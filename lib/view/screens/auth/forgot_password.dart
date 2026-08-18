@@ -1,3 +1,4 @@
+import 'package:farah/view/screens/auth/forgot_password_phone.dart';
 import 'package:farah/view/screens/auth/verify_code.dart';
 import 'package:flutter/material.dart';
 
@@ -124,6 +125,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
+                    // TODO: استدعاء AuthCubit لإرسال رمز التحقق
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -139,7 +141,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
               Center(
                 child: TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ForgotPasswordPhoneScreen(),
+                      ),
+                    );
+                  },
                   child: Text(
                     "تجربة طريقة اخرى",
                     style: theme.textTheme.bodyMedium?.copyWith(

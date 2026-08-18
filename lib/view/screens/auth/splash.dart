@@ -57,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     child: const Text(
                       "فرحتنا",
                       style: TextStyle(
-                        color: Color(0xFFD4AF37),
+                        color: Color.fromARGB(255, 228, 215, 175),
                         fontSize: 34,
                         fontWeight: FontWeight.w700,
                       ),

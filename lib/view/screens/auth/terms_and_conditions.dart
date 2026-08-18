@@ -33,7 +33,6 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
           children: [
             const SizedBox(height: 16),
 
-            // العنوان مع زر الرجوع
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
@@ -52,7 +51,7 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 48), // موازنة مع زر الرجوع
+                  const SizedBox(width: 48),
                 ],
               ),
             ),
@@ -91,7 +90,6 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
 
                     const SizedBox(height: 20),
 
-                    // صندوق الشروط
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
@@ -110,8 +108,9 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
                                 children: [
                                   Text(
                                     '${index + 1}.  ',
-                                    style: theme.textTheme.bodyMedium
-                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                   Expanded(
                                     child: Text(
@@ -136,8 +135,9 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
                           Text(
                             'نلتزم بحماية بياناتك الشخصية وعدم مشاركتها مع أي جهة خارجية إلا عند الحاجة لتقديم الخدمة أو وفقًا للأنظمة المعمول بها.',
                             textAlign: TextAlign.right,
-                            style: theme.textTheme.bodyMedium
-                                ?.copyWith(height: 1.6),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              height: 1.6,
+                            ),
                           ),
                         ],
                       ),
@@ -145,7 +145,6 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
 
                     const SizedBox(height: 20),
 
-                    // موافقة الشروط
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -174,11 +173,7 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
                     const SizedBox(height: 12),
 
                     ElevatedButton(
-                      onPressed: acceptedTerms
-                          ? () {
-                              // TODO: الانتقال للخطوة التالية بعد قبول الشروط
-                            }
-                          : null,
+                      onPressed: acceptedTerms ? () {} : null,
                       child: const Text("المتابعة"),
                     ),
 

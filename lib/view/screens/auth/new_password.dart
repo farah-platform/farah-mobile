@@ -132,8 +132,10 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                         color: primary,
                       ),
                       onPressed: () {
-                        setState(() =>
-                            obscureConfirmPassword = !obscureConfirmPassword);
+                        setState(
+                          () =>
+                              obscureConfirmPassword = !obscureConfirmPassword,
+                        );
                       },
                     ),
                   ),

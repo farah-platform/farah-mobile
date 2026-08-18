@@ -1,5 +1,6 @@
 import 'package:farah/view/screens/auth/login.dart';
-import 'package:farah/view/screens/auth/sign_up.dart';
+import 'package:farah/view/screens/auth/sginup.dart';
+import 'package:farah/view/screens/user/onboarding_screen.dart';
 import 'package:flutter/material.dart';
 
 class UserTypeCard extends StatelessWidget {
@@ -33,7 +34,7 @@ class UserTypeCard extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                    MaterialPageRoute(builder: (_) => const OnboardingScreen()),
                   );
                 },
                 child: const Text("عميل", style: TextStyle(fontSize: 22)),
@@ -62,7 +63,7 @@ class UserTypeCard extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  MaterialPageRoute(builder: (_) => const OnboardingScreen()),
                 );
               },
               child: const Text("الدخول كزائر", style: TextStyle(fontSize: 20)),
