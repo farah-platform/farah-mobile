@@ -1,3 +1,4 @@
+import 'package:farah/view/screens/auth/verify_code.dart';
 import 'package:flutter/material.dart';
 
 class ForgotPasswordPhoneScreen extends StatefulWidget {
@@ -161,19 +162,18 @@ class _ForgotPasswordPhoneScreenState extends State<ForgotPasswordPhoneScreen> {
               const SizedBox(height: 30),
 
               ElevatedButton(
-                onPressed: isLoading ? null : _onSubmitPressed,
-                child: isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text("تأكيد"),
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const VerifyCodeScreen(),
+                      ),
+                    );
+                  }
+                },
+                child: const Text("تأكيد"),
               ),
-
               const SizedBox(height: 16),
 
               Center(

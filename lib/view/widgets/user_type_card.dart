@@ -1,5 +1,4 @@
-import 'package:farah/view/screens/auth/login.dart';
-import 'package:farah/view/screens/auth/sginup.dart';
+import 'package:farah/view/screens/service1/onboarding_screen2.dart';
 import 'package:farah/view/screens/user/onboarding_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -50,7 +49,9 @@ class UserTypeCard extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const OnboardingScreen2(),
+                    ),
                   );
                 },
                 child: const Text("مزود خدمة", style: TextStyle(fontSize: 22)),

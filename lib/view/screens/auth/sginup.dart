@@ -1,4 +1,5 @@
 import 'package:farah/view/screens/auth/login.dart';
+import 'package:farah/view/screens/service1/service_info_screen.dart';
 import 'package:flutter/material.dart';
 import 'terms_and_conditions.dart';
 import 'package:flutter/gestures.dart';
@@ -305,7 +306,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 20),
 
                 ElevatedButton(
-                  onPressed: isLoading ? null : _onSignUpPressed,
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ServiceInfoScreen(),
+                      ),
+                    );
+                  },
                   child: isLoading
                       ? const SizedBox(
                           height: 20,
