@@ -1,7 +1,7 @@
+import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/cubits/auth/auth_cubit.dart';
 import 'package:farah/view/screens/auth/login.dart';
 import 'package:farah/view/screens/auth/terms_and_conditions.dart';
-import 'package:farah/view/screens/service1/service_info_screen.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -59,15 +59,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
-        } else if (state is AuthSuccess) {
-          Navigator.pushAndRemoveUntil(
+          ScaffoldMessenger.of(
             context,
-            MaterialPageRoute(builder: (_) => const ServiceInfoScreen()),
-            (_) => false,
-          );
+          ).showSnackBar(SnackBar(content: Text(state.message)));
+        } else if (state is AuthSuccess) {
+          final route = state.user.role == 'provider'
+              ? AppRoutes.providerHome
+              : AppRoutes.home;
+          Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
         }
       },
       child: Scaffold(
@@ -306,7 +305,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         color: Colors.black87,
                       ),
                       children: [
-                        const TextSpan(text: 'بالضغط على اشتراك فإنك توافق على '),
+                        const TextSpan(
+                          text: 'بالضغط على اشتراك فإنك توافق على ',
+                        ),
                         TextSpan(
                           text: 'سياسية الخصوصية والاستخدام',
                           style: TextStyle(
