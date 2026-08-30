@@ -1,7 +1,7 @@
 import 'package:farah/view/screens/auth/login.dart';
 import 'package:farah/view/screens/service1/service_info_screen.dart';
+import 'package:farah/view/screens/user/terms_and_conditions.dart';
 import 'package:flutter/material.dart';
-import 'terms_and_conditions.dart';
 import 'package:flutter/gestures.dart';
 
 class SignUpScreen extends StatefulWidget {
