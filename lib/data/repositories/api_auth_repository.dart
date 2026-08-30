@@ -43,17 +43,16 @@ class ApiAuthRepository implements AuthRepository {
       ApiEndpoints.login,
       data: {'email': email.trim(), 'password': password},
     );
-    await _cache.saveToken(res.data['token'] as String);
-    final user = UserModel.fromMap(res.data['user'] as Map<String, dynamic>);
+    // Response shape: { "icon": "success", "data": { "token": "...", "user": { ... } } }
+    final payload = res.data['data'] as Map<String, dynamic>;
+    await _cache.saveToken(payload['token'] as String);
+    final user = UserModel.fromMap(payload['user'] as Map<String, dynamic>);
     await _persistUser(user);
     return user;
   }
 
-  // cityId is int? — the backend spec field is city_id (integer).
-  // The sign-up screen currently passes null; it will be replaced with a
-  // real city picker in Part B.
   @override
-  Future<void> signUp({
+  Future<UserModel> signUp({
     required String name,
     required String email,
     required String phone,
@@ -61,7 +60,7 @@ class ApiAuthRepository implements AuthRepository {
     String? userType,
     int? cityId,
   }) async {
-    await _dio.post(
+    final res = await _dio.post(
       ApiEndpoints.register,
       data: {
         'name': name,
@@ -73,16 +72,16 @@ class ApiAuthRepository implements AuthRepository {
         if (cityId != null) 'city_id': cityId,
       },
     );
-    // Backend does not return a token on register — account needs email
-    // verification first. Token/session will be saved after login success.
+    // Backend returns a token immediately on registration.
+    final payload = res.data['data'] as Map<String, dynamic>;
+    await _cache.saveToken(payload['token'] as String);
+    final user = UserModel.fromMap(payload['user'] as Map<String, dynamic>);
+    await _persistUser(user);
+    return user;
   }
 
-  // ── Firebase / Google Sign-In ──────────────────────────────────────────────
-  // Scope decision pending. The '/auth/google' path does not exist in the
-  // current backend spec; the literal is kept here so this code continues to
-  // compile unchanged. Do not remove without a backend endpoint to back it.
-  // Google Sign-In is handled entirely via Firebase — there is no /auth/google
-  // endpoint in the Railway backend spec.
+  // Google Sign-In goes through Firebase only — no /auth/google endpoint exists
+  // in the Railway backend spec.
   @override
   Future<UserModel> signInWithGoogle() async {
     final existing = await checkSession();
@@ -106,7 +105,6 @@ class ApiAuthRepository implements AuthRepository {
       name: firebaseUser.displayName ?? 'مستخدم جوجل',
       email: firebaseUser.email ?? '',
       phone: firebaseUser.phoneNumber ?? '',
-      region: 'غزة',
     );
     await _persistUser(user);
     return user;
@@ -117,14 +115,13 @@ class ApiAuthRepository implements AuthRepository {
     await _dio.post(ApiEndpoints.forgotPassword, data: {'email': email.trim()});
   }
 
-  // Spec: POST /reset-password  body: token, email, password, password_confirmation
-  // token and email come from the deep-link URL; the screen will supply them in
-  // Part B. password_confirmation is added here; the rest will be wired in Step 4.
+  // POST /reset-password — for the email-link forgot-password flow.
+  // token and email come from the deep-link URL (deep-link wiring is pending).
   @override
   Future<void> updatePassword({
     required String newPassword,
-    String token = '',
-    String email = '',
+    required String token,
+    required String email,
   }) async {
     await _dio.post(
       ApiEndpoints.resetPassword,
@@ -142,7 +139,7 @@ class ApiAuthRepository implements AuthRepository {
     try {
       await _dio.post(ApiEndpoints.logout);
     } catch (_) {
-      // Ignore server errors during logout — we still clear local session
+      // Ignore server errors — always clear the local session.
     }
     await _cache.clearToken();
     await _clearUser();

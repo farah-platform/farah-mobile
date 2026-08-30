@@ -6,7 +6,7 @@ import 'package:farah/data/models/user_model.dart';
 abstract class AuthRepository {
   Future<UserModel> login({required String email, required String password});
 
-  Future<void> signUp({
+  Future<UserModel> signUp({
     required String name,
     required String email,
     required String phone,
@@ -19,14 +19,17 @@ abstract class AuthRepository {
 
   Future<void> sendPasswordReset({required String email});
 
+  /// Change password via the email-reset flow.
+  ///
+  /// [token] and [email] come from the reset-link deep link.
   Future<void> updatePassword({
     required String newPassword,
-    String token = '',
-    String email = '',
+    required String token,
+    required String email,
   });
 
   Future<void> logout();
 
-  /// Returns the currently signed-in user, or null if no session.
+  /// Returns the currently signed-in user, or null if no session exists.
   Future<UserModel?> checkSession();
 }

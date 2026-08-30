@@ -11,10 +11,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   AuthCubit(this._repo) : super(AuthInitial());
 
-  Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> login({required String email, required String password}) async {
     emit(AuthLoading());
     try {
       final user = await _repo.login(email: email, password: password);
@@ -68,24 +65,57 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  Future<void> updatePassword({required String newPassword}) async {
+  // token and email come from the password-reset deep link.
+  // Deep-link wiring is pending; screens currently pass empty strings.
+  Future<void> updatePassword({
+    required String newPassword,
+    required String token,
+    required String email,
+  }) async {
     emit(AuthLoading());
     try {
-      await _repo.updatePassword(newPassword: newPassword);
+      await _repo.updatePassword(
+        newPassword: newPassword,
+        token: token,
+        email: email,
+      );
       emit(AuthPasswordUpdated());
     } catch (e) {
       emit(AuthError(_mapError(e)));
     }
   }
 
+  Future<void> logout() async {
+    try {
+      await _repo.logout();
+    } catch (_) {}
+    emit(AuthInitial());
+  }
+
+  Future<void> checkSession() async {
+    emit(AuthLoading());
+    try {
+      final user = await _repo.checkSession();
+      if (user != null) {
+        emit(AuthSuccess(user));
+      } else {
+        emit(AuthInitial());
+      }
+    } catch (_) {
+      emit(AuthInitial());
+    }
+  }
+
   String _mapError(Object e) {
     if (e is DioException) {
-      final status = e.response?.statusCode;
-      final message = e.response?.data?['message'] as String?;
-      if (message != null && message.isNotEmpty) return message;
-      switch (status) {
+      // Backend error shape: { "icon": "error", "title": "...", "errors": {} }
+      final title = e.response?.data?['title'] as String?;
+      if (title != null && title.isNotEmpty) return title;
+      switch (e.response?.statusCode) {
         case 401:
           return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+        case 403:
+          return 'الحساب غير مفعّل، يرجى التواصل مع الدعم';
         case 404:
           return 'البريد الإلكتروني غير مسجل';
         case 409:
@@ -102,9 +132,23 @@ class AuthCubit extends Cubit<AuthState> {
       }
     }
     if (e is FirebaseAuthException) {
-      // Only reached via Google Sign-In
-      if (e.code == 'network-request-failed') {
-        return 'تحقق من اتصالك بالإنترنت';
+      switch (e.code) {
+        case 'invalid-credential':
+        case 'wrong-password':
+        case 'user-not-found':
+          return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+        case 'email-already-in-use':
+          return 'البريد الإلكتروني مستخدم بالفعل';
+        case 'weak-password':
+          return 'كلمة المرور ضعيفة جداً، يجب أن تكون 6 أحرف على الأقل';
+        case 'invalid-email':
+          return 'صيغة البريد الإلكتروني غير صحيحة';
+        case 'too-many-requests':
+          return 'تم تجاوز عدد المحاولات، يرجى المحاولة لاحقاً';
+        case 'requires-recent-login':
+          return 'يرجى إعادة تسجيل الدخول لتغيير كلمة المرور';
+        case 'network-request-failed':
+          return 'تحقق من اتصالك بالإنترنت';
       }
     }
     if (e is Exception && e.toString().contains('تم إلغاء')) {
