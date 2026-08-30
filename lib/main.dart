@@ -1,28 +1,102 @@
+import 'package:farah/core/network/dio_client.dart';
 import 'package:farah/core/theme/app_theme.dart';
-import 'package:farah/view/screens/auth/splash.dart';
+import 'package:farah/cubits/auth/auth_cubit.dart';
+import 'package:farah/cubits/booking/booking_cubit.dart';
+import 'package:farah/cubits/home/home_cubit.dart';
+import 'package:farah/cubits/notification/notification_cubit.dart';
+import 'package:farah/cubits/profile/profile_cubit.dart';
+import 'package:farah/data/datasources/local/cache_datasource.dart';
+import 'package:farah/data/repositories/api_auth_repository.dart';
+import 'package:farah/data/repositories/api_booking_repository.dart';
+import 'package:farah/data/repositories/api_notification_repository.dart';
+import 'package:farah/data/repositories/api_profile_repository.dart';
+import 'package:farah/data/repositories/api_service_repository.dart';
+import 'package:farah/data/repositories/auth_repository.dart';
+import 'package:farah/data/repositories/booking_repository.dart';
+import 'package:farah/data/repositories/notification_repository.dart';
+import 'package:farah/data/repositories/profile_repository.dart';
+import 'package:farah/data/repositories/service_repository.dart';
+import 'package:farah/core/constants/app_routes.dart';
+import 'package:farah/firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
-  runApp(const FarhaApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  final cache = CacheDatasource();
+  final dioClient = DioClient(cache);
+
+  final AuthRepository authRepository = ApiAuthRepository(
+    dioClient: dioClient,
+    cache: cache,
+  );
+  final ServiceRepository serviceRepository = ApiServiceRepository(
+    dioClient: dioClient,
+  );
+  final BookingRepository bookingRepository = ApiBookingRepository(
+    dioClient: dioClient,
+  );
+  final ProfileRepository profileRepository = ApiProfileRepository(
+    dioClient: dioClient,
+  );
+  final NotificationRepository notificationRepository = ApiNotificationRepository(
+    dioClient: dioClient,
+  );
+
+  runApp(
+    FarhaApp(
+      authRepository: authRepository,
+      serviceRepository: serviceRepository,
+      bookingRepository: bookingRepository,
+      profileRepository: profileRepository,
+      notificationRepository: notificationRepository,
+    ),
+  );
 }
 
 class FarhaApp extends StatelessWidget {
-  const FarhaApp({super.key});
+  final AuthRepository authRepository;
+  final ServiceRepository serviceRepository;
+  final BookingRepository bookingRepository;
+  final ProfileRepository profileRepository;
+  final NotificationRepository notificationRepository;
+
+  const FarhaApp({
+    super.key,
+    required this.authRepository,
+    required this.serviceRepository,
+    required this.bookingRepository,
+    required this.profileRepository,
+    required this.notificationRepository,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      locale: const Locale('ar'),
-      supportedLocales: const [Locale('ar')],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => AuthCubit(authRepository)),
+        BlocProvider(create: (_) => HomeCubit(serviceRepository)),
+        BlocProvider(create: (_) => BookingCubit(bookingRepository)),
+        BlocProvider(create: (_) => ProfileCubit(profileRepository)),
+        BlocProvider(create: (_) => NotificationCubit(notificationRepository)),
       ],
-      theme: appTheme,
-      home: const SplashScreen(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        locale: const Locale('ar'),
+        supportedLocales: const [Locale('ar')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        theme: appTheme,
+        initialRoute: AppRoutes.splash,
+        routes: AppRoutes.routes,
+      ),
     );
   }
 }
