@@ -16,8 +16,16 @@ class ApiAuthRepository implements AuthRepository {
 
   final Dio _dio;
   final CacheDatasource _cache;
-  final GoogleSignIn _googleSignIn;
-  final FirebaseAuth _firebaseAuth;
+  GoogleSignIn? _googleSignInOverride;
+  FirebaseAuth? _firebaseAuthOverride;
+
+  GoogleSignIn get _googleSignIn => _googleSignInOverride ??= GoogleSignIn(
+    serverClientId:
+        '800173223794-8kvbhprgpt0g8r0l9scab0br4c06jqsn.apps.googleusercontent.com',
+  );
+
+  FirebaseAuth get _firebaseAuth =>
+      _firebaseAuthOverride ??= FirebaseAuth.instance;
 
   ApiAuthRepository({
     required DioClient dioClient,
@@ -26,13 +34,8 @@ class ApiAuthRepository implements AuthRepository {
     FirebaseAuth? firebaseAuth,
   }) : _dio = dioClient.dio,
        _cache = cache,
-       _googleSignIn =
-           googleSignIn ??
-           GoogleSignIn(
-             serverClientId:
-                 '800173223794-8kvbhprgpt0g8r0l9scab0br4c06jqsn.apps.googleusercontent.com',
-           ),
-       _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
+       _googleSignInOverride = googleSignIn,
+       _firebaseAuthOverride = firebaseAuth;
 
   @override
   Future<UserModel> login({

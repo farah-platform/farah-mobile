@@ -85,6 +85,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     style: theme.textTheme.headlineMedium?.copyWith(
                       color: primary,
                       fontWeight: FontWeight.bold,
+                      fontSize: 20,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -93,6 +94,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: Colors.grey.shade700,
+                      fontSize: 18,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -109,6 +111,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           "المتابعة باستخدام Google",
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: Colors.black,
+                            fontSize: 16,
                           ),
                         ),
                       ],
@@ -396,6 +399,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           text,
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
+            fontSize: 14,
           ),
         ),
       ),

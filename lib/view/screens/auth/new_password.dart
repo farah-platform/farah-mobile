@@ -27,8 +27,6 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
 
   void _onSubmitPressed() {
     if (_formKey.currentState!.validate()) {
-      // TODO(deep-link): token and email must be injected from the reset-link
-      // URL once deep-link handling is implemented.
       context.read<AuthCubit>().updatePassword(
         newPassword: passwordController.text,
         token: '',
@@ -84,6 +82,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                     style: theme.textTheme.headlineMedium?.copyWith(
                       color: primary,
                       fontWeight: FontWeight.bold,
+                      fontSize: 20,
                     ),
                   ),
 
@@ -94,6 +93,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: Colors.grey.shade600,
+                      fontSize: 14,
                     ),
                   ),
 
@@ -105,6 +105,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                       "كلمة المرور",
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
+                        fontSize: 18,
                       ),
                     ),
                   ),
@@ -146,6 +147,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                       "تأكيد كلمة المرور",
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
+                        fontSize: 18,
                       ),
                     ),
                   ),

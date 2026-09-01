@@ -70,6 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: theme.textTheme.headlineMedium?.copyWith(
                       color: primary,
                       fontWeight: FontWeight.bold,
+                      fontSize: 20,
                     ),
                   ),
 
@@ -80,6 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: Colors.grey.shade600,
+                      fontSize: 16,
                     ),
                   ),
 
@@ -97,6 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           "المتابعة باستخدام Google",
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: Colors.black,
+                            fontSize: 14,
                           ),
                         ),
                       ],
@@ -111,6 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       "البريد الإلكتروني",
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
+                        fontSize: 14,
                       ),
                     ),
                   ),
@@ -147,6 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       "كلمة المرور",
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
+                        fontSize: 14,
                       ),
                     ),
                   ),
@@ -201,6 +206,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: primary,
                           fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
                       ),
                     ),
@@ -253,6 +259,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: theme.textTheme.bodyLarge?.copyWith(
                             color: primary,
                             fontWeight: FontWeight.bold,
+                            fontSize: 14,
                           ),
                         ),
                       ),

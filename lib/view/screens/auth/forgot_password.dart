@@ -87,6 +87,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   style: theme.textTheme.headlineMedium?.copyWith(
                     color: primary,
                     fontWeight: FontWeight.bold,
+                    fontSize: 20,
                   ),
                 ),
 
@@ -113,6 +114,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           "البريد الإلكتروني",
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
+                            fontSize: 18,
                           ),
                         ),
                       ),
@@ -180,6 +182,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: primary,
                         fontWeight: FontWeight.bold,
+                        fontSize: 12,
                       ),
                     ),
                   ),

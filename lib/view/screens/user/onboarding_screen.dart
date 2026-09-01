@@ -114,6 +114,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           style: theme.textTheme.headlineMedium?.copyWith(
                             color: primary,
                             fontWeight: FontWeight.bold,
+                            fontSize: 24,
                             height: 1.4,
                           ),
                         ),

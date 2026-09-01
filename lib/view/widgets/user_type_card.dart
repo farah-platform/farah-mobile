@@ -21,7 +21,7 @@ class UserTypeCard extends StatelessWidget {
           children: [
             const Text(
               "اختيار نوع المستخدم",
-              style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 25),
@@ -36,7 +36,7 @@ class UserTypeCard extends StatelessWidget {
                     MaterialPageRoute(builder: (_) => const OnboardingScreen()),
                   );
                 },
-                child: const Text("عميل", style: TextStyle(fontSize: 22)),
+                child: const Text("عميل", style: TextStyle(fontSize: 16)),
               ),
             ),
 
@@ -54,7 +54,7 @@ class UserTypeCard extends StatelessWidget {
                     ),
                   );
                 },
-                child: const Text("مزود خدمة", style: TextStyle(fontSize: 22)),
+                child: const Text("مزود خدمة", style: TextStyle(fontSize: 16)),
               ),
             ),
 
@@ -67,7 +67,7 @@ class UserTypeCard extends StatelessWidget {
                   MaterialPageRoute(builder: (_) => const OnboardingScreen()),
                 );
               },
-              child: const Text("الدخول كزائر", style: TextStyle(fontSize: 20)),
+              child: const Text("الدخول كزائر", style: TextStyle(fontSize: 14)),
             ),
           ],
         ),
