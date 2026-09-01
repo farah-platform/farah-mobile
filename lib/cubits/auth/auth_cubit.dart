@@ -41,7 +41,14 @@ class AuthCubit extends Cubit<AuthState> {
       );
       emit(AuthSuccess(user));
     } catch (e) {
-      emit(AuthError(_mapError(e)));
+      if (e is DioException &&
+          (e.type == DioExceptionType.connectionTimeout ||
+              e.type == DioExceptionType.receiveTimeout ||
+              e.type == DioExceptionType.sendTimeout)) {
+        emit(AuthSignUpTimeout());
+      } else {
+        emit(AuthError(_mapError(e)));
+      }
     }
   }
 
@@ -90,6 +97,24 @@ class AuthCubit extends Cubit<AuthState> {
       await _repo.logout();
     } catch (_) {}
     emit(AuthInitial());
+  }
+
+  Future<void> deleteAccount() async {
+    emit(AuthLoading());
+    try {
+      await _repo.deleteAccount();
+      emit(AuthAccountDeleted());
+    } catch (e) {
+      // TODO: BR-10/FR-24 — extract blocking booking ID from error response when backend enforces it.
+      if (e is DioException) {
+        final title = e.response?.data?['title'] as String?;
+        if (title != null && title.isNotEmpty) {
+          emit(AuthError(title));
+          return;
+        }
+      }
+      emit(AuthError('حدث خطأ أثناء حذف الحساب، يرجى المحاولة مجدداً'));
+    }
   }
 
   Future<void> checkSession() async {

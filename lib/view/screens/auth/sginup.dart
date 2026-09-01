@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/cubits/auth/auth_cubit.dart';
 import 'package:farah/view/screens/auth/login.dart';
@@ -26,9 +28,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String selectedCountryCode = '+970';
   bool obscurePassword = true;
   bool obscureConfirmPassword = true;
+  bool _showWaitHint = false;
+  Timer? _waitHintTimer;
+
+  void _startWaitHintTimer() {
+    _waitHintTimer?.cancel();
+    _waitHintTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) setState(() => _showWaitHint = true);
+    });
+  }
+
+  void _cancelWaitHintTimer() {
+    _waitHintTimer?.cancel();
+    _waitHintTimer = null;
+    if (mounted) setState(() => _showWaitHint = false);
+  }
 
   @override
   void dispose() {
+    _waitHintTimer?.cancel();
     emailController.dispose();
     nameController.dispose();
     phoneController.dispose();
@@ -58,15 +76,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
-        if (state is AuthError) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message)));
-        } else if (state is AuthSuccess) {
-          final route = state.user.role == 'provider'
-              ? AppRoutes.providerHome
-              : AppRoutes.home;
-          Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
+        if (state is AuthLoading) {
+          _startWaitHintTimer();
+        } else {
+          _cancelWaitHintTimer();
+          if (state is AuthError) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
+          } else if (state is AuthSignUpTimeout) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                duration: Duration(seconds: 8),
+                content: Text(
+                  'تم إرسال الطلب. تحقق من بريدك الإلكتروني، وإن لم يصلك شيء أعد المحاولة.',
+                ),
+              ),
+            );
+          } else if (state is AuthSuccess) {
+            final route = state.user.role == 'provider'
+                ? AppRoutes.providerHome
+                : AppRoutes.home;
+            Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
+          }
         }
       },
       child: Scaffold(
@@ -348,6 +380,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       );
                     },
                   ),
+                  if (_showWaitHint) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      'جارٍ إنشاء الحساب، قد يستغرق هذا لحظات...',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 16),
 
                   RichText(

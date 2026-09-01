@@ -162,6 +162,34 @@ class ApiAuthRepository implements AuthRepository {
     await prefs.setString(_userKey, json.encode(user.toMap()));
   }
 
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await _dio.post(
+      ApiEndpoints.changePassword,
+      data: {
+        'current_password': currentPassword,
+        'password': newPassword,
+        'password_confirmation': newPassword,
+      },
+    );
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    await _dio.delete(ApiEndpoints.deleteAccount);
+    await _cache.clearToken();
+    await _clearUser();
+    try {
+      await _googleSignIn.signOut();
+      await _firebaseAuth.signOut();
+    } catch (_) {
+      // Ignore sign-out errors — local session is already cleared.
+    }
+  }
+
   Future<void> _clearUser() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_userKey);

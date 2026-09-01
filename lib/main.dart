@@ -2,9 +2,11 @@ import 'package:farah/core/network/dio_client.dart';
 import 'package:farah/core/theme/app_theme.dart';
 import 'package:farah/cubits/auth/auth_cubit.dart';
 import 'package:farah/cubits/booking/booking_cubit.dart';
+import 'package:farah/cubits/favorites/favorites_cubit.dart';
 import 'package:farah/cubits/home/home_cubit.dart';
 import 'package:farah/cubits/notification/notification_cubit.dart';
 import 'package:farah/cubits/profile/profile_cubit.dart';
+import 'package:farah/cubits/settings/settings_cubit.dart';
 import 'package:farah/data/datasources/local/cache_datasource.dart';
 import 'package:farah/data/repositories/api_auth_repository.dart';
 import 'package:farah/data/repositories/api_booking_repository.dart';
@@ -13,6 +15,7 @@ import 'package:farah/data/repositories/api_profile_repository.dart';
 import 'package:farah/data/repositories/api_service_repository.dart';
 import 'package:farah/data/repositories/auth_repository.dart';
 import 'package:farah/data/repositories/booking_repository.dart';
+import 'package:farah/data/repositories/local_favorites_repository.dart';
 import 'package:farah/data/repositories/notification_repository.dart';
 import 'package:farah/data/repositories/profile_repository.dart';
 import 'package:farah/data/repositories/service_repository.dart';
@@ -43,7 +46,8 @@ Future<void> main() async {
   final ProfileRepository profileRepository = ApiProfileRepository(
     dioClient: dioClient,
   );
-  final NotificationRepository notificationRepository = ApiNotificationRepository(
+  final NotificationRepository notificationRepository =
+      ApiNotificationRepository(
     dioClient: dioClient,
   );
 
@@ -76,26 +80,36 @@ class FarhaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
+    return MultiRepositoryProvider(
       providers: [
-        BlocProvider(create: (_) => AuthCubit(authRepository)),
-        BlocProvider(create: (_) => HomeCubit(serviceRepository)),
-        BlocProvider(create: (_) => BookingCubit(bookingRepository)),
-        BlocProvider(create: (_) => ProfileCubit(profileRepository)),
-        BlocProvider(create: (_) => NotificationCubit(notificationRepository)),
+        RepositoryProvider<AuthRepository>.value(value: authRepository),
+        RepositoryProvider<ProfileRepository>.value(value: profileRepository),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        locale: const Locale('ar'),
-        supportedLocales: const [Locale('ar')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => AuthCubit(authRepository)),
+          BlocProvider(create: (_) => HomeCubit(serviceRepository)),
+          BlocProvider(create: (_) => BookingCubit(bookingRepository)),
+          BlocProvider(create: (_) => ProfileCubit(profileRepository)),
+          BlocProvider(
+              create: (_) => NotificationCubit(notificationRepository)),
+          BlocProvider(create: (_) => SettingsCubit(profileRepository)),
+          BlocProvider(
+              create: (_) => FavoritesCubit(LocalFavoritesRepository())),
         ],
-        theme: appTheme,
-        initialRoute: AppRoutes.splash,
-        routes: AppRoutes.routes,
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          locale: const Locale('ar'),
+          supportedLocales: const [Locale('ar')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          theme: appTheme,
+          initialRoute: AppRoutes.splash,
+          routes: AppRoutes.routes,
+        ),
       ),
     );
   }
