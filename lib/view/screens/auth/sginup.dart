@@ -85,7 +85,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     style: theme.textTheme.headlineMedium?.copyWith(
                       color: primary,
                       fontWeight: FontWeight.bold,
-                      fontSize: 20,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -94,7 +93,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: Colors.grey.shade700,
-                      fontSize: 18,
                     ),
                   ),
                   const SizedBox(height: 24),

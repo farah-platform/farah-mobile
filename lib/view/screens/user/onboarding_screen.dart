@@ -111,10 +111,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Text(
                           item.title,
                           textAlign: TextAlign.center,
-                          style: theme.textTheme.headlineMedium?.copyWith(
+                          style: theme.textTheme.headlineSmall?.copyWith(
                             color: primary,
                             fontWeight: FontWeight.bold,
-                            fontSize: 24,
+                            fontSize: 18,
                             height: 1.4,
                           ),
                         ),
@@ -122,7 +122,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Text(
                           item.subtitle,
                           textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyLarge?.copyWith(
+                          style: theme.textTheme.bodyMedium?.copyWith(
                             color: Colors.grey.shade700,
                             height: 1.5,
                           ),

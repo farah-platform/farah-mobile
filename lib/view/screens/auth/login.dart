@@ -70,7 +70,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: theme.textTheme.headlineMedium?.copyWith(
                       color: primary,
                       fontWeight: FontWeight.bold,
-                      fontSize: 20,
                     ),
                   ),
 
@@ -79,9 +78,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   Text(
                     "اهلا بعودتك مجددا",
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyLarge?.copyWith(
+                    style: theme.textTheme.bodyMedium?.copyWith(
                       color: Colors.grey.shade600,
-                      fontSize: 16,
                     ),
                   ),
 
