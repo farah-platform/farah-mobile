@@ -21,10 +21,8 @@ import 'package:farah/data/repositories/notification_repository.dart';
 import 'package:farah/data/repositories/profile_repository.dart';
 import 'package:farah/data/repositories/service_repository.dart';
 import 'package:farah/core/constants/app_routes.dart';
-
-// Firebase حاليًا غير مستخدم
-// import 'package:farah/firebase_options.dart';
-// import 'package:firebase_core/firebase_core.dart';
+import 'package:farah/firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -32,11 +30,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Firebase حاليًا متوقف
-  // await Firebase.initializeApp(
-  //   options: DefaultFirebaseOptions.currentPlatform,
-  // );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final cache = CacheDatasource();
 

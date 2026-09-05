@@ -25,132 +25,193 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) async {
+          if (didPop) return;
 
-        final now = DateTime.now();
+          final now = DateTime.now();
 
-        if (_lastBackPressed == null ||
-            now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
-          _lastBackPressed = now;
+          if (_lastBackPressed == null ||
+              now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
+            _lastBackPressed = now;
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('اضغط مرة أخرى للخروج'),
-              duration: Duration(seconds: 2),
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('اضغط مرة أخرى للخروج'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+
+            return;
+          }
+
+          await SystemNavigator.pop();
+        },
+        child: Scaffold(
+          backgroundColor: theme.scaffoldBackgroundColor,
+
+          body: SafeArea(
+            bottom: false,
+            child: BlocBuilder<HomeCubit, HomeState>(
+              builder: (context, state) {
+                if (state is HomeLoading) {
+                  return Center(
+                    child: CircularProgressIndicator(color: colors.primary),
+                  );
+                }
+
+                if (state is HomeError) {
+                  return _buildError(context, state.message);
+                }
+
+                if (state is HomeLoaded) {
+                  return _buildHomeContent(context, state);
+                }
+
+                return const SizedBox.shrink();
+              },
             ),
-          );
-
-          return;
-        }
-
-        await SystemNavigator.pop();
-      },
-      child: Scaffold(
-        body: SafeArea(
-          child: BlocBuilder<HomeCubit, HomeState>(
-            builder: (context, state) {
-              if (state is HomeLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              if (state is HomeError) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 55,
-                          color: colors.primary,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(state.message, textAlign: TextAlign.center),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {
-                            context.read<HomeCubit>().loadHome();
-                          },
-                          child: const Text('إعادة المحاولة'),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-
-              if (state is HomeLoaded) {
-                return _buildHomeContent(context, state);
-              }
-
-              return const SizedBox.shrink();
-            },
           ),
-        ),
 
-        bottomNavigationBar: _buildBottomNavigation(context),
+          bottomNavigationBar: _buildBottomNavigation(context),
+        ),
       ),
     );
   }
 
-  Widget _buildHomeContent(BuildContext context, HomeLoaded state) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        await context.read<HomeCubit>().loadHome();
-      },
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+  // =========================================================
+  // ERROR
+  // =========================================================
+
+  Widget _buildError(BuildContext context, String message) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            _buildHeader(context, state.home.user),
+            Icon(Icons.error_outline_rounded, size: 55, color: colors.primary),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 12),
 
-            _buildSearchBar(context),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium,
+            ),
 
-            const SizedBox(height: 28),
-            _buildSectionTitle(context, title: 'الخدمات'),
+            const SizedBox(height: 18),
 
-            const SizedBox(height: 14),
-
-            _buildServices(context, state.home.categories),
-
-            const SizedBox(height: 30),
-
-            _buildSectionTitle(context, title: 'باقات مميزة'),
-
-            const SizedBox(height: 14),
-
-            _buildPackages(context, state.home.featuredPackages),
-
-            const SizedBox(height: 30),
-
-            _buildSectionTitle(context, title: 'مزودو الخدمات'),
-
-            const SizedBox(height: 14),
-
-            _buildProviders(context, state.home.featuredProviders),
-
-            const SizedBox(height: 30),
-
-            _buildSectionTitle(context, title: 'الأكثر طلباً'),
-
-            const SizedBox(height: 14),
-
-            _buildMostPopular(context, state.home.mostPopular),
-
-            const SizedBox(height: 24),
+            SizedBox(
+              width: 150,
+              child: ElevatedButton(
+                onPressed: () {
+                  context.read<HomeCubit>().loadHome();
+                },
+                child: const Text('إعادة المحاولة'),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
+
+  // =========================================================
+  // HOME CONTENT
+  // =========================================================
+
+  Widget _buildHomeContent(BuildContext context, HomeLoaded state) {
+    return RefreshIndicator(
+      color: Theme.of(context).colorScheme.primary,
+
+      onRefresh: () async {
+        await context.read<HomeCubit>().loadHome();
+      },
+
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+
+        padding: const EdgeInsets.only(top: 10, bottom: 20),
+
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildHeader(context, state.home.user),
+            ),
+
+            const SizedBox(height: 14),
+
+            // Search
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildSearchBar(context),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Services
+            _buildServices(context, state.home.categories),
+
+            const SizedBox(height: 18),
+
+            // Banner
+            if (state.home.featuredPackages.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _buildPromoBanner(
+                  context,
+                  state.home.featuredPackages.first,
+                ),
+              ),
+
+            if (state.home.featuredPackages.isNotEmpty)
+              const SizedBox(height: 20),
+
+            // Providers
+            _buildSectionTitle(context, title: 'مزودين مقترحين لك'),
+
+            const SizedBox(height: 8),
+
+            _buildProviders(context, state.home.featuredProviders),
+
+            const SizedBox(height: 20),
+
+            // Packages
+            _buildSectionTitle(context, title: 'باقات مميزة'),
+
+            const SizedBox(height: 8),
+
+            _buildPackages(context, state.home.featuredPackages),
+
+            const SizedBox(height: 20),
+
+            // Most popular
+            _buildSectionTitle(context, title: 'الأكثر طلباً'),
+
+            const SizedBox(height: 8),
+
+            _buildMostPopular(context, state.home.mostPopular),
+
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // =========================================================
+  // HEADER
+  // =========================================================
 
   Widget _buildHeader(BuildContext context, UserHomeModel? user) {
     final theme = Theme.of(context);
@@ -160,51 +221,122 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
     final location = user?.location.isNotEmpty == true ? user!.location : 'غزة';
 
-    return Row(
-      textDirection: TextDirection.rtl,
-      children: [
-        CircleAvatar(
-          radius: 25,
-          backgroundColor: colors.primary.withOpacity(0.1),
-          backgroundImage: user?.avatar != null && user!.avatar!.isNotEmpty
-              ? NetworkImage(user.avatar!)
-              : null,
-          child: user?.avatar == null || user!.avatar!.isEmpty
-              ? Icon(Icons.person_outline, color: colors.primary, size: 28)
-              : null,
-        ),
+    return SizedBox(
+      height: 54,
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 45,
+            height: 45,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: colors.primary.withOpacity(.07),
+            ),
+            child: CircleAvatar(
+              backgroundColor: colors.primary.withOpacity(.07),
 
-        const SizedBox(width: 10),
+              backgroundImage: user?.avatar != null && user!.avatar!.isNotEmpty
+                  ? NetworkImage(user.avatar!)
+                  : null,
 
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'أهلا، $name',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+              child: user?.avatar == null || user!.avatar!.isEmpty
+                  ? Icon(
+                      Icons.person_outline_rounded,
+                      color: colors.primary,
+                      size: 25,
+                    )
+                  : null,
+            ),
+          ),
+
+          const SizedBox(width: 9),
+
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'أهلا، $name',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: colors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 3),
+                const SizedBox(height: 2),
 
-              Text(location, style: theme.textTheme.bodyMedium),
-            ],
+                Row(
+                  children: [
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 12,
+                      color: colors.onSurface.withOpacity(.45),
+                    ),
+
+                    const SizedBox(width: 2),
+
+                    Text(
+                      location,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colors.onSurface.withOpacity(.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
 
-        IconButton(
-          onPressed: () {},
-          icon: Icon(
-            Icons.notifications_none_rounded,
-            color: colors.primary,
-            size: 28,
+          // Notification
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: colors.surface,
+              border: Border.all(color: colors.outline.withOpacity(.15)),
+            ),
+            child: Stack(
+              children: [
+                Center(
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: () {},
+                    icon: Icon(
+                      Icons.notifications_none_rounded,
+                      color: colors.primary,
+                      size: 21,
+                    ),
+                  ),
+                ),
+
+                Positioned(
+                  top: 7,
+                  right: 7,
+                  child: Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: colors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
+
+  // =========================================================
+  // SEARCH
+  // =========================================================
 
   Widget _buildSearchBar(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
@@ -212,105 +344,583 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     return Row(
       children: [
         Expanded(
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: 'ابحث عن خدمة...',
-              prefixIcon: Icon(Icons.search_rounded, color: colors.primary),
+          child: SizedBox(
+            height: 45,
+            child: TextField(
+              textAlign: TextAlign.right,
+              textDirection: TextDirection.rtl,
+
+              style: Theme.of(context).textTheme.bodyMedium,
+
+              decoration: InputDecoration(
+                hintText: 'ابحث عن خدمة...',
+
+                hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: colors.onSurface.withOpacity(.4),
+                ),
+
+                prefixIcon: Icon(
+                  Icons.search_rounded,
+                  color: colors.primary,
+                  size: 20,
+                ),
+
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+              ),
             ),
           ),
         ),
 
-        const SizedBox(width: 10),
+        const SizedBox(width: 8),
 
         Container(
-          height: 54,
-          width: 54,
+          width: 45,
+          height: 45,
           decoration: BoxDecoration(
+            color: colors.surface,
             borderRadius: BorderRadius.circular(15),
-            border: Border.all(color: colors.primary.withOpacity(0.2)),
+            border: Border.all(color: colors.outline.withOpacity(.15)),
           ),
-          child: IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.tune_rounded, color: colors.primary),
-          ),
+          child: Icon(Icons.tune_rounded, color: colors.primary, size: 20),
         ),
       ],
     );
   }
+
+  // =========================================================
+  // SECTION TITLE
+  // =========================================================
 
   Widget _buildSectionTitle(BuildContext context, {required String title}) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: colors.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+
+          const Spacer(),
+
+          GestureDetector(
+            onTap: () {},
+            child: Text(
+              'عرض الكل',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: colors.primary,
+                fontSize: 9,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // =========================================================
+  // SERVICES
+  // =========================================================
+
+  Widget _buildServices(BuildContext context, List categories) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    if (categories.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Text(
+          'لا توجد خدمات بعد',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: colors.onSurface.withOpacity(.5),
           ),
         ),
+      );
+    }
 
-        TextButton(
-          onPressed: () {},
-          child: Text(
-            'عرض الكل',
-            style: TextStyle(color: colors.primary, fontSize: 12),
+    return Column(
+      children: [
+        _buildSectionTitle(context, title: 'الخدمات'),
+
+        const SizedBox(height: 10),
+
+        SizedBox(
+          height: 80,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+
+            scrollDirection: Axis.horizontal,
+
+            itemCount: categories.length,
+
+            separatorBuilder: (_, __) => const SizedBox(width: 13),
+
+            itemBuilder: (context, index) {
+              final service = categories[index];
+
+              return SizedBox(
+                width: 58,
+                child: Column(
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: colors.primary.withOpacity(.07),
+                      ),
+                      child: Icon(
+                        _serviceIcon(index),
+                        color: colors.primary,
+                        size: 22,
+                      ),
+                    ),
+
+                    const SizedBox(height: 5),
+
+                    Text(
+                      service.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontSize: 8.5,
+                        color: colors.onSurface.withOpacity(.8),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ],
     );
   }
 
-  Widget _buildServices(BuildContext context, List categories) {
+  IconData _serviceIcon(int index) {
+    const icons = [
+      Icons.church_outlined,
+      Icons.local_florist_outlined,
+      Icons.face_retouching_natural_outlined,
+      Icons.camera_alt_outlined,
+      Icons.storefront_outlined,
+      Icons.music_note_outlined,
+      Icons.restaurant_outlined,
+    ];
+
+    return icons[index % icons.length];
+  }
+
+  Widget _buildPromoBanner(BuildContext context, dynamic package) {
     final colors = Theme.of(context).colorScheme;
 
-    if (categories.isEmpty) {
-      return const Center(
+    return Container(
+      height: 116,
+      width: double.infinity,
+      clipBehavior: Clip.antiAlias,
+
+      decoration: BoxDecoration(
+        color: colors.primary.withOpacity(.08),
+        borderRadius: BorderRadius.circular(16),
+      ),
+
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (package.image != null && package.image!.isNotEmpty)
+            Image.network(
+              package.image!,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) {
+                return Container(color: colors.primary.withOpacity(.08));
+              },
+            ),
+
+          // Overlay
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.centerRight,
+                end: Alignment.centerLeft,
+                colors: [
+                  Colors.black.withOpacity(.5),
+                  Colors.black.withOpacity(.15),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+
+          Positioned(
+            right: 12,
+            top: 11,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(.9),
+                borderRadius: BorderRadius.circular(7),
+              ),
+              child: Text(
+                'عرض خاص',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: colors.primary,
+                  fontSize: 7,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+
+          Positioned(
+            right: 12,
+            bottom: 11,
+            left: 12,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  package.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: themeText(
+                    context,
+                    color: Colors.white,
+                    size: 13,
+                    weight: FontWeight.w700,
+                  ),
+                ),
+
+                const SizedBox(height: 2),
+
+                Text(
+                  '${package.price.toStringAsFixed(0)} ${package.currency}',
+                  style: themeText(
+                    context,
+                    color: Colors.white,
+                    size: 11,
+                    weight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProviders(BuildContext context, List providers) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    if (providers.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Text(
-          'لا توجد خدمات بعد',
-          style: TextStyle(fontSize: 14, color: Colors.grey),
+          'لا يوجد مزودو خدمات بعد',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: colors.onSurface.withOpacity(.5),
+          ),
         ),
       );
     }
 
     return SizedBox(
-      height: 105,
+      height: 148,
       child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: categories.length,
-        separatorBuilder: (_, __) {
-          return const SizedBox(width: 14);
-        },
-        itemBuilder: (context, index) {
-          final service = categories[index];
+        padding: const EdgeInsets.symmetric(horizontal: 16),
 
-          return SizedBox(
-            width: 85,
-            child: Column(
-              children: [
-                Container(
-                  height: 62,
-                  width: 62,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: colors.primary.withOpacity(0.08),
+        scrollDirection: Axis.horizontal,
+
+        itemCount: providers.length,
+
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+
+        itemBuilder: (context, index) {
+          final provider = providers[index];
+
+          return Container(
+            width: 112,
+
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: colors.outline.withOpacity(.12)),
+            ),
+
+            child: Padding(
+              padding: const EdgeInsets.all(7),
+
+              child: Column(
+                children: [
+                  Container(
+                    width: 62,
+                    height: 62,
+                    clipBehavior: Clip.antiAlias,
+
+                    decoration: const BoxDecoration(shape: BoxShape.circle),
+
+                    child: provider.image != null && provider.image!.isNotEmpty
+                        ? Image.network(
+                            provider.image!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) {
+                              return Icon(
+                                Icons.person_outline,
+                                color: colors.primary,
+                                size: 30,
+                              );
+                            },
+                          )
+                        : Icon(
+                            Icons.person_outline,
+                            color: colors.primary,
+                            size: 30,
+                          ),
                   ),
-                  child: Icon(
-                    Icons.miscellaneous_services_outlined,
-                    color: colors.primary,
+
+                  const SizedBox(height: 7),
+
+                  Text(
+                    provider.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+
+                  const SizedBox(height: 2),
+
+                  Text(
+                    provider.specialty,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontSize: 7.5,
+                      color: colors.onSurface.withOpacity(.5),
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.star_rounded,
+                        color: colors.secondary,
+                        size: 13,
+                      ),
+
+                      const SizedBox(width: 2),
+
+                      Text(
+                        provider.rating.toString(),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontSize: 8,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPackages(BuildContext context, List featuredPackages) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    if (featuredPackages.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Text(
+          'لا توجد باقات مميزة بعد',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: colors.onSurface.withOpacity(.5),
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 188,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+
+        scrollDirection: Axis.horizontal,
+
+        itemCount: featuredPackages.length,
+
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+
+        itemBuilder: (context, index) {
+          final package = featuredPackages[index];
+
+          return Container(
+            width: 170,
+
+            clipBehavior: Clip.antiAlias,
+
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: colors.outline.withOpacity(.12)),
+            ),
+
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+
+              children: [
+                SizedBox(
+                  height: 106,
+                  width: double.infinity,
+
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child:
+                            package.image != null && package.image!.isNotEmpty
+                            ? Image.network(
+                                package.image!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) {
+                                  return Container(
+                                    color: colors.primary.withOpacity(.08),
+                                    child: Icon(
+                                      Icons.image_outlined,
+                                      color: colors.primary,
+                                    ),
+                                  );
+                                },
+                              )
+                            : Container(
+                                color: colors.primary.withOpacity(.08),
+                                child: Icon(
+                                  Icons.image_outlined,
+                                  color: colors.primary,
+                                ),
+                              ),
+                      ),
+
+                      if (package.discountPercentage > 0)
+                        Positioned(
+                          top: 7,
+                          right: 7,
+
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 3,
+                            ),
+
+                            decoration: BoxDecoration(
+                              color: colors.primary,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+
+                            child: Text(
+                              package.discountBadge.isNotEmpty
+                                  ? package.discountBadge
+                                  : '${package.discountPercentage.toStringAsFixed(0)}%',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: Colors.white,
+                                fontSize: 7,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
 
-                const SizedBox(height: 8),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 7,
+                    ),
 
-                Text(
-                  service.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+
+                      children: [
+                        Text(
+                          package.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+
+                        const SizedBox(height: 2),
+
+                        if (package.provider != null)
+                          Text(
+                            package.provider!.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontSize: 7.5,
+                              color: colors.onSurface.withOpacity(.5),
+                            ),
+                          ),
+
+                        const Spacer(),
+
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.star_rounded,
+                              color: colors.secondary,
+                              size: 13,
+                            ),
+
+                            const SizedBox(width: 2),
+
+                            Text(
+                              package.ratingAvg.toStringAsFixed(1),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontSize: 8,
+                              ),
+                            ),
+
+                            const Spacer(),
+
+                            Text(
+                              '${package.price.toStringAsFixed(0)} ${package.currency}',
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: colors.primary,
+                                fontSize: 8,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -320,423 +930,158 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     );
   }
 
-  Widget _buildPackages(BuildContext context, List featuredPackages) {
-    final colors = Theme.of(context).colorScheme;
+  Widget _buildMostPopular(BuildContext context, List popularServices) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
-    if (featuredPackages.isEmpty) {
-      return const Center(
+    if (popularServices.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Text(
-          'لا توجد باقات مميزة بعد',
-          style: TextStyle(fontSize: 14, color: Colors.grey),
+          'لا توجد خدمات الأكثر طلباً بعد',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: colors.onSurface.withOpacity(.5),
+          ),
         ),
       );
     }
 
     return SizedBox(
-      height: 245,
+      height: 230,
       child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+
         scrollDirection: Axis.horizontal,
-        itemCount: featuredPackages.length,
-        separatorBuilder: (_, __) {
-          return const SizedBox(width: 16);
-        },
+
+        itemCount: popularServices.length,
+
+        separatorBuilder: (_, __) => const SizedBox(width: 11),
+
         itemBuilder: (context, index) {
-          final package = featuredPackages[index];
+          final service = popularServices[index];
 
-          return SizedBox(
-            width: 285,
-            child: Card(
-              elevation: 0,
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    height: 125,
-                    width: double.infinity,
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child:
-                              package.image != null && package.image!.isNotEmpty
-                              ? Image.network(
-                                  package.image!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) {
-                                    return Container(
-                                      color: colors.primary.withOpacity(0.08),
-                                      child: Icon(
-                                        Icons.image_not_supported_outlined,
-                                        color: colors.primary,
-                                        size: 35,
-                                      ),
-                                    );
-                                  },
-                                )
-                              : Container(
-                                  color: colors.primary.withOpacity(0.08),
-                                  child: Icon(
-                                    Icons.image_outlined,
-                                    color: colors.primary,
-                                    size: 35,
-                                  ),
-                                ),
-                        ),
+          return Container(
+            width: 235,
 
-                        // Discount badge
-                        if (package.discountPercentage > 0)
-                          Positioned(
-                            top: 10,
-                            right: 10,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 9,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colors.primary,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                package.discountBadge.isNotEmpty
-                                    ? package.discountBadge
-                                    : '${package.discountPercentage.toStringAsFixed(0)}%',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
+            clipBehavior: Clip.antiAlias,
 
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(11),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            package.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-
-                          const SizedBox(height: 5),
-
-                          if (package.provider != null)
-                            Text(
-                              package.provider!.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-
-                          const Spacer(),
-
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.star_rounded,
-                                size: 17,
-                                color: colors.secondary,
-                              ),
-
-                              const SizedBox(width: 3),
-
-                              Text(
-                                package.ratingAvg.toStringAsFixed(1),
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-
-                              const SizedBox(width: 4),
-
-                              Text(
-                                '(${package.reviewsCount})',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(color: Colors.grey),
-                              ),
-
-                              const Spacer(),
-
-                              Text(
-                                '${package.price.toStringAsFixed(0)} ${package.currency}',
-                                style: Theme.of(context).textTheme.titleSmall
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: colors.primary,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            decoration: BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: colors.outline.withOpacity(.12)),
             ),
-          );
-        },
-      ),
-    );
-  }
 
-  // =========================================================
-  // PROVIDERS
-  // =========================================================
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
 
-  Widget _buildProviders(BuildContext context, List providers) {
-    if (providers.isEmpty) {
-      return const Center(
-        child: Text(
-          'لا يوجد مزودو خدمات بعد',
-          style: TextStyle(fontSize: 14, color: Colors.grey),
-        ),
-      );
-    }
+              children: [
+                SizedBox(
+                  height: 143,
+                  width: double.infinity,
 
-    return SizedBox(
-      height: 215,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: providers.length,
-        separatorBuilder: (_, __) {
-          return const SizedBox(width: 16);
-        },
-        itemBuilder: (context, index) {
-          final provider = providers[index];
-
-          return SizedBox(
-            width: 155,
-            child: Card(
-              elevation: 0,
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: provider.image != null && provider.image!.isNotEmpty
-                        ? Image.network(
-                            provider.image!,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) {
-                              return const Center(
-                                child: Icon(Icons.person_outline, size: 40),
-                              );
-                            },
-                          )
-                        : const Center(
-                            child: Icon(Icons.person_outline, size: 40),
+                  child: service.image != null && service.image!.isNotEmpty
+                      ? Image.network(
+                          service.image!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) {
+                            return Container(
+                              color: colors.primary.withOpacity(.08),
+                              child: Icon(
+                                Icons.image_outlined,
+                                color: colors.primary,
+                              ),
+                            );
+                          },
+                        )
+                      : Container(
+                          color: colors.primary.withOpacity(.08),
+                          child: Icon(
+                            Icons.image_outlined,
+                            color: colors.primary,
                           ),
-                  ),
+                        ),
+                ),
 
-                  Padding(
-                    padding: const EdgeInsets.all(10),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+
                       children: [
                         Text(
-                          provider.name,
+                          service.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
 
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
 
-                        Text(
-                          provider.specialty,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
+                        if (service.provider != null)
+                          Text(
+                            service.provider!.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontSize: 7.5,
+                              color: colors.onSurface.withOpacity(.5),
+                            ),
+                          ),
 
-                        const SizedBox(height: 4),
+                        const Spacer(),
 
                         Row(
                           children: [
                             Icon(
                               Icons.star_rounded,
-                              size: 17,
-                              color: Theme.of(context).colorScheme.secondary,
+                              color: colors.secondary,
+                              size: 14,
+                            ),
+
+                            const SizedBox(width: 2),
+
+                            Text(
+                              service.ratingAvg.toStringAsFixed(1),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontSize: 8,
+                              ),
                             ),
 
                             const SizedBox(width: 3),
 
                             Text(
-                              provider.rating.toString(),
-                              style: Theme.of(context).textTheme.bodySmall,
+                              '(${service.reviewsCount})',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                fontSize: 7,
+                                color: colors.onSurface.withOpacity(.4),
+                              ),
+                            ),
+
+                            const Spacer(),
+
+                            Text(
+                              '${service.price.toStringAsFixed(0)} ${service.currency}',
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: colors.primary,
+                                fontSize: 8,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ],
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildMostPopular(BuildContext context, List popularServices) {
-    final colors = Theme.of(context).colorScheme;
-    if (popularServices.isEmpty) {
-      return const Center(
-        child: Text(
-          'لا توجد خدمات الأكثر طلباً بعد',
-          style: TextStyle(fontSize: 14, color: Colors.grey),
-        ),
-      );
-    }
-    return SizedBox(
-      height: 245,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: popularServices.length,
-        separatorBuilder: (_, __) {
-          return const SizedBox(width: 16);
-        },
-        itemBuilder: (context, index) {
-          final service = popularServices[index];
-
-          return SizedBox(
-            width: 285,
-            child: Card(
-              elevation: 0,
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    height: 135,
-                    width: double.infinity,
-                    child: service.image != null && service.image!.isNotEmpty
-                        ? Image.network(
-                            service.image!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) {
-                              return Container(
-                                color: colors.primary.withOpacity(0.08),
-                                child: Icon(
-                                  Icons.image_not_supported_outlined,
-                                  color: colors.primary,
-                                  size: 35,
-                                ),
-                              );
-                            },
-                          )
-                        : Container(
-                            color: colors.primary.withOpacity(0.08),
-                            child: Icon(
-                              Icons.image_outlined,
-                              color: colors.primary,
-                              size: 35,
-                            ),
-                          ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(11),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            service.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-
-                          const SizedBox(height: 4),
-
-                          if (service.provider != null)
-                            Text(
-                              service.provider!.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-
-                          const SizedBox(height: 4),
-
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.location_on_outlined,
-                                size: 16,
-                                color: colors.primary,
-                              ),
-
-                              const SizedBox(width: 3),
-
-                              Expanded(
-                                child: Text(
-                                  service.location.isNotEmpty
-                                      ? service.location
-                                      : service.city,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          const Spacer(),
-
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.star_rounded,
-                                size: 17,
-                                color: colors.secondary,
-                              ),
-
-                              const SizedBox(width: 3),
-
-                              Text(
-                                service.ratingAvg.toStringAsFixed(1),
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-
-                              const SizedBox(width: 4),
-
-                              Text(
-                                '(${service.reviewsCount})',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(color: Colors.grey),
-                              ),
-
-                              const Spacer(),
-
-                              Text(
-                                '${service.price.toStringAsFixed(0)} ${service.currency}',
-                                style: Theme.of(context).textTheme.titleSmall
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: colors.primary,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },
@@ -747,37 +1092,120 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
   Widget _buildBottomNavigation(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return BottomNavigationBar(
-      currentIndex: 3,
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: colors.primary,
-      unselectedItemColor: Colors.grey,
-      onTap: (index) {},
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person_outline),
-          activeIcon: Icon(Icons.person),
-          label: 'حسابي',
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        border: Border(top: BorderSide(color: colors.outline.withOpacity(.12))),
+      ),
 
-        BottomNavigationBarItem(
-          icon: Icon(Icons.favorite_border),
-          activeIcon: Icon(Icons.favorite),
-          label: 'المفضلة',
-        ),
+      child: SafeArea(
+        top: false,
 
-        BottomNavigationBarItem(
-          icon: Icon(Icons.receipt_long_outlined),
-          activeIcon: Icon(Icons.receipt_long),
-          label: 'طلباتي',
-        ),
+        child: SizedBox(
+          height: 62,
 
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_outlined),
-          activeIcon: Icon(Icons.home),
-          label: 'الرئيسية',
+          child: Row(
+            children: [
+              _bottomItem(
+                context,
+                icon: Icons.person_outline_rounded,
+                activeIcon: Icons.person_rounded,
+                label: 'حسابي',
+                active: false,
+              ),
+
+              _bottomItem(
+                context,
+                icon: Icons.favorite_border_rounded,
+                activeIcon: Icons.favorite_rounded,
+                label: 'المفضلة',
+                active: false,
+              ),
+
+              _bottomItem(
+                context,
+                icon: Icons.receipt_long_outlined,
+                activeIcon: Icons.receipt_long_rounded,
+                label: 'طلباتي',
+                active: false,
+              ),
+
+              _bottomItem(
+                context,
+                icon: Icons.home_outlined,
+                activeIcon: Icons.home_rounded,
+                label: 'الرئيسية',
+                active: true,
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
     );
+  }
+
+  Widget _bottomItem(
+    BuildContext context, {
+    required IconData icon,
+    required IconData activeIcon,
+    required String label,
+    required bool active,
+  }) {
+    final theme = Theme.of(context);
+
+    final colors = theme.colorScheme;
+
+    return Expanded(
+      child: InkWell(
+        onTap: () {},
+
+        splashColor: colors.primary.withOpacity(.05),
+
+        highlightColor: Colors.transparent,
+
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+
+          children: [
+            Icon(
+              active ? activeIcon : icon,
+
+              size: 21,
+
+              color: active
+                  ? colors.primary
+                  : colors.onSurface.withOpacity(.45),
+            ),
+
+            const SizedBox(height: 3),
+
+            Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontSize: 8.5,
+                color: active
+                    ? colors.primary
+                    : colors.onSurface.withOpacity(.45),
+                fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  TextStyle themeText(
+    BuildContext context, {
+    Color? color,
+    double? size,
+    FontWeight? weight,
+  }) {
+    return Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: color,
+          fontSize: size,
+          fontWeight: weight,
+        ) ??
+        TextStyle(color: color, fontSize: size, fontWeight: weight);
   }
 }
