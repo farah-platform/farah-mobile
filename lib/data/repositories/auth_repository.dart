@@ -41,4 +41,7 @@ abstract class AuthRepository {
 
   /// Permanently delete the authenticated user's account.
   Future<void> deleteAccount();
+
+  /// Persist a guest session flag (no server call, no token).
+  Future<void> loginAsGuest();
 }

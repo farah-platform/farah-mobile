@@ -18,7 +18,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<SettingsCubit>().load();
+    // Don't call the profile API for guests — there's no token.
+    if (context.read<AuthCubit>().state is! AuthGuest) {
+      context.read<SettingsCubit>().load();
+    }
   }
 
   Future<void> _navigateAndReload(String route) async {
@@ -39,40 +42,115 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.scaffoldSecondary,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: AppColors.primary,
-        centerTitle: true,
-        elevation: 0,
-        title: const Text(
-          'الإعدادات',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, authState) {
+        final isGuest = authState is AuthGuest;
+        return Scaffold(
+          backgroundColor: AppColors.scaffoldSecondary,
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            foregroundColor: AppColors.primary,
+            centerTitle: true,
+            elevation: 0,
+            title: const Text(
+              'الإعدادات',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          body: isGuest
+              ? _buildGuestBody()
+              : BlocBuilder<SettingsCubit, SettingsState>(
+                  builder: (context, state) {
+                    return _buildAuthBody(context, state);
+                  },
+                ),
+        );
+      },
+    );
+  }
+
+  Widget _buildGuestBody() {
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      children: [
+        _buildGuestLoginCard(),
+        const SizedBox(height: 20),
+        _buildPreferencesSectionGuest(),
+        const SizedBox(height: 16),
+        _buildSupportSection(),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _buildAuthBody(BuildContext context, SettingsState state) {
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      children: [
+        _buildProfileCard(state),
+        const SizedBox(height: 20),
+        _buildAccountSection(state),
+        const SizedBox(height: 16),
+        _buildPreferencesSection(state),
+        const SizedBox(height: 16),
+        _buildActivitySection(),
+        const SizedBox(height: 16),
+        _buildSupportSection(),
+        const SizedBox(height: 32),
+        _buildLogoutButton(context),
+        const SizedBox(height: 8),
+        _buildDeleteAccountButton(context),
+        const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _buildGuestLoginCard() {
+    return GestureDetector(
+      onTap: () => Navigator.pushNamedAndRemoveUntil(
+        context,
+        AppRoutes.login,
+        (_) => false,
       ),
-      body: BlocBuilder<SettingsCubit, SettingsState>(
-        builder: (context, state) {
-          return ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-            children: [
-              _buildProfileCard(state),
-              const SizedBox(height: 20),
-              _buildAccountSection(state),
-              const SizedBox(height: 16),
-              _buildPreferencesSection(state),
-              const SizedBox(height: 16),
-              _buildActivitySection(),
-              const SizedBox(height: 16),
-              _buildSupportSection(),
-              const SizedBox(height: 32),
-              _buildLogoutButton(context),
-              const SizedBox(height: 8),
-              _buildDeleteAccountButton(context),
-              const SizedBox(height: 24),
-            ],
-          );
-        },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+              child: const Icon(Icons.person_outline, color: AppColors.primary),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'تسجيل الدخول',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'سجّل الدخول للوصول لكافة المميزات',
+                    style: TextStyle(
+                      color: AppColors.textGrey,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: AppColors.textGrey),
+          ],
+        ),
       ),
     );
   }
@@ -87,10 +165,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Row(
         children: [
           if (state is SettingsLoading)
-            const CircleAvatar(
-              radius: 28,
-              backgroundColor: Color(0xFFE0E0E0),
-            )
+            const CircleAvatar(radius: 28, backgroundColor: Color(0xFFE0E0E0))
           else if (state is SettingsLoaded)
             CircleAvatar(
               radius: 28,
@@ -105,10 +180,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             )
           else
-            const CircleAvatar(
-              radius: 28,
-              backgroundColor: Color(0xFFE0E0E0),
-            ),
+            const CircleAvatar(radius: 28, backgroundColor: Color(0xFFE0E0E0)),
           const SizedBox(width: 14),
           Expanded(
             child: state is SettingsLoading
@@ -121,27 +193,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   )
                 : state is SettingsLoaded
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            state.user.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            state.user.phone,
-                            style: const TextStyle(
-                              color: AppColors.textGrey,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      )
-                    : const Text('—'),
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        state.user.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        state.user.phone,
+                        style: const TextStyle(
+                          color: AppColors.textGrey,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  )
+                : const Text('—'),
           ),
         ],
       ),
@@ -171,8 +243,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildPreferencesSection(SettingsState state) {
-    final notificationsEnabled =
-        state is SettingsLoaded ? state.notificationsEnabled : true;
+    final notificationsEnabled = state is SettingsLoaded
+        ? state.notificationsEnabled
+        : true;
+    return _buildPreferencesTile(notificationsEnabled);
+  }
+
+  Widget _buildPreferencesSectionGuest() {
+    return _buildPreferencesTile(true);
+  }
+
+  Widget _buildPreferencesTile(bool notificationsEnabled) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -186,8 +267,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: ListTile(
             dense: true,
             minLeadingWidth: 24,
-            leading: const Icon(Icons.notifications_outlined,
-                color: AppColors.primary),
+            leading: const Icon(
+              Icons.notifications_outlined,
+              color: AppColors.primary,
+            ),
             title: const Text('الإشعارات'),
             trailing: Switch(
               value: notificationsEnabled,
@@ -257,14 +340,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
-        children: List.generate(tiles.length * 2 - 1, (i) {
-          if (i.isOdd) {
-            return const Divider(height: 1, indent: 56);
-          }
-          return tiles[i ~/ 2];
-        }),
-      ),
+      child: Column(children: tiles),
     );
   }
 
@@ -273,11 +349,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       width: double.infinity,
       child: OutlinedButton(
         style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: AppColors.primary),
+          side: const BorderSide(color: AppColors.primary, width: 1.5),
           foregroundColor: AppColors.primary,
           padding: const EdgeInsets.symmetric(vertical: 14),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
         onPressed: () {
           final nav = Navigator.of(context);

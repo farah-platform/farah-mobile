@@ -49,14 +49,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _onSkipPressed() {
-    // مؤقت للتجربة، هيتشال لما ينربط الـ Cubit
-    Navigator.pushReplacementNamed(context, '/signup');
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const SignUpScreen(userType: 'customer'),
+      ),
+    );
   }
 
   void _onNextPressed() {
     if (currentPage == items.length - 1) {
-      // مؤقت للتجربة، هيتشال لما ينربط الـ Cubit
-      Navigator.pushReplacementNamed(context, '/signup');
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const SignUpScreen(userType: 'customer'),
+        ),
+      );
     } else {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
@@ -172,12 +180,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SignUpScreen()),
-                    );
-                  },
+                  onPressed: isLastPage
+                      ? () => Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const SignUpScreen(userType: 'customer'),
+                            ),
+                          )
+                      : _onNextPressed,
                   child: Text(isLastPage ? 'ابدأ الان' : 'التالي'),
                 ),
               ),

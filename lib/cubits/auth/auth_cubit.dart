@@ -117,12 +117,21 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<void> loginAsGuest() async {
+    await _repo.loginAsGuest();
+    emit(AuthGuest());
+  }
+
   Future<void> checkSession() async {
     emit(AuthLoading());
     try {
       final user = await _repo.checkSession();
       if (user != null) {
-        emit(AuthSuccess(user));
+        if (user.role == 'guest') {
+          emit(AuthGuest());
+        } else {
+          emit(AuthSuccess(user));
+        }
       } else {
         emit(AuthInitial());
       }

@@ -1,6 +1,8 @@
+import 'package:farah/cubits/auth/auth_cubit.dart';
 import 'package:farah/view/screens/service1/onboarding_screen2.dart';
 import 'package:farah/view/screens/user/onboarding_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class UserTypeCard extends StatelessWidget {
   const UserTypeCard({super.key});
@@ -60,12 +62,10 @@ class UserTypeCard extends StatelessWidget {
 
             const SizedBox(height: 20),
 
+            // Guest: set the flag and let SplashScreen's BlocListener navigate.
             TextButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const OnboardingScreen()),
-                );
+                context.read<AuthCubit>().loginAsGuest();
               },
               child: const Text("الدخول كزائر", style: TextStyle(fontSize: 20)),
             ),

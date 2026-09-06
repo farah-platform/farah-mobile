@@ -13,6 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Real backend implementation of [AuthRepository].
 class ApiAuthRepository implements AuthRepository {
   static const _userKey = 'api_user_model';
+  static const _guestKey = 'is_guest';
 
   final Dio _dio;
   final CacheDatasource _cache;
@@ -48,6 +49,7 @@ class ApiAuthRepository implements AuthRepository {
     await _cache.saveToken(payload['token'] as String);
     final user = UserModel.fromMap(payload['user'] as Map<String, dynamic>);
     await _persistUser(user);
+    await _clearGuest();
     return user;
   }
 
@@ -77,6 +79,7 @@ class ApiAuthRepository implements AuthRepository {
     await _cache.saveToken(payload['token'] as String);
     final user = UserModel.fromMap(payload['user'] as Map<String, dynamic>);
     await _persistUser(user);
+    await _clearGuest();
     return user;
   }
 
@@ -107,6 +110,7 @@ class ApiAuthRepository implements AuthRepository {
       phone: firebaseUser.phoneNumber ?? '',
     );
     await _persistUser(user);
+    await _clearGuest();
     return user;
   }
 
@@ -143,6 +147,7 @@ class ApiAuthRepository implements AuthRepository {
     }
     await _cache.clearToken();
     await _clearUser();
+    await _clearGuest();
     await _googleSignIn.signOut();
     await _firebaseAuth.signOut();
   }
@@ -150,11 +155,28 @@ class ApiAuthRepository implements AuthRepository {
   @override
   Future<UserModel?> checkSession() async {
     final token = await _cache.getToken();
-    if (token == null || token.isEmpty) return null;
+    if (token != null && token.isNotEmpty) {
+      final prefs = await SharedPreferences.getInstance();
+      final userJson = prefs.getString(_userKey);
+      if (userJson != null) {
+        return UserModel.fromMap(json.decode(userJson) as Map<String, dynamic>);
+      }
+    }
+    // No real session — check for guest flag.
     final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString(_userKey);
-    if (userJson == null) return null;
-    return UserModel.fromMap(json.decode(userJson) as Map<String, dynamic>);
+    final isGuest = prefs.getBool(_guestKey) ?? false;
+    if (isGuest) {
+      return const UserModel(uid: 'guest', name: 'زائر', email: '', role: 'guest');
+    }
+    return null;
+  }
+
+  @override
+  Future<void> loginAsGuest() async {
+    await _cache.clearToken();
+    await _clearUser();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_guestKey, true);
   }
 
   Future<void> _persistUser(UserModel user) async {
@@ -182,6 +204,7 @@ class ApiAuthRepository implements AuthRepository {
     await _dio.delete(ApiEndpoints.deleteAccount);
     await _cache.clearToken();
     await _clearUser();
+    await _clearGuest();
     try {
       await _googleSignIn.signOut();
       await _firebaseAuth.signOut();
@@ -193,5 +216,10 @@ class ApiAuthRepository implements AuthRepository {
   Future<void> _clearUser() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_userKey);
+  }
+
+  Future<void> _clearGuest() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_guestKey);
   }
 }

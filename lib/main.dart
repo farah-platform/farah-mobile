@@ -109,6 +109,16 @@ class FarhaApp extends StatelessWidget {
           theme: appTheme,
           initialRoute: AppRoutes.splash,
           routes: AppRoutes.routes,
+          onUnknownRoute: (_) => MaterialPageRoute(
+            builder: (_) => const Scaffold(
+              body: Center(
+                child: Text(
+                  'الصفحة غير موجودة',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );

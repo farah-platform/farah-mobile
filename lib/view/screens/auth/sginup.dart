@@ -9,7 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+  final String userType;
+  const SignUpScreen({super.key, this.userType = 'customer'});
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -57,13 +58,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   void _onSignUpPressed() {
     if (_formKey.currentState!.validate()) {
-      // cityId is null until the screen is rebuilt with a real city picker
-      // in Part B. The region dropdown is kept for UX but value is not sent.
       context.read<AuthCubit>().signUp(
         name: nameController.text.trim(),
         email: emailController.text,
         phone: '$selectedCountryCode${phoneController.text.trim()}',
         password: passwordController.text,
+        userType: widget.userType,
         cityId: null,
       );
     }
@@ -94,10 +94,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
             );
           } else if (state is AuthSuccess) {
-            final route = state.user.role == 'provider'
-                ? AppRoutes.providerHome
-                : AppRoutes.home;
-            Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              AppRoutes.homeForRole(state.user.role),
+              (_) => false,
+            );
           }
         }
       },
