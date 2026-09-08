@@ -1,0 +1,21 @@
+[1mdiff --git a/pubspec.yaml b/pubspec.yaml[m
+[1mindex 55a674b..94650c8 100644[m
+[1m--- a/pubspec.yaml[m
+[1m+++ b/pubspec.yaml[m
+[36m@@ -62,15 +62,8 @@[m [mdev_dependencies:[m
+ # following page: https://dart.dev/tools/pub/pubspec[m
+ [m
+ # The following section is specific to Flutter packages.[m
+[31m-flutter_launcher_icons:[m
+[31m-  android: "launcher_icon"[m
+[31m-  ios: true[m
+[31m-  image_path: "assets/icon/app_icon.png"[m
+[31m-  min_sdk_android: 21[m
+[31m-  adaptive_icon_background: "#7B2146"[m
+[31m-  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"[m
+[31m-[m
+ flutter:[m
+[32m+[m[41m  [m
+   uses-material-design: true[m
+   assets:[m
+     - assets/image/[m
