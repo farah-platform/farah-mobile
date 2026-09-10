@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:farah/data/models/service_model.dart';
-import 'package:farah/data/models/service_provider_model.dart';
 import 'package:farah/data/repositories/service_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -19,9 +18,17 @@ class ServiceDetailCubit extends Cubit<ServiceDetailState> {
 
   Future<void> load(String serviceId) async {
     emit(ServiceDetailLoading());
+
     try {
       final service = await _repo.fetchServiceById(serviceId);
-      final provider = await _repo.fetchProviderProfile(service.providerId);
+
+      final provider = service.provider;
+
+      if (provider == null) {
+        emit(ServiceDetailError('بيانات مزود الخدمة غير متوفرة'));
+        return;
+      }
+
       emit(ServiceDetailLoaded(service: service, provider: provider));
     } catch (e) {
       emit(ServiceDetailError(_mapError(e)));

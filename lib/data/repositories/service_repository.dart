@@ -1,12 +1,16 @@
 import 'package:farah/data/models/service_model.dart';
-import 'package:farah/data/models/service_provider_model.dart';
 
-/// Abstract interface for service / provider data operations.
 abstract class ServiceRepository {
   Future<List<ServiceModel>> fetchServices({
-    String? category,
-    String? region,
-    String? query,
+    int? categoryId,
+    String? categorySlug,
+    String? search,
+    String? sortBy,
+    int? cityId,
+    double? latitude,
+    double? longitude,
+    int? perPage,
+    int? page,
   });
 
   Future<ServiceModel> fetchServiceById(String id);

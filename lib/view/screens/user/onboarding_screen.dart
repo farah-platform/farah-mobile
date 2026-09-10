@@ -92,7 +92,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ],
               ),
             ),
-
             Expanded(
               child: PageView.builder(
                 controller: _pageController,

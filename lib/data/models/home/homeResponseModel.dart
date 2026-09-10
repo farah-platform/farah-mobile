@@ -1,4 +1,3 @@
-import 'package:farah/data/models/user_model.dart' show UserModel;
 import 'service_category_model.dart';
 import 'banner_model.dart';
 import 'provider_model.dart';

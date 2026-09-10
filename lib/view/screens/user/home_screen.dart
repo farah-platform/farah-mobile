@@ -1,8 +1,9 @@
 import 'package:farah/cubits/home/home_cubit.dart';
+import 'package:farah/data/models/home/banner_model.dart';
+import 'package:farah/data/models/home/userhome_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:farah/data/models/home/userhome_model.dart';
 
 class UserHomeScreen extends StatefulWidget {
   const UserHomeScreen({super.key});
@@ -52,7 +53,6 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         },
         child: Scaffold(
           backgroundColor: theme.scaffoldBackgroundColor,
-
           body: SafeArea(
             bottom: false,
             child: BlocBuilder<HomeCubit, HomeState>(
@@ -75,16 +75,11 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               },
             ),
           ),
-
           bottomNavigationBar: _buildBottomNavigation(context),
         ),
       ),
     );
   }
-
-  // =========================================================
-  // ERROR
-  // =========================================================
 
   Widget _buildError(BuildContext context, String message) {
     final theme = Theme.of(context);
@@ -97,17 +92,13 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.error_outline_rounded, size: 55, color: colors.primary),
-
             const SizedBox(height: 12),
-
             Text(
               message,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium,
             ),
-
             const SizedBox(height: 18),
-
             SizedBox(
               width: 150,
               child: ElevatedButton(
@@ -123,23 +114,15 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     );
   }
 
-  // =========================================================
-  // HOME CONTENT
-  // =========================================================
-
   Widget _buildHomeContent(BuildContext context, HomeLoaded state) {
     return RefreshIndicator(
       color: Theme.of(context).colorScheme.primary,
-
       onRefresh: () async {
         await context.read<HomeCubit>().loadHome();
       },
-
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-
         padding: const EdgeInsets.only(top: 10, bottom: 20),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -165,24 +148,20 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             const SizedBox(height: 18),
 
             // Banner
-            if (state.home.featuredPackages.isNotEmpty)
+            if (state.home.banners.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _buildPromoBanner(
-                  context,
-                  state.home.featuredPackages.first,
-                ),
+                child: _buildPromoBanner(context, state.home.banners.first),
               ),
 
-            if (state.home.featuredPackages.isNotEmpty)
-              const SizedBox(height: 20),
+            if (state.home.banners.isNotEmpty) const SizedBox(height: 20),
 
             // Providers
             _buildSectionTitle(context, title: 'مزودين مقترحين لك'),
 
             const SizedBox(height: 8),
 
-            _buildProviders(context, state.home.featuredProviders),
+            _buildProviders(context, state.home.suggestedProviders),
 
             const SizedBox(height: 20),
 
@@ -209,10 +188,6 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     );
   }
 
-  // =========================================================
-  // HEADER
-  // =========================================================
-
   Widget _buildHeader(BuildContext context, UserHomeModel? user) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -235,11 +210,9 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             ),
             child: CircleAvatar(
               backgroundColor: colors.primary.withOpacity(.07),
-
               backgroundImage: user?.avatar != null && user!.avatar!.isNotEmpty
                   ? NetworkImage(user.avatar!)
                   : null,
-
               child: user?.avatar == null || user!.avatar!.isEmpty
                   ? Icon(
                       Icons.person_outline_rounded,
@@ -276,9 +249,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       size: 12,
                       color: colors.onSurface.withOpacity(.45),
                     ),
-
                     const SizedBox(width: 2),
-
                     Text(
                       location,
                       style: theme.textTheme.labelSmall?.copyWith(
@@ -334,10 +305,6 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     );
   }
 
-  // =========================================================
-  // SEARCH
-  // =========================================================
-
   Widget _buildSearchBar(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
@@ -349,22 +316,17 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             child: TextField(
               textAlign: TextAlign.right,
               textDirection: TextDirection.rtl,
-
               style: Theme.of(context).textTheme.bodyMedium,
-
               decoration: InputDecoration(
                 hintText: 'ابحث عن خدمة...',
-
                 hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: colors.onSurface.withOpacity(.4),
                 ),
-
                 prefixIcon: Icon(
                   Icons.search_rounded,
                   color: colors.primary,
                   size: 20,
                 ),
-
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 10,
@@ -389,10 +351,6 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       ],
     );
   }
-
-  // =========================================================
-  // SECTION TITLE
-  // =========================================================
 
   Widget _buildSectionTitle(BuildContext context, {required String title}) {
     final theme = Theme.of(context);
@@ -427,10 +385,6 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     );
   }
 
-  // =========================================================
-  // SERVICES
-  // =========================================================
-
   Widget _buildServices(BuildContext context, List categories) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -457,13 +411,9 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           height: 80,
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-
             scrollDirection: Axis.horizontal,
-
             itemCount: categories.length,
-
             separatorBuilder: (_, __) => const SizedBox(width: 13),
-
             itemBuilder: (context, index) {
               final service = categories[index];
 
@@ -521,25 +471,24 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     return icons[index % icons.length];
   }
 
-  Widget _buildPromoBanner(BuildContext context, dynamic package) {
-    final colors = Theme.of(context).colorScheme;
+  Widget _buildPromoBanner(BuildContext context, BannerModel banner) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return Container(
       height: 116,
       width: double.infinity,
       clipBehavior: Clip.antiAlias,
-
       decoration: BoxDecoration(
         color: colors.primary.withOpacity(.08),
         borderRadius: BorderRadius.circular(16),
       ),
-
       child: Stack(
         fit: StackFit.expand,
         children: [
-          if (package.image != null && package.image!.isNotEmpty)
+          if (banner.image != null && banner.image!.isNotEmpty)
             Image.network(
-              package.image!,
+              banner.image!,
               fit: BoxFit.cover,
               errorBuilder: (_, __, ___) {
                 return Container(color: colors.primary.withOpacity(.08));
@@ -572,7 +521,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               ),
               child: Text(
                 'عرض خاص',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                style: theme.textTheme.labelSmall?.copyWith(
                   color: colors.primary,
                   fontSize: 7,
                   fontWeight: FontWeight.w700,
@@ -589,7 +538,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  package.title,
+                  banner.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: themeText(
@@ -603,7 +552,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 const SizedBox(height: 2),
 
                 Text(
-                  '${package.price.toStringAsFixed(0)} ${package.currency}',
+                  '${banner.price.toStringAsFixed(0)} ${banner.currency}',
                   style: themeText(
                     context,
                     color: Colors.white,
@@ -639,37 +588,28 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       height: 148,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-
         scrollDirection: Axis.horizontal,
-
         itemCount: providers.length,
-
         separatorBuilder: (_, __) => const SizedBox(width: 10),
-
         itemBuilder: (context, index) {
           final provider = providers[index];
 
           return Container(
             width: 112,
-
             decoration: BoxDecoration(
               color: colors.surface,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: colors.outline.withOpacity(.12)),
             ),
-
             child: Padding(
               padding: const EdgeInsets.all(7),
-
               child: Column(
                 children: [
                   Container(
                     width: 62,
                     height: 62,
                     clipBehavior: Clip.antiAlias,
-
                     decoration: const BoxDecoration(shape: BoxShape.circle),
-
                     child: provider.image != null && provider.image!.isNotEmpty
                         ? Image.network(
                             provider.image!,
@@ -765,35 +705,26 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       height: 188,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-
         scrollDirection: Axis.horizontal,
-
         itemCount: featuredPackages.length,
-
         separatorBuilder: (_, __) => const SizedBox(width: 10),
-
         itemBuilder: (context, index) {
           final package = featuredPackages[index];
 
           return Container(
             width: 170,
-
             clipBehavior: Clip.antiAlias,
-
             decoration: BoxDecoration(
               color: colors.surface,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: colors.outline.withOpacity(.12)),
             ),
-
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-
               children: [
                 SizedBox(
                   height: 106,
                   width: double.infinity,
-
                   child: Stack(
                     children: [
                       Positioned.fill(
@@ -825,18 +756,15 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                         Positioned(
                           top: 7,
                           right: 7,
-
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 7,
                               vertical: 3,
                             ),
-
                             decoration: BoxDecoration(
                               color: colors.primary,
                               borderRadius: BorderRadius.circular(6),
                             ),
-
                             child: Text(
                               package.discountBadge.isNotEmpty
                                   ? package.discountBadge
@@ -859,10 +787,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       horizontal: 9,
                       vertical: 7,
                     ),
-
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-
                       children: [
                         Text(
                           package.title,
@@ -950,35 +876,26 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
       height: 230,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-
         scrollDirection: Axis.horizontal,
-
         itemCount: popularServices.length,
-
         separatorBuilder: (_, __) => const SizedBox(width: 11),
-
         itemBuilder: (context, index) {
           final service = popularServices[index];
 
           return Container(
             width: 235,
-
             clipBehavior: Clip.antiAlias,
-
             decoration: BoxDecoration(
               color: colors.surface,
               borderRadius: BorderRadius.circular(15),
               border: Border.all(color: colors.outline.withOpacity(.12)),
             ),
-
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-
               children: [
                 SizedBox(
                   height: 143,
                   width: double.infinity,
-
                   child: service.image != null && service.image!.isNotEmpty
                       ? Image.network(
                           service.image!,
@@ -1008,10 +925,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       horizontal: 10,
                       vertical: 8,
                     ),
-
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-
                       children: [
                         Text(
                           service.title,
@@ -1097,13 +1012,10 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         color: colors.surface,
         border: Border(top: BorderSide(color: colors.outline.withOpacity(.12))),
       ),
-
       child: SafeArea(
         top: false,
-
         child: SizedBox(
           height: 62,
-
           child: Row(
             children: [
               _bottomItem(
@@ -1152,26 +1064,19 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     required bool active,
   }) {
     final theme = Theme.of(context);
-
     final colors = theme.colorScheme;
 
     return Expanded(
       child: InkWell(
         onTap: () {},
-
         splashColor: colors.primary.withOpacity(.05),
-
         highlightColor: Colors.transparent,
-
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-
           children: [
             Icon(
               active ? activeIcon : icon,
-
               size: 21,
-
               color: active
                   ? colors.primary
                   : colors.onSurface.withOpacity(.45),
