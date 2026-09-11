@@ -1,6 +1,7 @@
 import 'package:farah/cubits/home/home_cubit.dart';
 import 'package:farah/data/models/home/banner_model.dart';
 import 'package:farah/data/models/home/userhome_model.dart';
+import 'package:farah/view/widgets/bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -53,6 +54,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         },
         child: Scaffold(
           backgroundColor: theme.scaffoldBackgroundColor,
+
           body: SafeArea(
             bottom: false,
             child: BlocBuilder<HomeCubit, HomeState>(
@@ -75,7 +77,27 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
               },
             ),
           ),
-          bottomNavigationBar: _buildBottomNavigation(context),
+
+          bottomNavigationBar: FarahBottomNavBar(
+            currentIndex: 3,
+            onTap: (index) {
+              if (index == 0) {
+                // حسابي
+              }
+
+              if (index == 1) {
+                // المفضلة
+              }
+
+              if (index == 2) {
+                // طلباتي
+              }
+
+              if (index == 3) {
+                // الرئيسيةا
+              }
+            },
+          ),
         ),
       ),
     );
@@ -1000,102 +1022,6 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildBottomNavigation(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        border: Border(top: BorderSide(color: colors.outline.withOpacity(.12))),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 62,
-          child: Row(
-            children: [
-              _bottomItem(
-                context,
-                icon: Icons.person_outline_rounded,
-                activeIcon: Icons.person_rounded,
-                label: 'حسابي',
-                active: false,
-              ),
-
-              _bottomItem(
-                context,
-                icon: Icons.favorite_border_rounded,
-                activeIcon: Icons.favorite_rounded,
-                label: 'المفضلة',
-                active: false,
-              ),
-
-              _bottomItem(
-                context,
-                icon: Icons.receipt_long_outlined,
-                activeIcon: Icons.receipt_long_rounded,
-                label: 'طلباتي',
-                active: false,
-              ),
-
-              _bottomItem(
-                context,
-                icon: Icons.home_outlined,
-                activeIcon: Icons.home_rounded,
-                label: 'الرئيسية',
-                active: true,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _bottomItem(
-    BuildContext context, {
-    required IconData icon,
-    required IconData activeIcon,
-    required String label,
-    required bool active,
-  }) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return Expanded(
-      child: InkWell(
-        onTap: () {},
-        splashColor: colors.primary.withOpacity(.05),
-        highlightColor: Colors.transparent,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              active ? activeIcon : icon,
-              size: 21,
-              color: active
-                  ? colors.primary
-                  : colors.onSurface.withOpacity(.45),
-            ),
-
-            const SizedBox(height: 3),
-
-            Text(
-              label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                fontSize: 8.5,
-                color: active
-                    ? colors.primary
-                    : colors.onSurface.withOpacity(.45),
-                fontWeight: active ? FontWeight.w700 : FontWeight.w400,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

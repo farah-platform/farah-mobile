@@ -6,43 +6,49 @@ import 'package:farah/cubits/booking/booking_cubit.dart';
 import 'package:farah/cubits/home/home_cubit.dart';
 import 'package:farah/cubits/notification/notification_cubit.dart';
 import 'package:farah/cubits/profile/profile_cubit.dart';
+import 'package:farah/cubits/service/service_cubit.dart';
 
 import 'package:farah/data/datasources/local/cache_datasource.dart';
-
 import 'package:farah/data/repositories/api_auth_repository.dart';
 import 'package:farah/data/repositories/api_booking_repository.dart';
 import 'package:farah/data/repositories/api_notification_repository.dart';
 import 'package:farah/data/repositories/api_profile_repository.dart';
 import 'package:farah/data/repositories/api_service_repository.dart';
+
 import 'package:farah/data/repositories/auth_repository.dart';
 import 'package:farah/data/repositories/booking_repository.dart';
 import 'package:farah/data/repositories/home_repostory.dart';
 import 'package:farah/data/repositories/notification_repository.dart';
 import 'package:farah/data/repositories/profile_repository.dart';
 import 'package:farah/data/repositories/service_repository.dart';
+
 import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/firebase_options.dart';
-import 'package:firebase_core/firebase_core.dart';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final cache = CacheDatasource();
-
   final dioClient = DioClient(cache);
+
   final AuthRepository authRepository = ApiAuthRepository(
     dioClient: dioClient,
     cache: cache,
   );
+
   final ServiceRepository serviceRepository = ApiServiceRepository(
     dioClient: dioClient,
   );
+
   final HomeRepository homeRepository = HomeRepository(dioClient);
+
   final BookingRepository bookingRepository = ApiBookingRepository(
     dioClient: dioClient,
   );
@@ -96,6 +102,9 @@ class FarhaApp extends StatelessWidget {
           // Home
           BlocProvider(create: (_) => HomeCubit(homeRepository)),
 
+          // Services
+          BlocProvider(create: (_) => ServiceCubit(serviceRepository)),
+
           // Booking
           BlocProvider(create: (_) => BookingCubit(bookingRepository)),
 
@@ -109,21 +118,15 @@ class FarhaApp extends StatelessWidget {
         ],
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
-
           locale: const Locale('ar'),
-
           supportedLocales: const [Locale('ar')],
-
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-
           theme: appTheme,
-
           initialRoute: AppRoutes.splash,
-
           routes: AppRoutes.routes,
         ),
       ),
