@@ -1,3 +1,4 @@
+import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/cubits/home/home_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,6 +13,7 @@ class UserHomeScreen extends StatefulWidget {
 }
 
 class _UserHomeScreenState extends State<UserHomeScreen> {
+  int _currentIndex = 0; // 0=home, 1=favorites, 2=orders
   DateTime? _lastBackPressed;
 
   @override
@@ -53,27 +55,37 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         child: Scaffold(
           backgroundColor: theme.scaffoldBackgroundColor,
 
-          body: SafeArea(
-            bottom: false,
-            child: BlocBuilder<HomeCubit, HomeState>(
-              builder: (context, state) {
-                if (state is HomeLoading) {
-                  return Center(
-                    child: CircularProgressIndicator(color: colors.primary),
-                  );
-                }
+          body: IndexedStack(
+            index: _currentIndex,
+            children: [
+              // Tab 0 — الرئيسية
+              SafeArea(
+                bottom: false,
+                child: BlocBuilder<HomeCubit, HomeState>(
+                  builder: (context, state) {
+                    if (state is HomeLoading) {
+                      return Center(
+                        child: CircularProgressIndicator(color: colors.primary),
+                      );
+                    }
 
-                if (state is HomeError) {
-                  return _buildError(context, state.message);
-                }
+                    if (state is HomeError) {
+                      return _buildError(context, state.message);
+                    }
 
-                if (state is HomeLoaded) {
-                  return _buildHomeContent(context, state);
-                }
+                    if (state is HomeLoaded) {
+                      return _buildHomeContent(context, state);
+                    }
 
-                return const SizedBox.shrink();
-              },
-            ),
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
+              // Tab 1 — المفضلة (placeholder)
+              const Center(child: Text('المفضلة')),
+              // Tab 2 — طلباتي (placeholder)
+              const Center(child: Text('طلباتي')),
+            ],
           ),
 
           bottomNavigationBar: _buildBottomNavigation(context),
@@ -1112,6 +1124,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 activeIcon: Icons.person_rounded,
                 label: 'حسابي',
                 active: false,
+                onTap: () => Navigator.pushNamed(context, AppRoutes.settings),
               ),
 
               _bottomItem(
@@ -1119,7 +1132,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 icon: Icons.favorite_border_rounded,
                 activeIcon: Icons.favorite_rounded,
                 label: 'المفضلة',
-                active: false,
+                active: _currentIndex == 1,
+                onTap: () => setState(() => _currentIndex = 1),
               ),
 
               _bottomItem(
@@ -1127,7 +1141,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 icon: Icons.receipt_long_outlined,
                 activeIcon: Icons.receipt_long_rounded,
                 label: 'طلباتي',
-                active: false,
+                active: _currentIndex == 2,
+                onTap: () => setState(() => _currentIndex = 2),
               ),
 
               _bottomItem(
@@ -1135,7 +1150,8 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 icon: Icons.home_outlined,
                 activeIcon: Icons.home_rounded,
                 label: 'الرئيسية',
-                active: true,
+                active: _currentIndex == 0,
+                onTap: () => setState(() => _currentIndex = 0),
               ),
             ],
           ),
@@ -1150,6 +1166,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
     required IconData activeIcon,
     required String label,
     required bool active,
+    required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
 
@@ -1157,7 +1174,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
     return Expanded(
       child: InkWell(
-        onTap: () {},
+        onTap: onTap,
 
         splashColor: colors.primary.withOpacity(.05),
 

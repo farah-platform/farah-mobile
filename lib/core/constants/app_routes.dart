@@ -1,3 +1,8 @@
+import 'package:farah/cubits/auth/auth_cubit.dart';
+import 'package:farah/cubits/change_password/change_password_cubit.dart';
+import 'package:farah/cubits/profile_edit/profile_edit_cubit.dart';
+import 'package:farah/data/repositories/auth_repository.dart';
+import 'package:farah/data/repositories/profile_repository.dart';
 import 'package:farah/view/screens/auth/forgot_password.dart';
 import 'package:farah/view/screens/auth/forgot_password_phone.dart';
 import 'package:farah/view/screens/auth/login.dart';
@@ -8,8 +13,18 @@ import 'package:farah/view/screens/auth/terms_and_conditions.dart';
 import 'package:farah/view/screens/auth/verify_code.dart';
 import 'package:farah/view/screens/provider/provider_home_screen.dart';
 import 'package:farah/view/screens/service1/service_info_screen.dart';
+import 'package:farah/view/screens/user/change_password_screen.dart';
+import 'package:farah/view/screens/user/favorites_screen.dart';
+import 'package:farah/view/screens/user/help_center_screen.dart';
 import 'package:farah/view/screens/user/home_screen.dart';
+import 'package:farah/view/screens/user/profile_edit_screen.dart';
+import 'package:farah/view/screens/user/settings_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+// Dead route constants removed (screens not yet built):
+//   search, booking, orders, profile,
+//   providerOrders, providerProfile, notifications, serviceDetail
 
 class AppRoutes {
   static const String splash = '/';
@@ -22,15 +37,42 @@ class AppRoutes {
   static const String terms = '/terms';
   static const String serviceInfo = '/service-info';
   static const String home = '/home';
-  static const String search = '/search';
-  static const String booking = '/booking';
-  static const String orders = '/orders';
-  static const String profile = '/profile';
   static const String providerHome = '/provider/home';
-  static const String providerOrders = '/provider/orders';
-  static const String providerProfile = '/provider/profile';
-  static const String notifications = '/notifications';
-  static const String serviceDetail = '/service-detail';
+  static const String settings = '/settings';
+  static const String profileEdit = '/settings/profile-edit';
+  static const String changePassword = '/settings/change-password';
+  static const String helpCenter = '/settings/help';
+  static const String favorites = '/settings/favorites';
+
+  /// Returns the correct home route for the given server role string.
+  static String homeForRole(String? role) {
+    return role == 'provider' ? providerHome : home;
+  }
+
+  /// Shows a dialog telling the guest they must log in, then optionally
+  /// navigates to the login screen.
+  static Future<void> showGuestLoginDialog(BuildContext context) async {
+    final nav = Navigator.of(context);
+    final goLogin = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('سجّل الدخول للمتابعة'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('تسجيل الدخول'),
+          ),
+        ],
+      ),
+    );
+    if (goLogin == true && context.mounted) {
+      nav.pushNamedAndRemoveUntil(login, (_) => false);
+    }
+  }
 
   static Map<String, WidgetBuilder> get routes => {
     splash: (_) => const SplashScreen(),
@@ -42,7 +84,78 @@ class AppRoutes {
     newPassword: (_) => const NewPasswordScreen(),
     terms: (_) => const TermsAndConditionsScreen(),
     serviceInfo: (_) => const ServiceInfoScreen(),
-    home: (_) => const UserHomeScreen(),
-    providerHome: (_) => const ProviderHomeScreen(),
+    // Customer + guest routes — providers are redirected to providerHome.
+    home: (_) => const _CustomerGuard(child: UserHomeScreen()),
+    settings: (_) => const _CustomerGuard(child: SettingsScreen()),
+    profileEdit: (ctx) => _CustomerGuard(
+      child: BlocProvider(
+        create: (c) => ProfileEditCubit(c.read<ProfileRepository>()),
+        child: const ProfileEditScreen(),
+      ),
+    ),
+    changePassword: (ctx) => _CustomerGuard(
+      child: BlocProvider(
+        create: (c) => ChangePasswordCubit(c.read<AuthRepository>()),
+        child: const ChangePasswordScreen(),
+      ),
+    ),
+    helpCenter: (_) => const _CustomerGuard(child: HelpCenterScreen()),
+    favorites: (_) => const _CustomerGuard(child: FavoritesScreen()),
+    // Provider-only routes — customers/guests are redirected to home.
+    providerHome: (_) => const _ProviderGuard(child: ProviderHomeScreen()),
   };
+}
+
+/// Redirects providers away from customer-only screens.
+class _CustomerGuard extends StatelessWidget {
+  final Widget child;
+  const _CustomerGuard({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, state) {
+        if (state is AuthSuccess && state.user.role == 'provider') {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                AppRoutes.providerHome,
+                (_) => false,
+              );
+            }
+          });
+          return const SizedBox.shrink();
+        }
+        return child;
+      },
+    );
+  }
+}
+
+/// Redirects non-providers away from provider-only screens.
+class _ProviderGuard extends StatelessWidget {
+  final Widget child;
+  const _ProviderGuard({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, state) {
+        if (state is! AuthSuccess || state.user.role != 'provider') {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                AppRoutes.home,
+                (_) => false,
+              );
+            }
+          });
+          return const SizedBox.shrink();
+        }
+        return child;
+      },
+    );
+  }
 }

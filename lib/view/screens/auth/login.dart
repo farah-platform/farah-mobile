@@ -47,10 +47,11 @@ class _LoginScreenState extends State<LoginScreen> {
             context,
           ).showSnackBar(SnackBar(content: Text(state.message)));
         } else if (state is AuthSuccess) {
-          final route = state.user.role == 'provider'
-              ? AppRoutes.providerHome
-              : AppRoutes.home;
-          Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            AppRoutes.homeForRole(state.user.role),
+            (_) => false,
+          );
         }
       },
       child: Scaffold(

@@ -44,10 +44,18 @@ class _SplashScreenState extends State<SplashScreen> {
       listener: (context, state) {
         if (state is AuthSuccess) {
           setState(() => _sessionFound = true);
-          final route = state.user.role == 'provider'
-              ? AppRoutes.providerHome
-              : AppRoutes.home;
-          Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            AppRoutes.homeForRole(state.user.role),
+            (_) => false,
+          );
+        } else if (state is AuthGuest) {
+          setState(() => _sessionFound = true);
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            AppRoutes.home,
+            (_) => false,
+          );
         }
       },
       child: Scaffold(

@@ -32,4 +32,16 @@ abstract class AuthRepository {
 
   /// Returns the currently signed-in user, or null if no session exists.
   Future<UserModel?> checkSession();
+
+  /// Change the authenticated user's password.
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
+
+  /// Permanently delete the authenticated user's account.
+  Future<void> deleteAccount();
+
+  /// Persist a guest session flag (no server call, no token).
+  Future<void> loginAsGuest();
 }
