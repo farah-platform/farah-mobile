@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:farah/core/network/dio_client.dart';
 import 'package:farah/data/models/service_model.dart';
+import 'package:farah/data/models/service_provider_model.dart';
 import 'package:farah/data/repositories/service_repository.dart';
 
 class ApiServiceRepository implements ServiceRepository {
@@ -58,7 +59,7 @@ class ApiServiceRepository implements ServiceRepository {
 
     final data = res.data as Map<String, dynamic>;
 
-    return ServiceProviderModel.fromJson(data['data'] as Map<String, dynamic>);
+    return ServiceProviderModel.fromMap(data['data'] as Map<String, dynamic>);
   }
 
   @override

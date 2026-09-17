@@ -7,8 +7,10 @@ import 'package:farah/cubits/home/home_cubit.dart';
 import 'package:farah/cubits/notification/notification_cubit.dart';
 import 'package:farah/cubits/profile/profile_cubit.dart';
 import 'package:farah/cubits/service/service_cubit.dart';
+import 'package:farah/cubits/service_detail/service_detail_cubit.dart';
 
 import 'package:farah/data/datasources/local/cache_datasource.dart';
+
 import 'package:farah/data/repositories/api_auth_repository.dart';
 import 'package:farah/data/repositories/api_booking_repository.dart';
 import 'package:farah/data/repositories/api_notification_repository.dart';
@@ -24,7 +26,7 @@ import 'package:farah/data/repositories/service_repository.dart';
 
 import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/firebase_options.dart';
-
+import 'package:farah/view/screens/user/service_detail_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -36,6 +38,7 @@ Future<void> main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final cache = CacheDatasource();
+
   final dioClient = DioClient(cache);
 
   final AuthRepository authRepository = ApiAuthRepository(
@@ -118,16 +121,41 @@ class FarhaApp extends StatelessWidget {
         ],
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
+
           locale: const Locale('ar'),
+
           supportedLocales: const [Locale('ar')],
+
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
+
           theme: appTheme,
+
           initialRoute: AppRoutes.splash,
+
           routes: AppRoutes.routes,
+
+          // Service Details
+          onGenerateRoute: (settings) {
+            if (settings.name == AppRoutes.serviceDetail) {
+              final serviceId = settings.arguments as String;
+
+              return MaterialPageRoute(
+                builder: (_) => BlocProvider(
+                  create: (_) =>
+                      ServiceDetailCubit(serviceRepository)..load(serviceId),
+                  child: ServiceDetailsScreen(
+                    serviceId: int.tryParse(serviceId.toString()),
+                  ),
+                ),
+              );
+            }
+
+            return null;
+          },
         ),
       ),
     );

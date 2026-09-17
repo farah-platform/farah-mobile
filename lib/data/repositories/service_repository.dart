@@ -1,4 +1,5 @@
 import 'package:farah/data/models/service_model.dart';
+import 'package:farah/data/models/service_provider_model.dart';
 
 abstract class ServiceRepository {
   Future<List<ServiceModel>> fetchServices({

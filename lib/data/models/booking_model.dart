@@ -31,20 +31,40 @@ class BookingModel extends Equatable {
     required this.createdAt,
   });
 
-  factory BookingModel.fromMap(Map<String, dynamic> map) => BookingModel(
-    id: map['id'] as String,
-    userId: map['user_id'] as String,
-    serviceId: map['service_id'] as String,
-    serviceName: map['service_name'] as String,
-    providerId: map['provider_id'] as String,
-    providerName: map['provider_name'] as String,
-    category: map['category'] as String,
-    eventDate: DateTime.parse(map['event_date'] as String),
-    status: BookingStatus.values.byName(map['status'] as String),
-    totalPrice: (map['total_price'] as num).toDouble(),
-    notes: map['notes'] as String?,
-    createdAt: DateTime.parse(map['created_at'] as String),
-  );
+  factory BookingModel.fromMap(Map<String, dynamic> map) {
+    return BookingModel(
+      id: map['id']?.toString() ?? '',
+      userId: (map['user_id'] ?? map['userId'])?.toString() ?? '',
+      serviceId: (map['service_id'] ?? map['serviceId'])?.toString() ?? '',
+      serviceName:
+          (map['service_name'] ?? map['serviceName'] ?? map['title'])
+              ?.toString() ??
+          '',
+      providerId: (map['provider_id'] ?? map['providerId'])?.toString() ?? '',
+      providerName:
+          (map['provider_name'] ?? map['providerName'] ?? '')?.toString() ?? '',
+      category:
+          (map['category_name'] ?? map['category'] ?? '')?.toString() ?? '',
+      eventDate: map['event_date'] != null
+          ? DateTime.tryParse(map['event_date'].toString()) ?? DateTime.now()
+          : (map['booking_date'] != null
+                ? DateTime.tryParse(map['booking_date'].toString()) ??
+                      DateTime.now()
+                : DateTime.now()),
+      status: _parseStatus(map['status']),
+      totalPrice:
+          (map['total_price'] as num?)?.toDouble() ??
+          (map['total_amount'] as num?)?.toDouble() ??
+          0.0,
+      notes: map['notes'] as String?,
+      createdAt: map['created_at'] != null
+          ? DateTime.tryParse(map['created_at'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+    );
+  }
+
+  factory BookingModel.fromJson(Map<String, dynamic> json) =>
+      BookingModel.fromMap(json);
 
   Map<String, dynamic> toMap() => {
     'id': id,
@@ -60,6 +80,17 @@ class BookingModel extends Equatable {
     'notes': notes,
     'created_at': createdAt.toIso8601String(),
   };
+
+  Map<String, dynamic> toJson() => toMap();
+
+  static BookingStatus _parseStatus(dynamic rawStatus) {
+    if (rawStatus == null) return BookingStatus.pending;
+    final clean = rawStatus.toString().trim().toLowerCase();
+    return BookingStatus.values.firstWhere(
+      (e) => e.name.toLowerCase() == clean,
+      orElse: () => BookingStatus.pending,
+    );
+  }
 
   @override
   List<Object?> get props => [id];

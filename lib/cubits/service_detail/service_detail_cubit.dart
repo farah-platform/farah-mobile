@@ -5,12 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'service_detail_state.dart';
 
-/// Provide this cubit at the service-detail route level, not at app root.
-/// Example:
-///   BlocProvider(
-///     create: (_) => ServiceDetailCubit(repo)..load(serviceId),
-///     child: ServiceDetailScreen(),
-///   )
 class ServiceDetailCubit extends Cubit<ServiceDetailState> {
   final ServiceRepository _repo;
 
@@ -21,15 +15,7 @@ class ServiceDetailCubit extends Cubit<ServiceDetailState> {
 
     try {
       final service = await _repo.fetchServiceById(serviceId);
-
-      final provider = service.provider;
-
-      if (provider == null) {
-        emit(ServiceDetailError('بيانات مزود الخدمة غير متوفرة'));
-        return;
-      }
-
-      emit(ServiceDetailLoaded(service: service, provider: provider));
+      emit(ServiceDetailLoaded(service: service));
     } catch (e) {
       emit(ServiceDetailError(_mapError(e)));
     }
@@ -40,6 +26,10 @@ class ServiceDetailCubit extends Cubit<ServiceDetailState> {
       if (e.response?.statusCode == 404) return 'الخدمة غير موجودة';
       if (e.type == DioExceptionType.connectionError) {
         return 'تحقق من اتصالك بالإنترنت';
+      }
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        return 'انتهت مهلة الاتصال، يرجى المحاولة مجدداً';
       }
     }
     return 'حدث خطأ، يرجى المحاولة مجدداً';
