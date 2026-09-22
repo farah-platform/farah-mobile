@@ -1,0 +1,203 @@
+import 'package:farah/view/screens/auth/sginup.dart';
+import 'package:flutter/material.dart';
+
+class OnboardingScreen2 extends StatefulWidget {
+  const OnboardingScreen2({super.key});
+
+  @override
+  State<OnboardingScreen2> createState() => _OnboardingScreenState();
+}
+
+class _OnboardingItem {
+  final String title;
+  final String subtitle;
+  final String imagePath;
+
+  const _OnboardingItem({
+    required this.title,
+    required this.subtitle,
+    required this.imagePath,
+  });
+}
+
+class _OnboardingScreenState extends State<OnboardingScreen2> {
+  final PageController _pageController = PageController();
+  int currentPage = 0;
+
+  final List<_OnboardingItem> items = const [
+    _OnboardingItem(
+      title: '   وسّع نطاق عملك ووصولك  ',
+      subtitle: 'اعرض خدماتك لآلاف العملاء الباحثين عنك  ',
+      imagePath: 'assets/image/onb1.png',
+    ),
+    _OnboardingItem(
+      title: ' تحكم بجدول أعمالك \n بكل سهولة ',
+      subtitle: 'استقبل الحجوزات ونظّم مواعيدك من مكان واحد',
+      imagePath: 'assets/image/onb2.png',
+    ),
+    _OnboardingItem(
+      title: 'اربح أكتر وابنِ سمعة موثوقة',
+      subtitle: ' استلم أرباحك بسهولة وتابع تقييمات عملائك',
+      imagePath: 'assets/image/onb3.png',
+    ),
+  ];
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onSkipPressed() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const SignUpScreen(userType: 'provider'),
+      ),
+    );
+  }
+
+  void _onNextPressed() {
+    if (currentPage == items.length - 1) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const SignUpScreen(userType: 'provider'),
+        ),
+      );
+    } else {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
+    final isLastPage = currentPage == items.length - 1;
+
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 8, right: 20, left: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  TextButton(
+                    onPressed: _onSkipPressed,
+                    child: Text(
+                      'تخطي',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Expanded(
+              child: PageView.builder(
+                controller: _pageController,
+                itemCount: items.length,
+                onPageChanged: (index) {
+                  setState(() => currentPage = index);
+                },
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 20),
+                        Text(
+                          item.title,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            color: primary,
+                            fontWeight: FontWeight.bold,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          item.subtitle,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: Colors.grey.shade700,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        Expanded(
+                          child: Center(
+                            child: Image.asset(
+                              item.imagePath,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Icon(
+                                    Icons.image_outlined,
+                                    size: 100,
+                                    color: Colors.grey.shade300,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(items.length, (index) {
+                final isActive = index == currentPage;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  height: 8,
+                  width: isActive ? 24 : 8,
+                  decoration: BoxDecoration(
+                    color: isActive ? primary : primary.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                );
+              }),
+            ),
+
+            const SizedBox(height: 30),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: isLastPage
+                      ? () => Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const SignUpScreen(userType: 'provider'),
+                            ),
+                          )
+                      : _onNextPressed,
+                  child: Text(isLastPage ? 'ابدأ الان' : 'التالي'),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 30),
+          ],
+        ),
+      ),
+    );
+  }
+}
