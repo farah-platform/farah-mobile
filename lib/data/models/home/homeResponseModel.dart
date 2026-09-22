@@ -1,10 +1,9 @@
-import 'package:farah/data/models/user_model.dart' show UserModel;
-import 'service_category_model.dart';
-import 'banner_model.dart';
-import 'provider_model.dart';
-import 'package_model.dart';
-import 'popular_service_model.dart';
-import 'userhome_model.dart';
+import 'package:farah/data/models/home/userhome_model.dart';
+import 'package:farah/data/models/home/service_category_model.dart';
+import 'package:farah/data/models/home/banner_model.dart';
+import 'package:farah/data/models/home/provider_model.dart';
+import 'package:farah/data/models/home/package_model.dart';
+import 'package:farah/data/models/home/popular_service_model.dart';
 
 class HomeResponseModel {
   final UserHomeModel? user;
@@ -13,8 +12,8 @@ class HomeResponseModel {
   final List<ProviderModel> suggestedProviders;
   final List<PackageModel> featuredPackages;
   final List<PopularServiceModel> mostPopular;
-  final List<ProviderModel> featuredProviders;
-  final List<PopularServiceModel> services;
+  final List<dynamic> featuredProviders;
+  final List<dynamic> services;
 
   HomeResponseModel({
     this.user,
@@ -30,34 +29,46 @@ class HomeResponseModel {
   factory HomeResponseModel.fromJson(Map<String, dynamic> json) {
     return HomeResponseModel(
       user: json['user'] != null ? UserHomeModel.fromJson(json['user']) : null,
-
-      categories: (json['categories'] as List? ?? [])
-          .map((e) => ServiceCategoryModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-
-      banners: (json['banners'] as List? ?? [])
-          .map((e) => BannerModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-
-      suggestedProviders: (json['suggested_providers'] as List? ?? [])
-          .map((e) => ProviderModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-
-      featuredPackages: (json['featured_packages'] as List? ?? [])
-          .map((e) => PackageModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-
-      mostPopular: (json['most_popular'] as List? ?? [])
-          .map((e) => PopularServiceModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-
-      featuredProviders: (json['featured_providers'] as List? ?? [])
-          .map((e) => ProviderModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-
-      services: (json['services'] as List? ?? [])
-          .map((e) => PopularServiceModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      categories:
+          (json['categories'] as List?)
+              ?.where((e) => e is Map<String, dynamic> && e['id'] != null)
+              .map((e) => ServiceCategoryModel.fromJson(e))
+              .toList() ??
+          [],
+      banners:
+          (json['banners'] as List?)
+              ?.where((e) => e is Map<String, dynamic> && e['id'] != null)
+              .map((e) => BannerModel.fromJson(e))
+              .toList() ??
+          [],
+      suggestedProviders:
+          (json['suggested_providers'] as List?)
+              ?.where((e) => e is Map<String, dynamic> && e['id'] != null)
+              .map((e) => ProviderModel.fromJson(e))
+              .toList() ??
+          [],
+      featuredPackages:
+          (json['featured_packages'] as List?)
+              ?.where((e) => e is Map<String, dynamic> && e['id'] != null)
+              .map((e) => PackageModel.fromJson(e))
+              .toList() ??
+          [],
+      mostPopular:
+          (json['most_popular'] as List?)
+              ?.where((e) => e is Map<String, dynamic> && e['id'] != null)
+              .map((e) => PopularServiceModel.fromJson(e))
+              .toList() ??
+          [],
+      featuredProviders:
+          (json['featured_providers'] as List?)
+              ?.where((e) => e is Map && e.isNotEmpty)
+              .toList() ??
+          [],
+      services:
+          (json['services'] as List?)
+              ?.where((e) => e is Map && e.isNotEmpty)
+              .toList() ??
+          [],
     );
   }
 }

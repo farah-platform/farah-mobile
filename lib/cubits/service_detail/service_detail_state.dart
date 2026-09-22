@@ -8,11 +8,12 @@ final class ServiceDetailLoading extends ServiceDetailState {}
 
 final class ServiceDetailLoaded extends ServiceDetailState {
   final ServiceModel service;
-  final ServiceProviderModel provider;
-  ServiceDetailLoaded({required this.service, required this.provider});
+
+  ServiceDetailLoaded({required this.service});
 }
 
 final class ServiceDetailError extends ServiceDetailState {
   final String message;
+
   ServiceDetailError(this.message);
 }

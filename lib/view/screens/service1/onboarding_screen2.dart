@@ -49,22 +49,26 @@ class _OnboardingScreenState extends State<OnboardingScreen2> {
   }
 
   void _onSkipPressed() {
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (_) => const SignUpScreen(userType: 'provider'),
       ),
     );
+
   }
 
   void _onNextPressed() {
     if (currentPage == items.length - 1) {
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (_) => const SignUpScreen(userType: 'provider'),
         ),
       );
+
     } else {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
@@ -201,3 +205,4 @@ class _OnboardingScreenState extends State<OnboardingScreen2> {
     );
   }
 }
+

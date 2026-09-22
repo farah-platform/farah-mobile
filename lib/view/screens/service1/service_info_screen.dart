@@ -124,10 +124,6 @@ class _ServiceInfoScreenState extends State<ServiceInfoScreen> {
     final isFormValid = _formKey.currentState!.validate();
 
     if (isFormValid && categoriesError == null && idImageError == null) {
-      // لما يترابط الـ Cubit، التنقل لازم يصير عن طريق BlocListener
-      // (مش Navigator مباشرة زي تحت) بعد استجابة نجاح من السيرفر
-
-      // تنقل مؤقت لحد ما يترابط الـ Cubit:
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => RequestUnderReviewScreen()),

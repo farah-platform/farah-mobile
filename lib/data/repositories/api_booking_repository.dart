@@ -1,44 +1,50 @@
 import 'package:dio/dio.dart';
 import 'package:farah/core/network/dio_client.dart';
 import 'package:farah/data/models/booking_model.dart';
+import 'package:farah/data/models/home/booking_request_model.dart';
 import 'package:farah/data/repositories/booking_repository.dart';
 
-/// Real backend implementation of [BookingRepository].
 class ApiBookingRepository implements BookingRepository {
-  final Dio _dio;
+  final DioClient _dioClient;
 
-  ApiBookingRepository({required DioClient dioClient}) : _dio = dioClient.dio;
+  ApiBookingRepository({required DioClient dioClient}) : _dioClient = dioClient;
+
+  Dio get _dio => _dioClient.dio;
 
   @override
-  Future<BookingModel> createBooking({
-    required String serviceId,
-    required DateTime eventDate,
-    String? notes,
-  }) async {
-    final res = await _dio.post(
-      '/bookings',
-      data: {
-        'service_id': serviceId,
-        'event_date': eventDate.toIso8601String(),
-        if (notes != null) 'notes': notes,
-      },
-    );
-    return BookingModel.fromMap(res.data['data'] as Map<String, dynamic>);
+  Future<BookingModel> createBooking(BookingRequestModel request) async {
+    final res = await _dio.post('/bookings', data: request.toJson());
+
+    final rawData = res.data is Map<String, dynamic>
+        ? (res.data['data'] ?? res.data)
+        : res.data;
+
+    return BookingModel.fromJson(rawData as Map<String, dynamic>);
   }
 
   @override
   Future<List<BookingModel>> fetchUserBookings() async {
     final res = await _dio.get('/bookings');
-    return (res.data['data'] as List)
-        .map((e) => BookingModel.fromMap(e as Map<String, dynamic>))
+    final list = res.data is Map<String, dynamic>
+        ? (res.data['data'] as List? ?? [])
+        : (res.data as List? ?? []);
+
+    return list
+        .whereType<Map<String, dynamic>>()
+        .map((e) => BookingModel.fromJson(e))
         .toList();
   }
 
   @override
   Future<List<BookingModel>> fetchProviderBookings() async {
     final res = await _dio.get('/provider/bookings');
-    return (res.data['data'] as List)
-        .map((e) => BookingModel.fromMap(e as Map<String, dynamic>))
+    final list = res.data is Map<String, dynamic>
+        ? (res.data['data'] as List? ?? [])
+        : (res.data as List? ?? []);
+
+    return list
+        .whereType<Map<String, dynamic>>()
+        .map((e) => BookingModel.fromJson(e))
         .toList();
   }
 

@@ -1,10 +1,11 @@
 import 'dart:ui';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/cubits/auth/auth_cubit.dart';
 import 'package:farah/view/widgets/user_type_card.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -22,19 +23,28 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
 
-    // Restore session before revealing the type-selection card.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<AuthCubit>().checkSession();
+      if (mounted) {
+        context.read<AuthCubit>().checkSession();
+      }
     });
 
+    // Show the text after 3 seconds
     Future.delayed(const Duration(seconds: 3), () {
       if (!mounted) return;
-      setState(() => showCard = true);
+
+      setState(() {
+        showText = true;
+      });
     });
 
+    // Show the user type card after 5 seconds
     Future.delayed(const Duration(seconds: 5), () {
       if (!mounted) return;
-      setState(() => showText = true);
+
+      setState(() {
+        showCard = true;
+      });
     });
   }
 
@@ -67,6 +77,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Image.asset("assets/image/logo1.png", width: 180),
+
                   const SizedBox(height: 20),
 
                   AnimatedSlide(
@@ -76,7 +87,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       opacity: showText ? 1 : 0,
                       duration: const Duration(milliseconds: 800),
                       child: const Text(
-                        "فرحتنا",
+                        "??????",
                         style: TextStyle(
                           color: Color.fromARGB(255, 228, 215, 175),
                           fontSize: 34,
@@ -89,20 +100,18 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
 
-            // Blur overlay — hidden once a session is found.
+            // Blur overlay
             if (showCard && !_sessionFound)
               AnimatedOpacity(
                 opacity: 1,
                 duration: const Duration(milliseconds: 500),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-                  child: Container(
-                    color: Colors.black.withValues(alpha: .15),
-                  ),
+                  child: Container(color: Colors.black.withValues(alpha: .15)),
                 ),
               ),
 
-            // User-type card — slides up after delay, hidden if session found.
+            // User type card
             AnimatedPositioned(
               duration: const Duration(milliseconds: 600),
               curve: Curves.easeOut,
