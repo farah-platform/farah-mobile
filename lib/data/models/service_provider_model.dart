@@ -12,6 +12,11 @@ class ServiceProviderModel extends Equatable {
   final int reviewsCount;
   final bool isVerified;
 
+  final String? bankAccount;
+  final String? iban;
+  final String? jawwalPay;
+  final String? palPay;
+
   const ServiceProviderModel({
     required this.uid,
     required this.name,
@@ -23,20 +28,28 @@ class ServiceProviderModel extends Equatable {
     required this.rating,
     required this.reviewsCount,
     required this.isVerified,
+    this.bankAccount,
+    this.iban,
+    this.jawwalPay,
+    this.palPay,
   });
 
   factory ServiceProviderModel.fromMap(Map<String, dynamic> map) =>
       ServiceProviderModel(
-        uid: map['uid'] as String,
-        name: map['name'] as String,
-        phone: map['phone'] as String,
-        region: map['region'] as String,
+        uid: map['uid']?.toString() ?? '',
+        name: map['name'] as String? ?? '',
+        phone: map['phone'] as String? ?? '',
+        region: map['region'] as String? ?? '',
         description: map['description'] as String? ?? '',
         coverImageUrl: map['cover_image_url'] as String? ?? '',
         categories: List<String>.from(map['categories'] as List? ?? []),
         rating: (map['rating'] as num?)?.toDouble() ?? 0.0,
         reviewsCount: map['reviews_count'] as int? ?? 0,
         isVerified: map['is_verified'] as bool? ?? false,
+        bankAccount: map['bank_account'] as String?,
+        iban: map['iban'] as String?,
+        jawwalPay: map['jawwal_pay'] as String?,
+        palPay: map['pal_pay'] as String?,
       );
 
   Map<String, dynamic> toMap() => {
@@ -50,8 +63,21 @@ class ServiceProviderModel extends Equatable {
     'rating': rating,
     'reviews_count': reviewsCount,
     'is_verified': isVerified,
+    'bank_account': bankAccount,
+    'iban': iban,
+    'jawwal_pay': jawwalPay,
+    'pal_pay': palPay,
   };
 
   @override
-  List<Object?> get props => [uid];
+  List<Object?> get props => [
+    uid,
+    name,
+    phone,
+    region,
+    bankAccount,
+    iban,
+    jawwalPay,
+    palPay,
+  ];
 }

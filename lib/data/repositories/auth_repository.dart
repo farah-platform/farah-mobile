@@ -1,3 +1,4 @@
+import 'package:farah/data/models/auth/city_model.dart';
 import 'package:farah/data/models/user_model.dart';
 
 /// Abstract interface for authentication operations.
@@ -14,6 +15,9 @@ abstract class AuthRepository {
     String? userType,
     int? cityId,
   });
+
+  /// Fetches the list of available cities from the backend.
+  Future<List<CityModel>> getCities();
 
   Future<UserModel> signInWithGoogle();
 

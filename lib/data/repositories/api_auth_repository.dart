@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:farah/core/network/api_endpoints.dart';
 import 'package:farah/core/network/dio_client.dart';
 import 'package:farah/data/datasources/local/cache_datasource.dart';
+import 'package:farah/data/models/auth/city_model.dart';
 import 'package:farah/data/models/user_model.dart';
 import 'package:farah/data/repositories/auth_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -42,16 +43,37 @@ class ApiAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async {
-    final res = await _dio.post(
-      ApiEndpoints.login,
-      data: {'email': email.trim(), 'password': password},
-    );
-    // Response shape: { "icon": "success", "data": { "token": "...", "user": { ... } } }
-    final payload = res.data['data'] as Map<String, dynamic>;
-    await _cache.saveToken(payload['token'] as String);
-    final user = UserModel.fromMap(payload['user'] as Map<String, dynamic>);
-    await _persistUser(user);
-    return user;
+    final Map<String, dynamic> requestData = {
+      'email': email.trim(),
+      'password': password,
+    };
+
+    try {
+      print('📤 [LOGIN SENDING]: $requestData');
+
+      final res = await _dio.post(ApiEndpoints.login, data: requestData);
+
+      print('✅ [LOGIN STATUS]: ${res.statusCode}');
+      print('✅ [LOGIN RESPONSE]: ${res.data}');
+
+      final payload = res.data['data'] as Map<String, dynamic>;
+      await _cache.saveToken(payload['token'] as String);
+      final user = UserModel.fromMap(payload['user'] as Map<String, dynamic>);
+      await _persistUser(user);
+      return user;
+    } on DioException catch (e) {
+      print('🛑 [LOGIN STATUS]: ${e.response?.statusCode}');
+      print('🛑 [LOGIN ERROR RESPONSE]: ${e.response?.data}');
+
+      final serverMsg =
+          e.response?.data?['message'] ??
+          e.response?.data?['error'] ??
+          'فشل تسجيل الدخول';
+      throw Exception(serverMsg);
+    } catch (e) {
+      print('❌ [LOGIN PARSING ERROR]: $e');
+      rethrow;
+    }
   }
 
   @override
@@ -63,28 +85,56 @@ class ApiAuthRepository implements AuthRepository {
     String? userType,
     int? cityId,
   }) async {
-    final res = await _dio.post(
-      ApiEndpoints.register,
-      data: {
-        'name': name,
-        'email': email.trim(),
-        'phone': phone,
-        'password': password,
-        'password_confirmation': password,
-        if (userType != null) 'user_type': userType,
-        if (cityId != null) 'city_id': cityId,
-      },
-    );
-    // Backend returns a token immediately on registration.
-    final payload = res.data['data'] as Map<String, dynamic>;
-    await _cache.saveToken(payload['token'] as String);
-    final user = UserModel.fromMap(payload['user'] as Map<String, dynamic>);
-    await _persistUser(user);
-    return user;
+    final Map<String, dynamic> requestData = {
+      'name': name,
+      'email': email.trim(),
+      'phone': phone,
+      'password': password,
+      'password_confirmation': password,
+      if (userType != null) 'user_type': userType,
+      if (cityId != null) 'city_id': cityId,
+    };
+
+    try {
+      print('📤 [REGISTER SENDING]: ${json.encode(requestData)}');
+
+      final res = await _dio.post(ApiEndpoints.register, data: requestData);
+
+      print('✅ [REGISTER STATUS]: ${res.statusCode}');
+      print('✅ [REGISTER RESPONSE]: ${res.data}');
+
+      final payload = res.data['data'] as Map<String, dynamic>;
+      await _cache.saveToken(payload['token'] as String);
+      final user = UserModel.fromMap(payload['user'] as Map<String, dynamic>);
+      await _persistUser(user);
+      return user;
+    } on DioException catch (e) {
+      print('🛑 [REGISTER STATUS]: ${e.response?.statusCode}');
+      print('🛑 [REGISTER ERROR RESPONSE]: ${e.response?.data}');
+
+      final serverMsg =
+          e.response?.data?['message'] ??
+          e.response?.data?['errors']?.toString() ??
+          'البيانات المدخلة غير صحيحة';
+      throw Exception(serverMsg);
+    } catch (e) {
+      print('❌ [REGISTER PARSING ERROR]: $e');
+      rethrow;
+    }
   }
 
-  // Google Sign-In goes through Firebase only — no /auth/google endpoint exists
-  // in the Railway backend spec.
+  @override
+  Future<List<CityModel>> getCities() async {
+    final res = await _dio.get(ApiEndpoints.cities);
+    if (res.data != null && res.data['data'] != null) {
+      final List list = res.data['data'] as List;
+      return list
+          .map((item) => CityModel.fromJson(item as Map<String, dynamic>))
+          .toList();
+    }
+    return [];
+  }
+
   @override
   Future<UserModel> signInWithGoogle() async {
     final existing = await checkSession();
@@ -118,8 +168,6 @@ class ApiAuthRepository implements AuthRepository {
     await _dio.post(ApiEndpoints.forgotPassword, data: {'email': email.trim()});
   }
 
-  // POST /reset-password — for the email-link forgot-password flow.
-  // token and email come from the deep-link URL (deep-link wiring is pending).
   @override
   Future<void> updatePassword({
     required String newPassword,
@@ -142,7 +190,7 @@ class ApiAuthRepository implements AuthRepository {
     try {
       await _dio.post(ApiEndpoints.logout);
     } catch (_) {
-      // Ignore server errors — always clear the local session.
+      // تجاهل أخطاء السيرفر عند تسجيل الخروج
     }
     await _cache.clearToken();
     await _clearUser();

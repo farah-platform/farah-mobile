@@ -1,5 +1,7 @@
 import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/cubits/auth/auth_cubit.dart';
+import 'package:farah/data/models/auth/city_model.dart';
+import 'package:farah/data/repositories/auth_repository.dart';
 import 'package:farah/view/screens/auth/login.dart';
 import 'package:farah/view/screens/auth/terms_and_conditions.dart';
 import 'package:flutter/gestures.dart';
@@ -22,10 +24,35 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
-  String? selectedRegion;
+  int? selectedCityId;
+  List<CityModel> _cities = [];
+  bool _isLoadingCities = true;
+
   String selectedCountryCode = '+970';
   bool obscurePassword = true;
   bool obscureConfirmPassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCities();
+  }
+
+  Future<void> _fetchCities() async {
+    try {
+      final cities = await context.read<AuthRepository>().getCities();
+      if (mounted) {
+        setState(() {
+          _cities = cities;
+          _isLoadingCities = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoadingCities = false);
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -39,14 +66,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   void _onSignUpPressed() {
     if (_formKey.currentState!.validate()) {
-      // cityId is null until the screen is rebuilt with a real city picker
-      // in Part B. The region dropdown is kept for UX but value is not sent.
       context.read<AuthCubit>().signUp(
         name: nameController.text.trim(),
-        email: emailController.text,
+        email: emailController.text.trim(),
         phone: '$selectedCountryCode${phoneController.text.trim()}',
         password: passwordController.text,
-        cityId: null,
+        cityId: selectedCityId,
       );
     }
   }
@@ -206,36 +231,42 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   const SizedBox(height: 16),
 
                   _buildLabel('المنطقة', theme),
-                  DropdownButtonFormField<String>(
-                    initialValue: selectedRegion,
-                    decoration: InputDecoration(
-                      hintText: 'اختر منطقتك',
-                      suffixIcon: Icon(Icons.my_location, color: primary),
-                    ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'شمال غزة',
-                        child: Text('شمال غزة'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'وسط غزة',
-                        child: Text('وسط غزة'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'جنوب غزة',
-                        child: Text('جنوب غزة'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setState(() => selectedRegion = value);
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'الرجاء اختيار المنطقة';
-                      }
-                      return null;
-                    },
-                  ),
+                  _isLoadingCities
+                      ? const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        )
+                      : DropdownButtonFormField<int>(
+                          initialValue: selectedCityId,
+                          decoration: InputDecoration(
+                            hintText: 'اختر منطقتك',
+                            suffixIcon: Icon(Icons.my_location, color: primary),
+                          ),
+                          items: _cities.map((CityModel city) {
+                            return DropdownMenuItem<int>(
+                              value: city.id,
+                              child: Text(
+                                city.name,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() => selectedCityId = value);
+                          },
+                          validator: (value) {
+                            if (value == null) {
+                              return 'الرجاء اختيار المنطقة';
+                            }
+                            return null;
+                          },
+                        ),
                   const SizedBox(height: 16),
 
                   _buildLabel('كلمة المرور', theme),

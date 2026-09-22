@@ -1,335 +1,374 @@
+import 'package:farah/data/models/home/booking_request_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
+import 'package:farah/cubits/booking/booking_cubit.dart';
 import 'package:farah/data/models/service_model.dart';
+import 'package:farah/view/screens/user/payment_screen.dart';
 
-class BookingConfirmationScreen extends StatelessWidget {
+class BookingConfirmationScreen extends StatefulWidget {
   final ServiceModel service;
-  final String selectedDate;
+  final DateTime selectedDateTime;
   final String selectedTime;
-  final double depositAmount;
-  final double remainingAmount;
 
   const BookingConfirmationScreen({
     super.key,
     required this.service,
-    this.selectedDate = '7 سبتمبر 2026',
-    this.selectedTime = '5:00 م _ 10:00 م',
-    this.depositAmount = 500,
-    this.remainingAmount = 2000,
+    required this.selectedDateTime,
+    required this.selectedTime,
   });
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final primaryColor = colors.primary;
-    final totalAmount = depositAmount + remainingAmount;
+  State<BookingConfirmationScreen> createState() =>
+      _BookingConfirmationScreenState();
+}
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: theme.scaffoldBackgroundColor,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          centerTitle: true,
-          title: Text(
-            'تأكيد الحجز',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: primaryColor,
-              fontSize: 18,
-            ),
-          ),
-          leading: IconButton(
-            icon: Icon(Icons.arrow_forward_rounded, color: colors.onSurface),
-            onPressed: () => Navigator.pop(context),
+class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
+  static const Color _primaryMaroon = Color(0xFF7B2146);
+  static const Color _lightMaroonBg = Color(0xFFF9EEF1);
+  static const Color _cardBorderColor = Color(0xFFE8E8E8);
+
+  @override
+  Widget build(BuildContext context) {
+    // حسابات المبالغ التلقائية والديناميكية
+    final double totalPrice = widget.service.price > 0
+        ? widget.service.price
+        : 800.0;
+    final double depositAmount = totalPrice * 0.25; // عربون 25%
+    final double remainingAmount = totalPrice - depositAmount;
+
+    final formattedArabicDate = DateFormat(
+      'd MMMM yyyy',
+      'ar',
+    ).format(widget.selectedDateTime);
+    final apiFormattedDate = DateFormat(
+      'yyyy-MM-dd',
+    ).format(widget.selectedDateTime);
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          'تأكيد الحجز',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: _primaryMaroon,
           ),
         ),
-        body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_forward_rounded, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 12),
+              const SizedBox(height: 12),
 
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: colors.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: colors.outline.withOpacity(0.12),
+              // 1. بطاقة معلومات الخدمة والتاريخ
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: _cardBorderColor),
+                ),
+                child: Row(
+                  children: [
+                    const Spacer(),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          widget.service.title.isNotEmpty
+                              ? widget.service.title
+                              : 'باقة العروس',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    service.title,
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.calendar_today_outlined,
-                                        size: 14,
-                                        color: primaryColor,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        selectedDate,
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: primaryColor,
-                                          fontSize: 11.5,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.access_time_rounded,
-                                        size: 14,
-                                        color: primaryColor,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        selectedTime,
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: primaryColor,
-                                          fontSize: 11.5,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: service.image != null && service.image!.isNotEmpty
-                                  ? Image.network(
-                                      service.image!,
-                                      width: 90,
-                                      height: 75,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Container(
-                                      width: 90,
-                                      height: 75,
-                                      color: colors.outline.withOpacity(0.1),
-                                    ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      Text(
-                        'الخدمات',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: primaryColor,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: colors.surface,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: colors.outline.withOpacity(0.12),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        const SizedBox(height: 6),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'حجز صالة',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontSize: 12,
-                                color: colors.onSurface.withOpacity(0.8),
-                              ),
-                            ),
-                            Text(
-                              'الخدمة',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                                color: primaryColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      Text(
-                        'تفاصيل الدفع',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: primaryColor,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: colors.surface,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: colors.outline.withOpacity(0.12),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  '${depositAmount.toInt()} ${service.currency}',
-                                  style: theme.textTheme.bodyMedium?.copyWith(fontSize: 12),
-                                ),
-                                Text(
-                                  'العربون',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                    color: primaryColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  '${remainingAmount.toInt()} ${service.currency}',
-                                  style: theme.textTheme.bodyMedium?.copyWith(fontSize: 12),
-                                ),
-                                Text(
-                                  'أثناء استلام الخدمة',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                    color: primaryColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: primaryColor.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.info_outline_rounded, size: 16, color: primaryColor),
-                            const SizedBox(width: 8),
-                            Text(
-                              'العربون مطلوب لتأكيد الحجز',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: primaryColor,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${totalAmount.toInt()} ${service.currency}',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13.5,
-                              ),
-                            ),
-                            Text(
-                              'السعر الاجمالي',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: primaryColor,
+                              formattedArabicDate,
+                              style: const TextStyle(
                                 fontSize: 13,
+                                color: _primaryMaroon,
+                                fontWeight: FontWeight.w500,
                               ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Icon(
+                              Icons.calendar_today_outlined,
+                              size: 15,
+                              color: _primaryMaroon,
                             ),
                           ],
                         ),
-                      ),
-
-                      const SizedBox(height: 20),
-                    ],
-                  ),
+                      ],
+                    ),
+                    const SizedBox(width: 14),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child:
+                          widget.service.image != null &&
+                              widget.service.image!.isNotEmpty
+                          ? Image.network(
+                              widget.service.image!,
+                              width: 84,
+                              height: 72,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  _buildPlaceholderImage(),
+                            )
+                          : _buildPlaceholderImage(),
+                    ),
+                  ],
                 ),
               ),
 
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 12, top: 8),
-                  child: SizedBox(
+              const SizedBox(height: 28),
+
+              // 2. عنوان تفاصيل الدفع
+              const Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  'تفاصيل الدفع',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: _primaryMaroon,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // 3. جدول تفاصيل المبالغ (العربون والمتبقي)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: _cardBorderColor),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${depositAmount.toInt()} ${widget.service.currency}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const Text(
+                          'العربون',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: _primaryMaroon,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${remainingAmount.toInt()} ${widget.service.currency}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const Text(
+                          'أثناء استلام الخدمة',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: _primaryMaroon,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // 4. شريط التنبيه: العربون مطلوب لتأكيد الحجز
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: _lightMaroonBg,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: const [
+                    Text(
+                      'العربون مطلوب لتأكيد الحجز',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _primaryMaroon,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 18,
+                      color: _primaryMaroon,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // 5. السعر الإجمالي
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${totalPrice.toInt()} ${widget.service.currency}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const Text(
+                      'السعر الاجمالي',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: _primaryMaroon,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Spacer(),
+
+              // 6. زر الانتقال لصفحة الدفع مع الاستماع لـ Cubit
+              BlocConsumer<BookingCubit, BookingState>(
+                listener: (context, state) {
+                  if (state is BookingCreated) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => PaymentScreen(
+                          service: widget.service,
+                          depositAmount: depositAmount,
+                          bookingId: state.booking.id.toString(),
+                        ),
+                      ),
+                    );
+                  } else if (state is BookingError) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(state.message),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                builder: (context, state) {
+                  final isLoading = state is BookingLoading;
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 20),
                     width: double.infinity,
-                    height: 50,
+                    height: 52,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
+                        backgroundColor: _primaryMaroon,
                         foregroundColor: Colors.white,
+                        disabledBackgroundColor: _primaryMaroon.withOpacity(
+                          0.6,
+                        ),
+                        disabledForegroundColor: Colors.white70,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                      onPressed: () {
-                        // الانتقال لصفحة الدفع
-                      },
-                      child: const Text(
-                        'الانتقال لصفحة الدفع',
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      onPressed: isLoading
+                          ? null
+                          : () {
+                              // بناء كائن الطلب المطابق لمفاتيح السيرفر
+                              final request = BookingRequestModel(
+                                serviceId: widget.service.id,
+                                bookingDate: apiFormattedDate,
+                                bookingTime: widget.selectedTime,
+                                bookingSlot: widget.selectedTime,
+                                notes: null,
+                              );
+
+                              context.read<BookingCubit>().createBooking(
+                                request,
+                              );
+                            },
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2.2,
+                              ),
+                            )
+                          : const Text(
+                              'الانتقال لصفحة الدفع',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPlaceholderImage() {
+    return Container(
+      width: 84,
+      height: 72,
+      color: Colors.grey[200],
+      child: const Icon(Icons.image_outlined, color: Colors.grey),
     );
   }
 }
