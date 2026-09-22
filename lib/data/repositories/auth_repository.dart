@@ -1,3 +1,4 @@
+import 'package:farah/data/models/auth/city_model.dart';
 import 'package:farah/data/models/user_model.dart';
 
 /// Abstract interface for authentication operations.
@@ -14,6 +15,9 @@ abstract class AuthRepository {
     String? userType,
     int? cityId,
   });
+
+  /// Fetches the list of available cities from the backend.
+  Future<List<CityModel>> getCities();
 
   Future<UserModel> signInWithGoogle();
 
@@ -32,16 +36,4 @@ abstract class AuthRepository {
 
   /// Returns the currently signed-in user, or null if no session exists.
   Future<UserModel?> checkSession();
-
-  /// Change the authenticated user's password.
-  Future<void> changePassword({
-    required String currentPassword,
-    required String newPassword,
-  });
-
-  /// Permanently delete the authenticated user's account.
-  Future<void> deleteAccount();
-
-  /// Persist a guest session flag (no server call, no token).
-  Future<void> loginAsGuest();
 }

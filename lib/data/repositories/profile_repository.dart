@@ -11,6 +11,7 @@ abstract class ProfileRepository {
     String? name,
     String? phone,
     String? region,
+    File? avatar,
   });
 
   Future<UserModel> uploadAvatar(File image);

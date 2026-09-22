@@ -479,10 +479,22 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             itemBuilder: (context, index) {
               final service = categories[index];
 
-              return SizedBox(
-                width: 58,
-                child: Column(
-                  children: [
+              return GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.services,
+                    arguments: {
+                      'categoryId': int.tryParse(service.id.toString()),
+                      'categorySlug': service.slug,
+                      'categoryName': service.name,
+                    },
+                  );
+                },
+                child: SizedBox(
+                  width: 58,
+                  child: Column(
+                    children: [
                     Container(
                       width: 50,
                       height: 50,
@@ -511,7 +523,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                     ),
                   ],
                 ),
-              );
+              ));
             },
           ),
         ),
@@ -682,9 +694,9 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
                     decoration: const BoxDecoration(shape: BoxShape.circle),
 
-                    child: provider.image != null && provider.image!.isNotEmpty
+                    child: provider.avatar != null && provider.avatar!.isNotEmpty
                         ? Image.network(
-                            provider.image!,
+                            provider.avatar!,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) {
                               return Icon(
@@ -972,16 +984,22 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         itemBuilder: (context, index) {
           final service = popularServices[index];
 
-          return Container(
-            width: 235,
-
-            clipBehavior: Clip.antiAlias,
-
-            decoration: BoxDecoration(
-              color: colors.surface,
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: colors.outline.withOpacity(.12)),
-            ),
+          return GestureDetector(
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                AppRoutes.serviceDetail,
+                arguments: int.tryParse(service.id.toString()),
+              );
+            },
+            child: Container(
+              width: 235,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: colors.outline.withOpacity(.12)),
+              ),
 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1095,7 +1113,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 ),
               ],
             ),
-          );
+          ));
         },
       ),
     );

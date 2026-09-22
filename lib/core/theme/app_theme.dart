@@ -41,10 +41,13 @@ ThemeData appTheme = ThemeData(
     labelMedium: GoogleFonts.tajawal(fontSize: 12),
     labelSmall: GoogleFonts.tajawal(fontSize: 11),
   ),
+
   inputDecorationTheme: InputDecorationTheme(
+    isDense: true,
+    constraints: const BoxConstraints(minHeight: 48, maxHeight: 48),
     filled: true,
     fillColor: Colors.white,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(15),
       borderSide: BorderSide(color: Colors.grey.shade300, width: 1),

@@ -35,16 +35,11 @@ class ProfileEditCubit extends Cubit<ProfileEditState> {
 
     emit(ProfileEditSaving(current.user));
     try {
-      UserModel user = current.user;
-
-      if (avatar != null) {
-        user = await _repo.uploadAvatar(avatar);
-      }
-
-      user = await _repo.updateUserProfile(
+      final user = await _repo.updateUserProfile(
         name: name.trim(),
         phone: phone.trim(),
         region: region.trim(),
+        avatar: avatar,
       );
 
       emit(ProfileEditSuccess(user));
