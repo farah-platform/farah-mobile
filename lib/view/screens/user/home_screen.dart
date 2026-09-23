@@ -474,15 +474,27 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
             itemCount: categories.length,
 
-            separatorBuilder: (_, __) => const SizedBox(width: 13),
+            separatorBuilder: (_, _) => const SizedBox(width: 13),
 
             itemBuilder: (context, index) {
               final service = categories[index];
 
-              return SizedBox(
-                width: 58,
-                child: Column(
-                  children: [
+              return GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.services,
+                    arguments: {
+                      'categoryId': int.tryParse(service.id.toString()),
+                      'categorySlug': service.slug,
+                      'categoryName': service.name,
+                    },
+                  );
+                },
+                child: SizedBox(
+                  width: 58,
+                  child: Column(
+                    children: [
                     Container(
                       width: 50,
                       height: 50,
@@ -511,7 +523,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                     ),
                   ],
                 ),
-              );
+              ));
             },
           ),
         ),
@@ -553,7 +565,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             Image.network(
               package.image!,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) {
+              errorBuilder: (_, _, _) {
                 return Container(color: colors.primary.withOpacity(.08));
               },
             ),
@@ -656,7 +668,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
         itemCount: providers.length,
 
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
 
         itemBuilder: (context, index) {
           final provider = providers[index];
@@ -682,11 +694,11 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
                     decoration: const BoxDecoration(shape: BoxShape.circle),
 
-                    child: provider.image != null && provider.image!.isNotEmpty
+                    child: provider.avatar != null && provider.avatar!.isNotEmpty
                         ? Image.network(
-                            provider.image!,
+                            provider.avatar!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) {
+                            errorBuilder: (_, _, _) {
                               return Icon(
                                 Icons.person_outline,
                                 color: colors.primary,
@@ -782,7 +794,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
         itemCount: featuredPackages.length,
 
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
 
         itemBuilder: (context, index) {
           final package = featuredPackages[index];
@@ -814,7 +826,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                             ? Image.network(
                                 package.image!,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) {
+                                errorBuilder: (_, _, _) {
                                   return Container(
                                     color: colors.primary.withOpacity(.08),
                                     child: Icon(
@@ -967,21 +979,27 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
         itemCount: popularServices.length,
 
-        separatorBuilder: (_, __) => const SizedBox(width: 11),
+        separatorBuilder: (_, _) => const SizedBox(width: 11),
 
         itemBuilder: (context, index) {
           final service = popularServices[index];
 
-          return Container(
-            width: 235,
-
-            clipBehavior: Clip.antiAlias,
-
-            decoration: BoxDecoration(
-              color: colors.surface,
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: colors.outline.withOpacity(.12)),
-            ),
+          return GestureDetector(
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                AppRoutes.serviceDetail,
+                arguments: int.tryParse(service.id.toString()),
+              );
+            },
+            child: Container(
+              width: 235,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: colors.outline.withOpacity(.12)),
+              ),
 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -995,7 +1013,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       ? Image.network(
                           service.image!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) {
+                          errorBuilder: (_, _, _) {
                             return Container(
                               color: colors.primary.withOpacity(.08),
                               child: Icon(
@@ -1095,7 +1113,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                 ),
               ],
             ),
-          );
+          ));
         },
       ),
     );
@@ -1226,3 +1244,4 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         TextStyle(color: color, fontSize: size, fontWeight: weight);
   }
 }
+

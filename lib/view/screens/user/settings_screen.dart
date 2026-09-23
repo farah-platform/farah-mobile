@@ -19,7 +19,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     // Don't call the profile API for guests — there's no token.
-    if (context.read<AuthCubit>().state is! AuthGuest) {
+    if (context.read<AuthCubit>().state is! AuthError) {
       context.read<SettingsCubit>().load();
     }
   }
@@ -44,7 +44,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, authState) {
-        final isGuest = authState is AuthGuest;
+        final isGuest = authState is AuthError;
         return Scaffold(
           backgroundColor: AppColors.scaffoldSecondary,
           appBar: AppBar(

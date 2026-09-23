@@ -51,9 +51,7 @@ class _OnboardingScreenState extends State<OnboardingScreen2> {
   void _onSkipPressed() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (_) => const SignUpScreen(userType: 'provider'),
-      ),
+      MaterialPageRoute(builder: (_) => const SignUpScreen(userType: 'provider')),
     );
   }
 
@@ -61,9 +59,7 @@ class _OnboardingScreenState extends State<OnboardingScreen2> {
     if (currentPage == items.length - 1) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (_) => const SignUpScreen(userType: 'provider'),
-        ),
+        MaterialPageRoute(builder: (_) => const SignUpScreen(userType: 'provider')),
       );
     } else {
       _pageController.nextPage(
@@ -180,15 +176,7 @@ class _OnboardingScreenState extends State<OnboardingScreen2> {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: isLastPage
-                      ? () => Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  const SignUpScreen(userType: 'provider'),
-                            ),
-                          )
-                      : _onNextPressed,
+                  onPressed: _onNextPressed,
                   child: Text(isLastPage ? 'ابدأ الان' : 'التالي'),
                 ),
               ),

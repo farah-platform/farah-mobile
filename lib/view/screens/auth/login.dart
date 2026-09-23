@@ -71,6 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: theme.textTheme.headlineMedium?.copyWith(
                       color: primary,
                       fontWeight: FontWeight.bold,
+                      fontSize: 26,
                     ),
                   ),
 

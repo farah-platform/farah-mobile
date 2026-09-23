@@ -1,26 +1,26 @@
 part of 'booking_cubit.dart';
 
-sealed class BookingState {}
+abstract class BookingState {}
 
-final class BookingInitial extends BookingState {}
+class BookingInitial extends BookingState {}
 
-final class BookingLoading extends BookingState {}
+class BookingLoading extends BookingState {}
 
-final class BookingCreated extends BookingState {
+class BookingCreated extends BookingState {
   final BookingModel booking;
   BookingCreated(this.booking);
 }
 
-final class BookingsLoaded extends BookingState {
+class BookingsLoaded extends BookingState {
   final List<BookingModel> bookings;
   BookingsLoaded(this.bookings);
 }
 
-final class BookingCancelled extends BookingState {}
+class BookingCancelled extends BookingState {}
 
-final class BookingConfirmed extends BookingState {}
+class BookingConfirmed extends BookingState {}
 
-final class BookingError extends BookingState {
+class BookingError extends BookingState {
   final String message;
   BookingError(this.message);
 }

@@ -1,7 +1,7 @@
-import 'dart:async';
-
 import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/cubits/auth/auth_cubit.dart';
+import 'package:farah/data/models/auth/city_model.dart';
+import 'package:farah/data/repositories/auth_repository.dart';
 import 'package:farah/view/screens/auth/login.dart';
 import 'package:farah/view/screens/auth/terms_and_conditions.dart';
 import 'package:flutter/gestures.dart';
@@ -25,29 +25,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
-  String? selectedRegion;
+  int? selectedCityId;
+  List<CityModel> _cities = [];
+  bool _isLoadingCities = true;
+
   String selectedCountryCode = '+970';
   bool obscurePassword = true;
   bool obscureConfirmPassword = true;
-  bool _showWaitHint = false;
-  Timer? _waitHintTimer;
 
-  void _startWaitHintTimer() {
-    _waitHintTimer?.cancel();
-    _waitHintTimer = Timer(const Duration(seconds: 5), () {
-      if (mounted) setState(() => _showWaitHint = true);
-    });
+  @override
+  void initState() {
+    super.initState();
+    _fetchCities();
   }
 
-  void _cancelWaitHintTimer() {
-    _waitHintTimer?.cancel();
-    _waitHintTimer = null;
-    if (mounted) setState(() => _showWaitHint = false);
+  Future<void> _fetchCities() async {
+    try {
+      final cities = await context.read<AuthRepository>().getCities();
+      if (mounted) {
+        setState(() {
+          _cities = cities;
+          _isLoadingCities = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoadingCities = false);
+      }
+    }
   }
 
   @override
   void dispose() {
-    _waitHintTimer?.cancel();
     emailController.dispose();
     nameController.dispose();
     phoneController.dispose();
@@ -60,11 +69,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (_formKey.currentState!.validate()) {
       context.read<AuthCubit>().signUp(
         name: nameController.text.trim(),
-        email: emailController.text,
+        email: emailController.text.trim(),
         phone: '$selectedCountryCode${phoneController.text.trim()}',
         password: passwordController.text,
+        cityId: selectedCityId,
         userType: widget.userType,
-        cityId: null,
       );
     }
   }
@@ -76,30 +85,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
-        if (state is AuthLoading) {
-          _startWaitHintTimer();
-        } else {
-          _cancelWaitHintTimer();
-          if (state is AuthError) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(state.message)));
-          } else if (state is AuthSignUpTimeout) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                duration: Duration(seconds: 8),
-                content: Text(
-                  'تم إرسال الطلب. تحقق من بريدك الإلكتروني، وإن لم يصلك شيء أعد المحاولة.',
-                ),
-              ),
-            );
-          } else if (state is AuthSuccess) {
-            Navigator.pushNamedAndRemoveUntil(
-              context,
-              AppRoutes.homeForRole(state.user.role),
-              (_) => false,
-            );
-          }
+        if (state is AuthError) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
+        } else if (state is AuthSuccess) {
+          final route = state.user.role == 'provider'
+              ? AppRoutes.providerHome
+              : AppRoutes.home;
+          Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
         }
       },
       child: Scaffold(
@@ -239,36 +233,42 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   const SizedBox(height: 16),
 
                   _buildLabel('المنطقة', theme),
-                  DropdownButtonFormField<String>(
-                    initialValue: selectedRegion,
-                    decoration: InputDecoration(
-                      hintText: 'اختر منطقتك',
-                      suffixIcon: Icon(Icons.my_location, color: primary),
-                    ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'شمال غزة',
-                        child: Text('شمال غزة'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'وسط غزة',
-                        child: Text('وسط غزة'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'جنوب غزة',
-                        child: Text('جنوب غزة'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setState(() => selectedRegion = value);
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'الرجاء اختيار المنطقة';
-                      }
-                      return null;
-                    },
-                  ),
+                  _isLoadingCities
+                      ? const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        )
+                      : DropdownButtonFormField<int>(
+                          initialValue: selectedCityId,
+                          decoration: InputDecoration(
+                            hintText: 'اختر منطقتك',
+                            suffixIcon: Icon(Icons.my_location, color: primary),
+                          ),
+                          items: _cities.map((CityModel city) {
+                            return DropdownMenuItem<int>(
+                              value: city.id,
+                              child: Text(
+                                city.name,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() => selectedCityId = value);
+                          },
+                          validator: (value) {
+                            if (value == null) {
+                              return 'الرجاء اختيار المنطقة';
+                            }
+                            return null;
+                          },
+                        ),
                   const SizedBox(height: 16),
 
                   _buildLabel('كلمة المرور', theme),
@@ -382,16 +382,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       );
                     },
                   ),
-                  if (_showWaitHint) ...[
-                    const SizedBox(height: 10),
-                    Text(
-                      'جارٍ إنشاء الحساب، قد يستغرق هذا لحظات...',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
                   const SizedBox(height: 16),
 
                   RichText(

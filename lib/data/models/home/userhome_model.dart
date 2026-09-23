@@ -19,7 +19,7 @@ class UserHomeModel {
 
   factory UserHomeModel.fromJson(Map<String, dynamic> json) {
     return UserHomeModel(
-      id: json['id'],
+      id: json['id'] ?? 0,
       name: json['name'] ?? '',
       email: json['email'] ?? '',
       avatar: json['avatar'],

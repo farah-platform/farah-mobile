@@ -24,31 +24,27 @@ class ApiProfileRepository implements ProfileRepository {
     String? name,
     String? phone,
     String? region,
+    File? avatar,
   }) async {
-    final res = await _dio.put(
-      ApiEndpoints.profile,
-      data: {
-        if (name != null) 'name': name,
-        if (phone != null) 'phone': phone,
-        if (region != null) 'region': region,
-      },
+    final fields = <String, dynamic>{
+      if (name != null) 'name': name,
+      if (phone != null) 'phone': phone,
+      if (region != null) 'region': region,
+      if (avatar != null)
+        'avatar': await MultipartFile.fromFile(
+          avatar.path,
+          filename: 'avatar.jpg',
+        ),
+    };
+    final res = await _dio.post(
+      ApiEndpoints.profileUpdate,
+      data: FormData.fromMap(fields),
     );
     return UserModel.fromMap(res.data['data'] as Map<String, dynamic>);
   }
 
-  // TODO: spec says POST /profile/update (multipart). Full multipart
-  // implementation is in Step 4. Placeholder keeps compilation valid.
   @override
-  Future<UserModel> uploadAvatar(File image) async {
-    final formData = FormData.fromMap({
-      'avatar': await MultipartFile.fromFile(
-        image.path,
-        filename: 'avatar.jpg',
-      ),
-    });
-    final res = await _dio.post(ApiEndpoints.profileUpdate, data: formData);
-    return UserModel.fromMap(res.data['data'] as Map<String, dynamic>);
-  }
+  Future<UserModel> uploadAvatar(File image) => updateUserProfile(avatar: image);
 
   // TODO: /provider/profile is not in the current backend spec.
   // These methods will be updated when the endpoint is documented.

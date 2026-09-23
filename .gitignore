@@ -120,3 +120,6 @@ v[0-9].png
 stack.json
 vm.json
 web_entrypoint.dart
+
+# Junk shell-output files accidentally created at repo root
+pec.yaml*

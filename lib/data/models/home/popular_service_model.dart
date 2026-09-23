@@ -1,7 +1,7 @@
 class PopularServiceModel {
   final int id;
   final String title;
-  final String? description;
+  final String description;
   final double price;
   final String currency;
   final String? image;
@@ -15,7 +15,7 @@ class PopularServiceModel {
   PopularServiceModel({
     required this.id,
     required this.title,
-    this.description,
+    required this.description,
     required this.price,
     required this.currency,
     this.image,
@@ -29,13 +29,13 @@ class PopularServiceModel {
 
   factory PopularServiceModel.fromJson(Map<String, dynamic> json) {
     return PopularServiceModel(
-      id: json['id'],
+      id: json['id'] ?? 0,
       title: json['title'] ?? '',
-      description: json['description'],
-      price: (json['price'] as num?)?.toDouble() ?? 0.0,
-      currency: json['currency'] ?? 'ILS',
+      description: json['description'] ?? '',
+      price: (json['price'] as num?)?.toDouble() ?? 0,
+      currency: json['currency'] ?? '',
       image: json['image'],
-      ratingAvg: (json['rating_avg'] as num?)?.toDouble() ?? 0.0,
+      ratingAvg: (json['rating_avg'] as num?)?.toDouble() ?? 0,
       reviewsCount: json['reviews_count'] ?? 0,
       location: json['location'] ?? '',
       city: json['city'] ?? '',
@@ -58,7 +58,7 @@ class PopularProviderModel {
 
   factory PopularProviderModel.fromJson(Map<String, dynamic> json) {
     return PopularProviderModel(
-      id: json['id'],
+      id: json['id'] ?? 0,
       name: json['name'] ?? '',
       avatar: json['avatar'],
     );
@@ -72,6 +72,6 @@ class PopularCategoryModel {
   PopularCategoryModel({required this.id, required this.name});
 
   factory PopularCategoryModel.fromJson(Map<String, dynamic> json) {
-    return PopularCategoryModel(id: json['id'], name: json['name'] ?? '');
+    return PopularCategoryModel(id: json['id'] ?? 0, name: json['name'] ?? '');
   }
 }
