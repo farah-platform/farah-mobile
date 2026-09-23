@@ -41,7 +41,7 @@ class HomeCategoriesWidget extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             scrollDirection: Axis.horizontal,
             itemCount: categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 13),
+            separatorBuilder: (_, _) => const SizedBox(width: 13),
             itemBuilder: (context, index) {
               final service = categories[index];
 
@@ -112,3 +112,4 @@ class HomeCategoriesWidget extends StatelessWidget {
     return icons[index % icons.length];
   }
 }
+

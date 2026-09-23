@@ -29,7 +29,7 @@ class HomeProvidersWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
         itemCount: providers.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final provider = providers[index];
 
@@ -54,7 +54,7 @@ class HomeProvidersWidget extends StatelessWidget {
                         ? Image.network(
                             provider.avatar!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Icon(
+                            errorBuilder: (_, _, _) => Icon(
                               Icons.person_outline,
                               color: colors.primary,
                               size: 30,
@@ -115,3 +115,4 @@ class HomeProvidersWidget extends StatelessWidget {
     );
   }
 }
+

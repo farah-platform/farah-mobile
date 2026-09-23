@@ -29,7 +29,7 @@ class HomePackagesWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
         itemCount: packages.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
           final package = packages[index];
 
@@ -55,7 +55,7 @@ class HomePackagesWidget extends StatelessWidget {
                             ? Image.network(
                                 package.image!,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
+                                errorBuilder: (_, _, _) => Container(
                                   color: colors.primary.withOpacity(.08),
                                   child: Icon(
                                     Icons.image_outlined,
@@ -167,3 +167,4 @@ class HomePackagesWidget extends StatelessWidget {
     );
   }
 }
+

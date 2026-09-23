@@ -43,7 +43,7 @@ class _ServiceDetailHeaderWidgetState extends State<ServiceDetailHeaderWidget> {
                 return Image.network(
                   widget.images[index],
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
+                  errorBuilder: (_, _, _) => Container(
                     color: colors.surfaceContainerHighest,
                     child: Icon(
                       Icons.image_outlined,

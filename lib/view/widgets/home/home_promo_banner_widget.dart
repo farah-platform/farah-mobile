@@ -29,7 +29,7 @@ class HomePromoBannerWidget extends StatelessWidget {
               Image.network(
                 banner.image!,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) {
+                errorBuilder: (_, _, _) {
                   return Container(color: colors.primary.withOpacity(.08));
                 },
               ),
@@ -106,3 +106,4 @@ class HomePromoBannerWidget extends StatelessWidget {
     );
   }
 }
+

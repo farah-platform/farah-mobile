@@ -47,7 +47,7 @@ class _ServiceFeaturesListWidgetState extends State<ServiceFeaturesListWidget> {
           physics: const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.zero,
           itemCount: widget.features.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          separatorBuilder: (_, _) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
             final feature = widget.features[index];
             final status = _featureStatuses[feature] ?? 'مشمولة';
@@ -194,3 +194,4 @@ class _ServiceFeaturesListWidgetState extends State<ServiceFeaturesListWidget> {
     );
   }
 }
+

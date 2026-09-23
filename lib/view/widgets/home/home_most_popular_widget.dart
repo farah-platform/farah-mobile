@@ -29,7 +29,7 @@ class HomeMostPopularWidget extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
         itemCount: popularServices.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 11),
+        separatorBuilder: (_, _) => const SizedBox(width: 11),
         itemBuilder: (context, index) {
           final service = popularServices[index];
 
@@ -51,7 +51,7 @@ class HomeMostPopularWidget extends StatelessWidget {
                       ? Image.network(
                           service.image!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
+                          errorBuilder: (_, _, _) => Container(
                             color: colors.primary.withOpacity(.08),
                             child: Icon(
                               Icons.image_outlined,
@@ -142,3 +142,4 @@ class HomeMostPopularWidget extends StatelessWidget {
     );
   }
 }
+

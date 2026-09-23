@@ -208,6 +208,34 @@ class ApiAuthRepository implements AuthRepository {
     return UserModel.fromMap(json.decode(userJson) as Map<String, dynamic>);
   }
 
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final token = await _cache.getToken();
+    if (token == null) throw Exception('No session token');
+    await _dio.post(
+      '/change-password',
+      data: {
+        'current_password': currentPassword,
+        'new_password': newPassword,
+        'new_password_confirmation': newPassword,
+      },
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    final token = await _cache.getToken();
+    if (token == null) throw Exception('No session token');
+    // Using dummy endpoint since API doesn't exist yet
+    // await _dio.delete('/account', options: Options(headers: {'Authorization': 'Bearer $token'}));
+    await Future.delayed(const Duration(seconds: 1));
+    await logout();
+  }
+
   Future<void> _persistUser(UserModel user) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userKey, json.encode(user.toMap()));

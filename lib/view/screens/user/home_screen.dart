@@ -474,7 +474,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
             itemCount: categories.length,
 
-            separatorBuilder: (_, __) => const SizedBox(width: 13),
+            separatorBuilder: (_, _) => const SizedBox(width: 13),
 
             itemBuilder: (context, index) {
               final service = categories[index];
@@ -565,7 +565,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
             Image.network(
               package.image!,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) {
+              errorBuilder: (_, _, _) {
                 return Container(color: colors.primary.withOpacity(.08));
               },
             ),
@@ -668,7 +668,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
         itemCount: providers.length,
 
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
 
         itemBuilder: (context, index) {
           final provider = providers[index];
@@ -698,7 +698,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                         ? Image.network(
                             provider.avatar!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) {
+                            errorBuilder: (_, _, _) {
                               return Icon(
                                 Icons.person_outline,
                                 color: colors.primary,
@@ -794,7 +794,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
         itemCount: featuredPackages.length,
 
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
 
         itemBuilder: (context, index) {
           final package = featuredPackages[index];
@@ -826,7 +826,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                             ? Image.network(
                                 package.image!,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) {
+                                errorBuilder: (_, _, _) {
                                   return Container(
                                     color: colors.primary.withOpacity(.08),
                                     child: Icon(
@@ -979,7 +979,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
 
         itemCount: popularServices.length,
 
-        separatorBuilder: (_, __) => const SizedBox(width: 11),
+        separatorBuilder: (_, _) => const SizedBox(width: 11),
 
         itemBuilder: (context, index) {
           final service = popularServices[index];
@@ -1013,7 +1013,7 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
                       ? Image.network(
                           service.image!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) {
+                          errorBuilder: (_, _, _) {
                             return Container(
                               color: colors.primary.withOpacity(.08),
                               child: Icon(
@@ -1244,3 +1244,4 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         TextStyle(color: color, fontSize: size, fontWeight: weight);
   }
 }
+

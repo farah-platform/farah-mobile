@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:farah/data/models/home/homeResponsemodel.dart';
+import 'package:farah/data/models/home/home_response_model.dart';
 import 'package:farah/data/repositories/home_repostory.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -38,3 +38,4 @@ class HomeCubit extends Cubit<HomeState> {
     return 'حدث خطأ، يرجى المحاولة مجدداً';
   }
 }
+

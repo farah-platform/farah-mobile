@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farah/data/models/service_model.dart';
 import 'package:farah/cubits/service_detail/service_detail_cubit.dart';
-import 'package:farah/view/widgets/service_details/ServiceFeaturesListWidget.dart';
+import 'package:farah/view/widgets/service_details/service_features_list_widget.dart';
 import 'package:farah/view/widgets/service_details/booking_bottom_sheet_widget.dart';
 import 'package:farah/view/widgets/service_details/service_bottom_action_bar_widget.dart';
 import 'package:farah/view/widgets/service_details/service_detail_header_widget.dart';
@@ -191,3 +191,4 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
     );
   }
 }
+

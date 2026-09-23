@@ -22,13 +22,6 @@ final class AuthError extends AuthState {
   AuthError(this.message);
 }
 
-// Emitted when the user's account has been successfully deleted.
-final class AuthAccountDeleted extends AuthState {}
-
-// Emitted when POST /register times out — the account may still have been
-// created server-side (Railway processing takes ~60 s including email delivery).
-final class AuthSignUpTimeout extends AuthState {}
-
-// Emitted when the user chooses to browse without logging in.
-// No token exists; only a local guest flag is set.
 final class AuthGuest extends AuthState {}
+
+final class AuthAccountDeleted extends AuthState {}

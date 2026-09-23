@@ -1,6 +1,6 @@
 import 'package:farah/core/network/dio_client.dart';
 import 'package:farah/core/network/api_endpoints.dart';
-import 'package:farah/data/models/home/homeResponsemodel.dart';
+import 'package:farah/data/models/home/home_response_model.dart';
 
 class HomeRepository {
   final DioClient _dioClient;
@@ -13,3 +13,4 @@ class HomeRepository {
     return HomeResponseModel.fromJson(response.data);
   }
 }
+

@@ -59,7 +59,7 @@ class _SplashScreenState extends State<SplashScreen> {
             AppRoutes.homeForRole(state.user.role),
             (_) => false,
           );
-        } else if (state is AuthGuest) {
+        } else if (state is AuthError) {
           setState(() => _sessionFound = true);
           Navigator.pushNamedAndRemoveUntil(
             context,
@@ -87,7 +87,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       opacity: showText ? 1 : 0,
                       duration: const Duration(milliseconds: 800),
                       child: const Text(
-                        "??????",
+                        "فرحتنا",
                         style: TextStyle(
                           color: Color.fromARGB(255, 228, 215, 175),
                           fontSize: 34,

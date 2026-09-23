@@ -34,6 +34,13 @@ abstract class AuthRepository {
 
   Future<void> logout();
 
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  });
+
+  Future<void> deleteAccount();
+
   /// Returns the currently signed-in user, or null if no session exists.
   Future<UserModel?> checkSession();
 }

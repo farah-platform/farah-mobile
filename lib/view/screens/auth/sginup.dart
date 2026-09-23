@@ -9,7 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+  final String userType;
+  const SignUpScreen({super.key, this.userType = 'customer'});
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -72,6 +73,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         phone: '$selectedCountryCode${phoneController.text.trim()}',
         password: passwordController.text,
         cityId: selectedCityId,
+        userType: widget.userType,
       );
     }
   }

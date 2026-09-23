@@ -129,7 +129,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                               width: 84,
                               height: 72,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
+                              errorBuilder: (_, _, _) =>
                                   _buildPlaceholderImage(),
                             )
                           : _buildPlaceholderImage(),
@@ -372,3 +372,4 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
     );
   }
 }
+

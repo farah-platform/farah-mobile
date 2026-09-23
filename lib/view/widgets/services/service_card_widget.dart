@@ -159,7 +159,7 @@ class ServiceCardWidget extends StatelessWidget {
             Image.network(
               imageUrl,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _imagePlaceholder(context),
+              errorBuilder: (_, _, _) => _imagePlaceholder(context),
               loadingBuilder: (context, child, loadingProgress) {
                 if (loadingProgress == null) return child;
                 return _imagePlaceholder(context);
