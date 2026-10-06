@@ -1,5 +1,3 @@
-// TODO: BR-10/FR-24 — server must reject deletion if an unfinished booking exists.
-// Display the blocking booking ID from the error response when implemented.
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/cubits/auth/auth_cubit.dart';
@@ -22,10 +20,9 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
       listener: (context, state) {
         if (state is AuthAccountDeleted) {
           Navigator.of(context, rootNavigator: true).pop();
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            AppRoutes.login,
-            (route) => false,
-          );
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
         } else if (state is AuthError) {
           setState(() => _errorMessage = state.message);
         }
@@ -33,8 +30,9 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
       builder: (context, state) {
         final isLoading = state is AuthLoading;
         return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -42,16 +40,13 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
               children: [
                 const Icon(
                   Icons.warning_amber_rounded,
-                  size: 56,
-                  color: Colors.amber,
+                  size: 30,
+                  color: Color.fromARGB(255, 146, 21, 73),
                 ),
                 const SizedBox(height: 16),
                 const Text(
                   'هل أنت متأكد؟',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),

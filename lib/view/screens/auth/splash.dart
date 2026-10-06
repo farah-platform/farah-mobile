@@ -29,7 +29,6 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     });
 
-    // Show the text after 3 seconds
     Future.delayed(const Duration(seconds: 3), () {
       if (!mounted) return;
 
@@ -38,7 +37,6 @@ class _SplashScreenState extends State<SplashScreen> {
       });
     });
 
-    // Show the user type card after 5 seconds
     Future.delayed(const Duration(seconds: 5), () {
       if (!mounted) return;
 
@@ -87,9 +85,9 @@ class _SplashScreenState extends State<SplashScreen> {
                       opacity: showText ? 1 : 0,
                       duration: const Duration(milliseconds: 800),
                       child: const Text(
-                        "فرحتنا",
+                        "فرح",
                         style: TextStyle(
-                          color: Color.fromARGB(255, 228, 215, 175),
+                          color: Color.fromARGB(255, 223, 215, 190),
                           fontSize: 34,
                           fontWeight: FontWeight.w700,
                         ),
@@ -100,7 +98,6 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
 
-            // Blur overlay
             if (showCard && !_sessionFound)
               AnimatedOpacity(
                 opacity: 1,
@@ -111,7 +108,6 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
 
-            // User type card
             AnimatedPositioned(
               duration: const Duration(milliseconds: 600),
               curve: Curves.easeOut,

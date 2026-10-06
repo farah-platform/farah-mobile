@@ -16,8 +16,9 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
   List<Map<String, String>> get _filtered {
     if (_query.trim().isEmpty) return FaqData.items;
     return FaqData.items
-        .where((item) =>
-            item['q']!.contains(_query) || item['a']!.contains(_query))
+        .where(
+          (item) => item['q']!.contains(_query) || item['a']!.contains(_query),
+        )
         .toList();
   }
 
@@ -29,7 +30,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldSecondary,
+      backgroundColor: const Color(0xFFFBF8F8),
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: AppColors.primary,
@@ -43,16 +44,15 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
       body: Column(
         children: [
           Container(
-            color: Colors.white,
+            color: const Color(0xFFFBF8F8),
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: TextField(
               onChanged: (v) => setState(() => _query = v),
               decoration: InputDecoration(
                 hintText: 'ابحث عن مشكلتك',
-                prefixIcon:
-                    const Icon(Icons.search, color: AppColors.textGrey),
+                prefixIcon: const Icon(Icons.search, color: AppColors.textGrey),
                 filled: true,
-                fillColor: AppColors.scaffoldSecondary,
+                fillColor: const Color(0xFFFBF8F8),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
@@ -71,6 +71,7 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
@@ -141,10 +142,7 @@ class _FaqTile extends StatelessWidget {
       childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       title: Text(
         question,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
       ),
       children: [
         Text(

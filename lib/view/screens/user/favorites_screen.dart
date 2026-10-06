@@ -1,7 +1,6 @@
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/cubits/favorites/favorites_cubit.dart';
-import 'package:farah/data/models/favorite_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -32,10 +31,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'حذف',
-              style: TextStyle(color: AppColors.error),
-            ),
+            child: const Text('حذف', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -48,7 +44,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldSecondary,
+      backgroundColor: const Color(0xFFFBF8F8),
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: AppColors.primary,
@@ -111,47 +107,89 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   Widget _buildEmptyState(BuildContext context) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.favorite_border,
-            size: 72,
-            color: AppColors.textLightGrey,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'لا توجد عناصر في المفضلة',
-            style: TextStyle(
-              fontSize: 16,
-              color: AppColors.textGrey,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Spacer(),
+            Container(
+              width: 140,
+              height: 140,
+              decoration: const BoxDecoration(
+                color: Color(0xFFF9F1F4),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.favorite_border_rounded,
+                size: 60,
+                color: Color(0xFF7B2146),
               ),
             ),
-            onPressed: () => Navigator.pushNamedAndRemoveUntil(
-              context,
-              AppRoutes.home,
-              (route) => false,
+            const SizedBox(height: 24),
+
+            const Text(
+              'لا توجد عناصر في المفضلة',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Tajawal',
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF7B2146),
+              ),
             ),
-            child: const Text('تصفح الخدمات'),
-          ),
-        ],
+            const SizedBox(height: 12),
+            const Text(
+              'أضف خدماتك المفضلة لتصل إليها بسهولة',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Tajawal',
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+            ),
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 24.0),
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF7B2146),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      AppRoutes.home,
+                      (route) => false,
+                    );
+                  },
+                  child: const Text(
+                    'تصفح الخدمات',
+                    style: TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class _FavoriteItemCard extends StatelessWidget {
-  final FavoriteItem item;
+  final dynamic item;
   final VoidCallback onRemove;
 
   const _FavoriteItemCard({required this.item, required this.onRemove});

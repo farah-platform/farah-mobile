@@ -112,4 +112,3 @@ class HomeCategoriesWidget extends StatelessWidget {
     return icons[index % icons.length];
   }
 }
-

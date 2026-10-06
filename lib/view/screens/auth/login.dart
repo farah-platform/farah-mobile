@@ -90,11 +90,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   OutlinedButton(
                     onPressed: () =>
                         context.read<AuthCubit>().signInWithGoogle(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 22,
+                      ),
+
+                      minimumSize: const Size(double.infinity, 40),
+
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset("assets/image/google1.png", width: 24),
-                        const SizedBox(width: 12),
+                        Image.asset("assets/image/google1.png", width: 20),
+                        const SizedBox(width: 8), //
                         Text(
                           "المتابعة باستخدام Google",
                           style: theme.textTheme.titleMedium?.copyWith(
@@ -143,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 16),
 
                   Align(
                     alignment: Alignment.centerRight,
@@ -188,7 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 2),
 
                   Align(
                     alignment: Alignment.centerLeft,
@@ -239,7 +251,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
 
-                  const SizedBox(height: 25),
+                  const SizedBox(height: 16),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -259,7 +271,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: theme.textTheme.bodyLarge?.copyWith(
                             color: primary,
                             fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                            fontSize: 13,
                           ),
                         ),
                       ),

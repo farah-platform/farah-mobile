@@ -55,17 +55,17 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
   void _save() {
     context.read<ProfileEditCubit>().save(
-          name: _nameCtrl.text,
-          phone: _phoneCtrl.text,
-          region: _regionCtrl.text,
-          avatar: _pickedFile,
-        );
+      name: _nameCtrl.text,
+      phone: _phoneCtrl.text,
+      region: _regionCtrl.text,
+      avatar: _pickedFile,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.scaffoldSecondary,
+      backgroundColor: const Color(0xFFFBF8F8),
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: AppColors.primary,
@@ -99,8 +99,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         },
         builder: (context, state) {
           final isSaving = state is ProfileEditSaving;
-          final fieldErrors =
-              state is ProfileEditReady ? state.fieldErrors : <String, String>{};
+          final fieldErrors = state is ProfileEditReady
+              ? state.fieldErrors
+              : <String, String>{};
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
@@ -114,12 +115,22 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     children: [
                       CircleAvatar(
                         radius: 52,
-                        backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-                        backgroundImage:
-                            _pickedFile != null ? FileImage(_pickedFile!) : null,
+                        backgroundColor: AppColors.primary.withValues(
+                          alpha: 0.15,
+                        ),
+                        backgroundImage: _pickedFile != null
+                            ? FileImage(_pickedFile!)
+                            : null,
                         child: _pickedFile == null
-                            ? const Icon(Icons.person,
-                                size: 52, color: AppColors.primary)
+                            ? Transform.flip(
+                                flipX:
+                                    false, // Mallattoo gara bitaatti garagalcha
+                                child: const Icon(
+                                  Icons.person,
+                                  size: 52,
+                                  color: AppColors.primary,
+                                ),
+                              )
                             : null,
                       ),
                       Container(

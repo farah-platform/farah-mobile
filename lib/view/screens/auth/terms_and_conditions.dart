@@ -48,6 +48,7 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
                       style: theme.textTheme.headlineSmall?.copyWith(
                         color: primary,
                         fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                     ),
                   ),
@@ -69,6 +70,7 @@ class _TermsAndConditionsScreenState extends State<TermsAndConditionsScreen> {
                       textAlign: TextAlign.center,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
+                        fontSize: 14,
                       ),
                     ),
                     const SizedBox(height: 4),

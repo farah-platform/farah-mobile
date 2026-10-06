@@ -127,23 +127,35 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   OutlinedButton(
                     onPressed: () =>
                         context.read<AuthCubit>().signInWithGoogle(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 22,
+                      ),
+
+                      minimumSize: const Size(double.infinity, 40),
+
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset("assets/image/google1.png", width: 24),
-                        const SizedBox(width: 12),
+                        Image.asset("assets/image/google1.png", width: 20),
+                        const SizedBox(width: 8), //
                         Text(
                           "المتابعة باستخدام Google",
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: Colors.black,
-                            fontSize: 16,
+                            fontSize: 14,
                           ),
                         ),
                       ],
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   _buildLabel('الاسم', theme),
                   TextFormField(
@@ -156,7 +168,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
                   _buildLabel('البريد الإلكتروني', theme),
                   TextFormField(
@@ -179,7 +191,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
                   _buildLabel('رقم الجوال', theme),
                   TextFormField(
@@ -230,7 +242,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
                   _buildLabel('المنطقة', theme),
                   _isLoadingCities
@@ -269,7 +281,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             return null;
                           },
                         ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
                   _buildLabel('كلمة المرور', theme),
                   TextFormField(
@@ -298,7 +310,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
 
                   _buildLabel('تأكيد كلمة المرور', theme),
                   TextFormField(
@@ -330,7 +342,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
 
                   RichText(
                     textAlign: TextAlign.center,
@@ -389,6 +401,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     text: TextSpan(
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: Colors.black87,
+                        fontSize: 13,
                       ),
                       children: [
                         const TextSpan(text: 'لديك حساب بالفعل! '),
