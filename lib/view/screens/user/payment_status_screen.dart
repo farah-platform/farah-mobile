@@ -238,7 +238,7 @@ class PaymentStatusScreen extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          _buildActionButton('اعادة المحاولة', state.onRetry),
+          _buildActionButton('اعادة المحاولة', () => context.read<PaymentCubit>().retry()),
           const SizedBox(height: 20),
         ],
       ),

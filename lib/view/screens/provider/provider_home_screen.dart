@@ -1,7 +1,13 @@
-import 'package:farah/cubits/provider_dashboard/provider_dashboard_cubit.dart';
+﻿import 'package:farah/cubits/provider_dashboard/provider_dashboard_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../widgets/provider/home/provider_home_header_widget.dart';
+import '../../widgets/provider/home/provider_home_subscription_card_widget.dart';
+import '../../widgets/provider/home/provider_home_quick_management_widget.dart';
+import 'services/provider_services_screen.dart';
+import '../../widgets/provider/home/provider_home_latest_orders_widget.dart';
 
 class ProviderHomeScreen extends StatefulWidget {
   const ProviderHomeScreen({super.key});
@@ -11,6 +17,7 @@ class ProviderHomeScreen extends StatefulWidget {
 }
 
 class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
+  int _currentIndex = 0;
   DateTime? _lastBackPressed;
 
   @override
@@ -42,139 +49,13 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
         await SystemNavigator.pop();
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('الشاشة الرئيسية'),
-          centerTitle: true,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.notifications_none),
-              onPressed: () {},
-            ),
-          ],
-        ),
-        body: BlocBuilder<ProviderDashboardCubit, ProviderDashboardState>(
-          builder: (context, state) {
-            if (state is ProviderDashboardLoading ||
-                state is ProviderDashboardInitial) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (state is ProviderDashboardError) {
-              return Center(child: Text(state.message));
-            }
-
-            final data = (state as ProviderDashboardLoaded).data;
-
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 30,
-                        backgroundColor: primary.withValues(alpha: 0.2),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'أهلاً بك متجر/مقدم',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 12,
-                            ),
-                          ),
-                          Text(
-                            data['business_name'] ?? 'مستلزمات أفراح وهدايا',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Spacer(),
-                      Chip(
-                        label: const Text(
-                          'الاشتراك نشط',
-                          style: TextStyle(color: Colors.white, fontSize: 12),
-                        ),
-                        backgroundColor: Colors.green,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  const Text(
-                    'إدارة المتجر السريعة',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const SizedBox(height: 16),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildStatCard(
-                          title: 'طلبات جديدة',
-                          count: (data['new_orders_count'] ?? 0).toString(),
-                          icon: Icons.receipt_long,
-                          color: Colors.orange,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildStatCard(
-                          title: 'الخدمات',
-                          count: (data['services_count'] ?? 0).toString(),
-                          icon: Icons.miscellaneous_services,
-                          color: primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  const Text(
-                    'أحدث الطلبات',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Empty state for orders
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 40),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.inbox,
-                          size: 50,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'لا توجد طلبات',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
+        body: SafeArea(child: _buildBody(context)),
         bottomNavigationBar: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
+          currentIndex: _currentIndex,
+          onTap: (index) => setState(() => _currentIndex = index),
           selectedItemColor: primary,
           unselectedItemColor: Colors.grey,
-          currentIndex: 0,
+          type: BottomNavigationBarType.fixed,
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'الرئيسية'),
             BottomNavigationBarItem(
@@ -192,38 +73,50 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
     );
   }
 
-  Widget _buildStatCard({
-    required String title,
-    required String count,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
+  Widget _buildBody(BuildContext context) {
+    switch (_currentIndex) {
+      case 0:
+        return _buildHomeContent(context);
+      case 1:
+        return const Center(child: Text('الطلبات (قريباً)'));
+      case 2:
+        return const ProviderServicesScreen();
+      case 3:
+        return const Center(child: Text('حسابي (قريباً)'));
+      default:
+        return _buildHomeContent(context);
+    }
+  }
+
+  Widget _buildHomeContent(BuildContext context) {
+    return BlocBuilder<ProviderDashboardCubit, ProviderDashboardState>(
+      builder: (context, state) {
+        if (state is ProviderDashboardLoading ||
+            state is ProviderDashboardInitial) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state is ProviderDashboardError) {
+          return Center(child: Text(state.message));
+        }
+
+        final data = (state as ProviderDashboardLoaded).data;
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ProviderHomeHeaderWidget(data: data),
+              const SizedBox(height: 24),
+              ProviderHomeSubscriptionCardWidget(data: data),
+              const SizedBox(height: 24),
+              ProviderHomeQuickManagementWidget(data: data),
+              const SizedBox(height: 24),
+              ProviderHomeLatestOrdersWidget(data: data),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 32),
-          const SizedBox(height: 8),
-          Text(
-            count,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-          ),
-          Text(
-            title,
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

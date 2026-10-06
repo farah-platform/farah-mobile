@@ -27,6 +27,9 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
   void initState() {
     super.initState();
     _isFavorited = widget.service?.isFavorited ?? false;
+    if (widget.service == null && widget.serviceId != null) {
+      context.read<ServiceDetailCubit>().load(widget.serviceId.toString());
+    }
   }
 
   @override

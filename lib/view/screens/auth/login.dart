@@ -95,11 +95,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Image.asset("assets/image/google1.png", width: 24),
                         const SizedBox(width: 12),
-                        Text(
-                          "المتابعة باستخدام Google",
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: Colors.black,
-                            fontSize: 14,
+                        Flexible(
+                          child: Text(
+                            "تسجيل الدخول باستخدام جوجل",
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],

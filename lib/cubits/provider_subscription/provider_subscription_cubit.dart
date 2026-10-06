@@ -26,14 +26,6 @@ class ProviderSubscriptionCubit extends Cubit<ProviderSubscriptionState> {
     emit(ProviderSubscriptionLoading());
     try {
       final plans = await _providerRepository.getSubscriptionPlans();
-      // If no plans mock them for now
-      if (plans.isEmpty) {
-        emit(ProviderSubscriptionPlansLoaded(plans: [
-          {'id': 1, 'name': 'الخطة الشهرية', 'price': '100', 'description': 'أفضل قيمة لإدارة المبيعات على مدار الشهر'},
-          {'id': 2, 'name': 'الخطة السنوية', 'price': '1000', 'description': 'أفضل قيمة لإدارة المبيعات على مدار العام'},
-        ]));
-        return;
-      }
       emit(ProviderSubscriptionPlansLoaded(plans: plans));
     } catch (e) {
       emit(ProviderSubscriptionError('فشل في جلب باقات الاشتراك'));

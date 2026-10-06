@@ -42,11 +42,9 @@ class PaymentBookingConfirmed extends PaymentState {
 // 4. خطأ في الاتصال / الشبكة
 class PaymentConnectionError extends PaymentState {
   final String message;
-  final VoidCallback onRetry;
 
   PaymentConnectionError({
     this.message = 'يرجى التحقق من اتصالك بالإنترنت\nوالمحاولة مرة أخرى',
-    required this.onRetry,
   });
 }
 

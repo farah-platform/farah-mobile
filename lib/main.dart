@@ -35,17 +35,29 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   final cache = CacheDatasource();
   final dioClient = DioClient(cache);
 
-  final AuthRepository authRepository = ApiAuthRepository(dioClient: dioClient, cache: cache);
-  final ServiceRepository serviceRepository = ApiServiceRepository(dioClient: dioClient);
+  final AuthRepository authRepository = ApiAuthRepository(
+    dioClient: dioClient,
+    cache: cache,
+  );
+  final ServiceRepository serviceRepository = ApiServiceRepository(
+    dioClient: dioClient,
+  );
   final HomeRepository homeRepository = HomeRepository(dioClient);
-  final BookingRepository bookingRepository = ApiBookingRepository(dioClient: dioClient);
-  final ProfileRepository profileRepository = ApiProfileRepository(dioClient: dioClient);
-  final NotificationRepository notificationRepository = ApiNotificationRepository(dioClient: dioClient);
-  final ProviderRepository providerRepository = ApiProviderRepository(dioClient: dioClient);
+  final BookingRepository bookingRepository = ApiBookingRepository(
+    dioClient: dioClient,
+  );
+  final ProfileRepository profileRepository = ApiProfileRepository(
+    dioClient: dioClient,
+  );
+  final NotificationRepository notificationRepository =
+      ApiNotificationRepository(dioClient: dioClient);
+  final ProviderRepository providerRepository = ApiProviderRepository(
+    dioClient: dioClient,
+  );
 
   runApp(
     FarhaApp(
@@ -97,8 +109,12 @@ class FarhaApp extends StatelessWidget {
           BlocProvider(create: (_) => BookingCubit(bookingRepository)),
           BlocProvider(create: (_) => ProfileCubit(profileRepository)),
           BlocProvider(create: (_) => SettingsCubit(profileRepository)),
-          BlocProvider(create: (_) => NotificationCubit(notificationRepository)),
-          BlocProvider(create: (_) => FavoritesCubit(LocalFavoritesRepository())),
+          BlocProvider(
+            create: (_) => NotificationCubit(notificationRepository),
+          ),
+          BlocProvider(
+            create: (_) => FavoritesCubit(LocalFavoritesRepository()),
+          ),
         ],
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
@@ -115,7 +131,10 @@ class FarhaApp extends StatelessWidget {
           onUnknownRoute: (_) => MaterialPageRoute(
             builder: (_) => const Scaffold(
               body: Center(
-                child: Text('?????? ??? ??????', style: TextStyle(fontSize: 18)),
+                child: Text(
+                  '?????? ??? ??????',
+                  style: TextStyle(fontSize: 18),
+                ),
               ),
             ),
           ),

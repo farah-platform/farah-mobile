@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:farah/data/repositories/provider_repository.dart';
 import 'package:farah/data/repositories/home_repostory.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,25 +26,16 @@ class ProviderOnboardingCubit extends Cubit<ProviderOnboardingState> {
   ProviderOnboardingCubit(this._providerRepository, this._homeRepository) : super(ProviderOnboardingInitial());
 
   Future<void> loadData() async {
+    if (isClosed) return;
     emit(ProviderOnboardingLoading());
     try {
-      // Mocking categories and cities fetch since endpoints are missing in repositories or we can just fetch them via Dio.
-      // Wait, HomeRepository might have categories. Let's just emit empty for now and let the UI handle or use DioClient.
-      // Since we don't have a direct CityRepository, we'll just mock them for now.
-      
-      final categories = [
-        {'id': 1, 'name': 'صالات أفراح'},
-        {'id': 2, 'name': 'كوافير'},
-        {'id': 3, 'name': 'دي جي'},
-      ];
-      final cities = [
-        {'id': 1, 'name': 'شمال غزة'},
-        {'id': 2, 'name': 'وسط غزة'},
-        {'id': 3, 'name': 'جنوب غزة'},
-      ];
+      final categories = await _homeRepository.getCategories();
+      final cities = await _homeRepository.getCities();
 
+      if (isClosed) return;
       emit(ProviderOnboardingLoaded(categories: categories, cities: cities));
     } catch (e) {
+      if (isClosed) return;
       emit(ProviderOnboardingError('فشل في جلب البيانات'));
     }
   }
@@ -59,6 +50,7 @@ class ProviderOnboardingCubit extends Cubit<ProviderOnboardingState> {
     String? commercialRegister,
     required File coverImage,
   }) async {
+    if (isClosed) return;
     emit(ProviderOnboardingSaving());
     try {
       await _providerRepository.submitOnboardingData({
@@ -70,8 +62,10 @@ class ProviderOnboardingCubit extends Cubit<ProviderOnboardingState> {
         'commercial_register': commercialRegister ?? '',
       }, idProof, coverImage);
       
+      if (isClosed) return;
       emit(ProviderOnboardingSuccess());
     } catch (e) {
+      if (isClosed) return;
       emit(ProviderOnboardingError('حدث خطأ أثناء حفظ البيانات'));
     }
   }
