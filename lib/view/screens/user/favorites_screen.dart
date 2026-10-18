@@ -114,15 +114,15 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
           children: [
             const Spacer(),
             Container(
-              width: 140,
-              height: 140,
+              width: 100,
+              height: 100,
               decoration: const BoxDecoration(
                 color: Color(0xFFF9F1F4),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.favorite_border_rounded,
-                size: 60,
+                size: 40,
                 color: Color(0xFF7B2146),
               ),
             ),
@@ -153,7 +153,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               padding: const EdgeInsets.only(bottom: 24.0),
               child: SizedBox(
                 width: double.infinity,
-                height: 56,
+                height: 48,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF7B2146),
@@ -174,7 +174,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     'تصفح الخدمات',
                     style: TextStyle(
                       fontFamily: 'Tajawal',
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

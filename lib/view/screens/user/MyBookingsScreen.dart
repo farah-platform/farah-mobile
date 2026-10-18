@@ -151,15 +151,15 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                             children: [
                               const Spacer(),
                               Container(
-                                width: 140,
-                                height: 140,
+                                width: 100,
+                                height: 100,
                                 decoration: const BoxDecoration(
                                   color: Color(0xFFF9F1F4),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
                                   Icons.calendar_month_outlined,
-                                  size: 60,
+                                  size: 40,
                                   color: Color(0xFF7B113A),
                                 ),
                               ),
@@ -192,7 +192,7 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                                 ),
                                 child: SizedBox(
                                   width: double.infinity,
-                                  height: 56,
+                                  height: 48,
                                   child: ElevatedButton(
                                     onPressed: () {
                                       Navigator.pushNamedAndRemoveUntil(
@@ -213,7 +213,7 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                                       'استكشف الخدمات',
                                       style: TextStyle(
                                         fontFamily: 'Tajawal',
-                                        fontSize: 18,
+                                        fontSize: 16,
                                         fontWeight: FontWeight.w600,
                                         color: Colors.white,
                                       ),

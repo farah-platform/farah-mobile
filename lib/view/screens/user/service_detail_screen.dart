@@ -34,12 +34,10 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    // 1. إذا تم تمرير الكائن مباشرة من الشاشة السابقة
     if (widget.service != null) {
       return _buildContent(context, widget.service!);
     }
 
-    // 2. إذا تم الفتح عبر serviceId من الكيوبت والباك إند
     return BlocBuilder<ServiceDetailCubit, ServiceDetailState>(
       builder: (context, state) {
         if (state is ServiceDetailLoading) {
@@ -191,4 +189,3 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
     );
   }
 }
-
