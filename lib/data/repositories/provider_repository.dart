@@ -11,7 +11,7 @@ abstract class ProviderRepository {
   Future<void> addProviderService(Map<String, dynamic> data, List<dynamic> images);
   Future<void> updateProviderService(int id, Map<String, dynamic> data, List<dynamic> newImages);
   Future<void> deleteProviderService(int id);
-  Future<void> toggleServiceVisibility(int id);
+  Future<void> toggleServiceVisibility(int id, bool isAvailable);
   Future<Map<String, dynamic>> getBookingDetails(int bookingId);
   Future<void> reviewPaymentProof(int bookingId, int paymentId, String decision, {String? reviewNote});
 }

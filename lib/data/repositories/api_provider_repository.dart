@@ -87,8 +87,8 @@ class ApiProviderRepository implements ProviderRepository {
 
   @override
   Future<void> updateProviderService(int id, Map<String, dynamic> data, List<dynamic> newImages) async {
+    // The API updates with POST /provider/services/{id}; spoofing PUT gives 405.
     final formData = FormData.fromMap(data);
-    formData.fields.add(const MapEntry('_method', 'PUT'));
 
     for (int i = 0; i < newImages.length; i++) {
       if (newImages[i] != null) {
@@ -108,8 +108,11 @@ class ApiProviderRepository implements ProviderRepository {
   }
 
   @override
-  Future<void> toggleServiceVisibility(int id) async {
-    await dioClient.dio.patch('${ApiEndpoints.providerServices}/$id/visibility');
+  Future<void> toggleServiceVisibility(int id, bool isAvailable) async {
+    await dioClient.dio.patch(
+      '${ApiEndpoints.providerServices}/$id/visibility',
+      data: {'is_available': isAvailable},
+    );
   }
 
   @override

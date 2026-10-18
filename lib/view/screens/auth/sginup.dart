@@ -53,7 +53,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (mounted) {
         setState(() {
           _isLoadingCities = false;
-          _citiesError = e.toString();
+          _citiesError = 'تعذر الاتصال بالخادم، يرجى المحاولة لاحقاً';
         });
       }
     }

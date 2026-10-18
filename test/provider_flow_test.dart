@@ -175,4 +175,23 @@ void main() {
       expect((cubit.state as ProviderSubscriptionPlansLoaded).plans, isEmpty);
     },
   );
+
+  test('service update uses POST without method spoofing', () async {
+    final (repo, recorder) = _repo((_) => {'data': <String, dynamic>{}});
+    await repo.updateProviderService(4, {'title': 't'}, []);
+    final req = recorder.requests.single;
+    expect(req.method, 'POST');
+    expect(req.path, '/provider/services/4');
+    final fields = Map.fromEntries((req.data as FormData).fields);
+    expect(fields.containsKey('_method'), isFalse);
+  });
+
+  test('visibility sends the is_available flag the API requires', () async {
+    final (repo, recorder) = _repo((_) => {'data': <String, dynamic>{}});
+    await repo.toggleServiceVisibility(4, false);
+    final req = recorder.requests.single;
+    expect(req.method, 'PATCH');
+    expect(req.path, '/provider/services/4/visibility');
+    expect(req.data, {'is_available': false});
+  });
 }

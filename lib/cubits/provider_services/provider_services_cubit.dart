@@ -1,4 +1,5 @@
-﻿import 'dart:io';
+import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farah/data/repositories/provider_repository.dart';
 import 'provider_services_state.dart';
@@ -17,11 +18,14 @@ class ProviderServicesCubit extends Cubit<ProviderServicesState> {
       emit(ProviderServicesLoaded(services: services));
     } catch (e) {
       if (isClosed) return;
-      emit(ProviderServicesError(message: e.toString()));
+      emit(ProviderServicesError(message: _mapError(e)));
     }
   }
 
-  Future<void> addService(Map<String, dynamic> data, List<dynamic> images) async {
+  Future<void> addService(
+    Map<String, dynamic> data,
+    List<dynamic> images,
+  ) async {
     if (isClosed) return;
     emit(ProviderServicesAdding());
     try {
@@ -31,11 +35,19 @@ class ProviderServicesCubit extends Cubit<ProviderServicesState> {
       emit(ProviderServicesAddSuccess());
     } catch (e) {
       if (isClosed) return;
-      emit(ProviderServicesAddError(message: 'حدث خطأ أثناء إضافة الخدمة'));
+      emit(
+        ProviderServicesAddError(
+          message: _mapError(e, 'حدث خطأ أثناء إضافة الخدمة'),
+        ),
+      );
     }
   }
 
-  Future<void> updateService(int id, Map<String, dynamic> data, List<dynamic> newImages) async {
+  Future<void> updateService(
+    int id,
+    Map<String, dynamic> data,
+    List<dynamic> newImages,
+  ) async {
     if (isClosed) return;
     emit(ProviderServicesAdding());
     try {
@@ -45,7 +57,11 @@ class ProviderServicesCubit extends Cubit<ProviderServicesState> {
       emit(ProviderServicesAddSuccess());
     } catch (e) {
       if (isClosed) return;
-      emit(ProviderServicesAddError(message: 'حدث خطأ أثناء التعديل'));
+      emit(
+        ProviderServicesAddError(
+          message: _mapError(e, 'حدث خطأ أثناء التعديل'),
+        ),
+      );
     }
   }
 
@@ -56,18 +72,35 @@ class ProviderServicesCubit extends Cubit<ProviderServicesState> {
       loadServices();
     } catch (e) {
       if (isClosed) return;
-      emit(ProviderServicesError(message: e.toString()));
+      emit(ProviderServicesError(message: _mapError(e)));
     }
   }
 
-  Future<void> toggleVisibility(int id) async {
+  Future<void> toggleVisibility(int id, bool isAvailable) async {
     if (isClosed) return;
     try {
-      await _repository.toggleServiceVisibility(id);
+      await _repository.toggleServiceVisibility(id, isAvailable);
       loadServices();
     } catch (e) {
       if (isClosed) return;
-      emit(ProviderServicesError(message: e.toString()));
+      emit(ProviderServicesError(message: _mapError(e)));
     }
+  }
+
+  String _mapError(
+    Object e, [
+    String fallback = 'حدث خطأ، يرجى المحاولة مجدداً',
+  ]) {
+    if (e is DioException) {
+      final data = e.response?.data;
+      if (data is Map) {
+        final message = (data['title'] ?? data['message'])?.toString();
+        if (message != null && message.isNotEmpty) return message;
+      }
+      if (e.type == DioExceptionType.connectionError) {
+        return 'تحقق من اتصالك بالإنترنت';
+      }
+    }
+    return fallback;
   }
 }
