@@ -3,19 +3,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:farah/cubits/booking/booking_cubit.dart';
+import 'package:farah/data/models/booking_options_model.dart';
 import 'package:farah/data/models/service_model.dart';
-import 'package:farah/view/screens/user/payment_screen.dart';
 
 class BookingConfirmationScreen extends StatefulWidget {
   final ServiceModel service;
   final DateTime selectedDateTime;
-  final String selectedTime;
+  final BookingOptionSlotModel slot;
+  final String currency;
+  final String? notes;
 
   const BookingConfirmationScreen({
     super.key,
     required this.service,
     required this.selectedDateTime,
-    required this.selectedTime,
+    required this.slot,
+    required this.currency,
+    this.notes,
   });
 
   @override
@@ -30,12 +34,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // حسابات المبالغ التلقائية والديناميكية
-    final double totalPrice = widget.service.price > 0
-        ? widget.service.price
-        : 800.0;
-    final double depositAmount = totalPrice * 0.25; // عربون 25%
-    final double remainingAmount = totalPrice - depositAmount;
+    // السعر من الفترة المختارة (API). العربون يحدده مقدّم الخدمة عند قبول الطلب.
+    final double totalPrice = widget.slot.price;
+    const depositPending = 'يُحدَّد عند قبول الطلب';
 
     final formattedArabicDate = DateFormat(
       'd MMMM yyyy',
@@ -87,9 +88,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          widget.service.title.isNotEmpty
-                              ? widget.service.title
-                              : 'باقة العروس',
+                          widget.service.title,
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
@@ -170,8 +169,8 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '${depositAmount.toInt()} ${widget.service.currency}',
+                        const Text(
+                          depositPending,
                           style: const TextStyle(
                             fontSize: 13,
                             color: Colors.black87,
@@ -191,8 +190,8 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '${remainingAmount.toInt()} ${widget.service.currency}',
+                        const Text(
+                          depositPending,
                           style: const TextStyle(
                             fontSize: 13,
                             color: Colors.black87,
@@ -255,7 +254,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '${totalPrice.toInt()} ${widget.service.currency}',
+                      '${totalPrice == totalPrice.roundToDouble() ? totalPrice.toInt() : totalPrice} ${widget.currency}',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -280,18 +279,16 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
               BlocConsumer<BookingCubit, BookingState>(
                 listener: (context, state) {
                   if (state is BookingCreated) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PaymentScreen(
-                          service: widget.service,
-                          depositAmount: depositAmount,
-                          bookingId: state.booking.id.toString(),
-                          paymentInstructions:
-                              state.booking.paymentInstructions,
+                    // The provider accepts first; transfer details arrive
+                    // with that acceptance (status payment_awaiting).
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'تم إرسال طلب الحجز إلى مقدّم الخدمة، وستصلك تعليمات الدفع بعد قبوله.',
                         ),
                       ),
                     );
+                    Navigator.pop(context);
                   } else if (state is BookingError) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -328,9 +325,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                               final request = BookingRequestModel(
                                 serviceId: widget.service.id,
                                 bookingDate: apiFormattedDate,
-                                bookingTime: widget.selectedTime,
-                                bookingSlot: widget.selectedTime,
-                                notes: null,
+                                bookingTime: widget.slot.startTime,
+                                bookingSlot: widget.slot.label,
+                                notes: widget.notes,
                               );
 
                               context.read<BookingCubit>().createBooking(
@@ -347,7 +344,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                               ),
                             )
                           : const Text(
-                              'الانتقال لصفحة الدفع',
+                              'إرسال طلب الحجز',
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
@@ -374,4 +371,3 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
     );
   }
 }
-

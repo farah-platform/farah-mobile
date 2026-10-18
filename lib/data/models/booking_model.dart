@@ -1,6 +1,17 @@
 import 'package:equatable/equatable.dart';
 
-enum BookingStatus { pending, confirmed, cancelled, completed }
+enum BookingStatus {
+  pending,
+  // Workflow states returned by the API (CUSTOMER_BOOKING_HANDOFF.md).
+  providerPending,
+  paymentAwaiting,
+  reviewUnderProof,
+  confirmed,
+  completed,
+  rejected,
+  cancelled,
+  expired,
+}
 
 class BookingModel extends Equatable {
   final String id;
@@ -13,6 +24,9 @@ class BookingModel extends Equatable {
   final DateTime eventDate;
   final BookingStatus status;
   final double totalPrice;
+  final double? depositAmount;
+  final String? currency;
+  final String? reference;
   final String? notes;
   final String? paymentInstructions;
   final DateTime createdAt;
@@ -28,18 +42,30 @@ class BookingModel extends Equatable {
     required this.eventDate,
     required this.status,
     required this.totalPrice,
+    this.depositAmount,
+    this.currency,
+    this.reference,
     this.notes,
     this.paymentInstructions,
     required this.createdAt,
   });
 
   factory BookingModel.fromMap(Map<String, dynamic> map) {
+    final service = map['service'] is Map ? map['service'] as Map : const {};
+    final pricing = map['pricing'] is Map ? map['pricing'] as Map : const {};
+    final rawDate = map['event_date'] ?? map['booking_date'] ?? map['date'];
     return BookingModel(
       id: map['id']?.toString() ?? '',
       userId: (map['user_id'] ?? map['userId'])?.toString() ?? '',
-      serviceId: (map['service_id'] ?? map['serviceId'])?.toString() ?? '',
+      serviceId:
+          (map['service_id'] ?? map['serviceId'] ?? service['id'])
+              ?.toString() ??
+          '',
       serviceName:
-          (map['service_name'] ?? map['serviceName'] ?? map['title'])
+          (map['service_name'] ??
+                  map['serviceName'] ??
+                  map['title'] ??
+                  service['title'])
               ?.toString() ??
           '',
       providerId: (map['provider_id'] ?? map['providerId'])?.toString() ?? '',
@@ -47,17 +73,18 @@ class BookingModel extends Equatable {
           (map['provider_name'] ?? map['providerName'] ?? '')?.toString() ?? '',
       category:
           (map['category_name'] ?? map['category'] ?? '')?.toString() ?? '',
-      eventDate: map['event_date'] != null
-          ? DateTime.tryParse(map['event_date'].toString()) ?? DateTime.now()
-          : (map['booking_date'] != null
-                ? DateTime.tryParse(map['booking_date'].toString()) ??
-                      DateTime.now()
-                : DateTime.now()),
+      eventDate: rawDate != null
+          ? DateTime.tryParse(rawDate.toString()) ?? DateTime.now()
+          : DateTime.now(),
       status: _parseStatus(map['status']),
       totalPrice:
           (map['total_price'] as num?)?.toDouble() ??
           (map['total_amount'] as num?)?.toDouble() ??
+          (pricing['total'] as num?)?.toDouble() ??
           0.0,
+      depositAmount: (pricing['deposit'] as num?)?.toDouble(),
+      currency: pricing['currency']?.toString(),
+      reference: map['reference']?.toString(),
       notes: map['notes'] as String?,
       paymentInstructions: map['payment_instructions']?.toString(),
       createdAt: map['created_at'] != null
@@ -89,7 +116,8 @@ class BookingModel extends Equatable {
 
   static BookingStatus _parseStatus(dynamic rawStatus) {
     if (rawStatus == null) return BookingStatus.pending;
-    final clean = rawStatus.toString().trim().toLowerCase();
+    // API sends snake_case (provider_pending); enum names are camelCase.
+    final clean = rawStatus.toString().trim().toLowerCase().replaceAll('_', '');
     return BookingStatus.values.firstWhere(
       (e) => e.name.toLowerCase() == clean,
       orElse: () => BookingStatus.pending,

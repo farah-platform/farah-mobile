@@ -95,6 +95,7 @@ class FarhaApp extends StatelessWidget {
         RepositoryProvider<ProviderRepository>.value(value: providerRepository),
         RepositoryProvider<HomeRepository>.value(value: homeRepository),
         RepositoryProvider<ServiceRepository>.value(value: serviceRepository),
+        RepositoryProvider<BookingRepository>.value(value: bookingRepository),
       ],
       child: MultiBlocProvider(
         providers: [

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart' hide TextDirection;
+import 'package:farah/cubits/booking_options/booking_options_cubit.dart';
+import 'package:farah/data/models/booking_options_model.dart';
 import 'package:farah/data/models/service_model.dart';
+import 'package:farah/data/repositories/booking_repository.dart';
 import 'package:farah/view/screens/user/booking_confirmation_screen.dart';
 
 class BookingBottomSheetWidget extends StatefulWidget {
@@ -13,7 +17,13 @@ class BookingBottomSheetWidget extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => BookingBottomSheetWidget(service: service),
+      builder: (_) => BlocProvider(
+        create: (_) => BookingOptionsCubit(
+          context.read<BookingRepository>(),
+          serviceId: service.id,
+        )..loadMonth(DateTime.now()),
+        child: BookingBottomSheetWidget(service: service),
+      ),
     );
   }
 
@@ -25,11 +35,8 @@ class BookingBottomSheetWidget extends StatefulWidget {
 class _BookingBottomSheetWidgetState extends State<BookingBottomSheetWidget> {
   DateTime _currentMonth = DateTime.now();
   DateTime? _selectedDate;
-  int _selectedPeriod = 1; // 0: صباحية, 1: مسائية
+  int? _selectedSlotIndex;
   final TextEditingController _notesController = TextEditingController();
-
-  // أيام محاكاة للحجز (أيام محجوزة مسبقاً باللون العنابي الداكن)
-  final Set<int> _bookedDays = {2, 3, 5, 6, 9, 12, 15, 17, 21, 24, 27, 30};
 
   final Color _maroon = const Color(0xFF7B2146);
   final Color _lightGray = const Color(0xFFF1F2F4);
@@ -47,8 +54,25 @@ class _BookingBottomSheetWidgetState extends State<BookingBottomSheetWidget> {
         _currentMonth.year,
         _currentMonth.month + increment,
       );
+      _selectedDate = null;
+      _selectedSlotIndex = null;
     });
+    context.read<BookingOptionsCubit>().loadMonth(_currentMonth);
   }
+
+  List<BookingOptionSlotModel> _slotsOf(BookingOptionsModel? options) {
+    if (options == null || _selectedDate == null) return const [];
+    return options.dayOf(_selectedDate!.day)?.slots ?? const [];
+  }
+
+  BookingOptionSlotModel? _selectedSlot(BookingOptionsModel? options) {
+    final slots = _slotsOf(options);
+    final i = _selectedSlotIndex;
+    return i != null && i < slots.length ? slots[i] : null;
+  }
+
+  String _formatPrice(double price) =>
+      price == price.roundToDouble() ? '${price.toInt()}' : '$price';
 
   @override
   Widget build(BuildContext context) {
@@ -57,8 +81,22 @@ class _BookingBottomSheetWidgetState extends State<BookingBottomSheetWidget> {
       _currentMonth.year,
       _currentMonth.month,
     );
+    // The week row starts on Friday (جمعة), so offset from Friday.
     final firstDayOffset =
-        DateTime(_currentMonth.year, _currentMonth.month, 1).weekday % 7;
+        (DateTime(_currentMonth.year, _currentMonth.month, 1).weekday -
+            DateTime.friday) %
+        7;
+    final optionsState = context.watch<BookingOptionsCubit>().state;
+    final options = optionsState is BookingOptionsLoaded
+        ? optionsState.options
+        : null;
+    final slots = _slotsOf(options);
+    final selectedSlot = _selectedSlot(options);
+    final totalPrice =
+        selectedSlot?.price ?? options?.price ?? widget.service.price;
+    final currency = options?.currency.isNotEmpty == true
+        ? options!.currency
+        : widget.service.currency;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.92,
@@ -163,13 +201,18 @@ class _BookingBottomSheetWidgetState extends State<BookingBottomSheetWidget> {
                           itemBuilder: (context, index) {
                             if (index < firstDayOffset) return const SizedBox();
                             final day = index - firstDayOffset + 1;
-                            final isBooked = _bookedDays.contains(day);
+                            final dayInfo = options?.dayOf(day);
+                            final isSelectable = dayInfo?.isAvailable == true;
+                            final isBooked =
+                                dayInfo != null &&
+                                !dayInfo.isAvailable &&
+                                !dayInfo.isPast;
                             final isSelected =
                                 _selectedDate?.day == day &&
                                 _selectedDate?.month == _currentMonth.month;
 
                             return InkWell(
-                              onTap: isBooked
+                              onTap: !isSelectable
                                   ? null
                                   : () {
                                       setState(() {
@@ -178,6 +221,7 @@ class _BookingBottomSheetWidgetState extends State<BookingBottomSheetWidget> {
                                           _currentMonth.month,
                                           day,
                                         );
+                                        _selectedSlotIndex = null;
                                       });
                                     },
                               customBorder: const CircleBorder(),
@@ -201,13 +245,30 @@ class _BookingBottomSheetWidgetState extends State<BookingBottomSheetWidget> {
                                     fontWeight: FontWeight.w600,
                                     color: isBooked
                                         ? Colors.white
-                                        : Colors.black87,
+                                        : (isSelectable
+                                              ? Colors.black87
+                                              : Colors.black26),
                                   ),
                                 ),
                               ),
                             );
                           },
                         ),
+                        if (optionsState is BookingOptionsLoading) ...[
+                          const SizedBox(height: 10),
+                          const LinearProgressIndicator(),
+                        ],
+                        if (optionsState is BookingOptionsError) ...[
+                          const SizedBox(height: 10),
+                          Text(
+                            optionsState.message,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -232,20 +293,29 @@ class _BookingBottomSheetWidgetState extends State<BookingBottomSheetWidget> {
                   ),
                   const SizedBox(height: 10),
 
-                  // الفترة الصباحية
-                  _buildPeriodOption(
-                    index: 0,
-                    title: 'الفترة الصباحية',
-                    time: '10:00 ص _ 3:00 م',
-                  ),
-                  const SizedBox(height: 10),
-
-                  // الفترة المسائية
-                  _buildPeriodOption(
-                    index: 1,
-                    title: 'الفترة المسائية',
-                    time: '5:00 م _ 10:00 م',
-                  ),
+                  // الفترات كما يعرّفها مقدّم الخدمة (من الـ API)
+                  if (_selectedDate == null)
+                    const Text(
+                      'اختر تاريخاً لعرض الفترات المتاحة',
+                      style: TextStyle(fontSize: 14, color: Colors.black54),
+                    )
+                  else if (slots.isEmpty)
+                    const Text(
+                      'لا توجد فترات متاحة لهذا اليوم',
+                      style: TextStyle(fontSize: 14, color: Colors.black54),
+                    )
+                  else
+                    for (var i = 0; i < slots.length; i++) ...[
+                      if (i > 0) const SizedBox(height: 10),
+                      _buildPeriodOption(
+                        index: i,
+                        title: slots[i].label ?? '',
+                        time: slots[i].endTime == null
+                            ? slots[i].startTime
+                            : '${slots[i].startTime} - ${slots[i].endTime}',
+                        enabled: slots[i].isAvailable,
+                      ),
+                    ],
 
                   const SizedBox(height: 14),
 
@@ -293,7 +363,7 @@ class _BookingBottomSheetWidgetState extends State<BookingBottomSheetWidget> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '${widget.service.price > 0 ? widget.service.price.toInt() : 1400} ${widget.service.currency}',
+                          '${_formatPrice(totalPrice)} $currency',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: _maroon,
@@ -332,7 +402,16 @@ class _BookingBottomSheetWidgetState extends State<BookingBottomSheetWidget> {
                           );
                           return;
                         }
+                        if (selectedSlot == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('يرجى اختيار الفترة أولاً'),
+                            ),
+                          );
+                          return;
+                        }
 
+                        final notes = _notesController.text.trim();
                         Navigator.pop(context);
                         Navigator.push(
                           context,
@@ -340,9 +419,9 @@ class _BookingBottomSheetWidgetState extends State<BookingBottomSheetWidget> {
                             builder: (_) => BookingConfirmationScreen(
                               service: widget.service,
                               selectedDateTime: _selectedDate!,
-                              selectedTime: _selectedPeriod == 0
-                                  ? 'الفترة الصباحية (10:00 ص - 3:00 م)'
-                                  : 'الفترة المسائية (5:00 م - 10:00 م)',
+                              slot: selectedSlot,
+                              currency: currency,
+                              notes: notes.isEmpty ? null : notes,
                             ),
                           ),
                         );
@@ -396,71 +475,80 @@ class _BookingBottomSheetWidgetState extends State<BookingBottomSheetWidget> {
     required int index,
     required String title,
     required String time,
+    bool enabled = true,
   }) {
-    final isSelected = _selectedPeriod == index;
+    final isSelected = _selectedSlotIndex == index;
 
-    return InkWell(
-      onTap: () => setState(() => _selectedPeriod = index),
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: isSelected ? _selectedBg : Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isSelected ? _maroon.withOpacity(0.4) : Colors.black12,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isSelected ? _maroon : Colors.transparent,
-                border: Border.all(
-                  color: isSelected ? _maroon : Colors.black26,
-                  width: 1.5,
-                ),
-              ),
-              child: isSelected
-                  ? const Icon(Icons.check, size: 14, color: Colors.white)
-                  : null,
+    return Opacity(
+      opacity: enabled ? 1 : 0.45,
+      child: InkWell(
+        onTap: enabled
+            ? () => setState(() => _selectedSlotIndex = index)
+            : null,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: isSelected ? _selectedBg : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isSelected ? _maroon.withOpacity(0.4) : Colors.black12,
             ),
-            const Spacer(),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    color: isSelected ? _maroon : Colors.black87,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected ? _maroon : Colors.transparent,
+                  border: Border.all(
+                    color: isSelected ? _maroon : Colors.black26,
+                    width: 1.5,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Text(
-                      time,
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        color: Colors.black54,
+                child: isSelected
+                    ? const Icon(Icons.check, size: 14, color: Colors.white)
+                    : null,
+              ),
+              const Spacer(),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: isSelected ? _maroon : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Text(
+                          time,
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: Colors.black54,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(
-                      Icons.access_time,
-                      size: 13,
-                      color: Colors.black45,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.access_time,
+                        size: 13,
+                        color: Colors.black45,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

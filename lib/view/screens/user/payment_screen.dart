@@ -340,9 +340,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       return;
                     }
 
-                    String methodKey = 'bank_of_palestine';
+                    // The API accepts bank_transfer, jawwal_pay or other.
+                    String methodKey = 'bank_transfer';
                     if (_selectedMethod == PaymentMethod.palPay) {
-                      methodKey = 'pal_pay';
+                      methodKey = 'other';
                     } else if (_selectedMethod == PaymentMethod.jawwalPay) {
                       methodKey = 'jawwal_pay';
                     }

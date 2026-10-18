@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:farah/core/network/dio_client.dart';
 import 'package:farah/data/models/booking_model.dart';
+import 'package:farah/data/models/booking_options_model.dart';
 import 'package:farah/data/models/home/booking_request_model.dart';
 import 'package:farah/data/repositories/booking_repository.dart';
 
@@ -12,8 +13,25 @@ class ApiBookingRepository implements BookingRepository {
   Dio get _dio => _dioClient.dio;
 
   @override
+  Future<BookingOptionsModel> fetchBookingOptions(
+    int serviceId,
+    String month,
+  ) async {
+    final res = await _dio.get(
+      '/services/$serviceId/booking-options',
+      queryParameters: {'month': month},
+    );
+    return BookingOptionsModel.fromJson(
+      res.data['data'] as Map<String, dynamic>,
+    );
+  }
+
+  @override
   Future<BookingModel> createBooking(BookingRequestModel request) async {
-    final res = await _dio.post('/bookings', data: request.toJson());
+    final res = await _dio.post(
+      '/services/${request.serviceId}/bookings',
+      data: request.toJson(),
+    );
 
     final rawData = res.data is Map<String, dynamic>
         ? (res.data['data'] ?? res.data)
@@ -50,11 +68,6 @@ class ApiBookingRepository implements BookingRepository {
 
   @override
   Future<void> cancelBooking(String id) async {
-    await _dio.put('/bookings/$id/cancel');
-  }
-
-  @override
-  Future<void> confirmBooking(String id) async {
-    await _dio.put('/bookings/$id/confirm');
+    await _dio.post('/bookings/$id/cancel');
   }
 }
