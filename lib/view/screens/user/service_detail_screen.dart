@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farah/data/models/service_model.dart';
+import 'package:farah/cubits/favorites/favorites_cubit.dart';
 import 'package:farah/cubits/service_detail/service_detail_cubit.dart';
 import 'package:farah/view/widgets/service_details/service_features_list_widget.dart';
 import 'package:farah/view/widgets/service_details/booking_bottom_sheet_widget.dart';
@@ -21,12 +22,25 @@ class ServiceDetailsScreen extends StatefulWidget {
 }
 
 class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
-  late bool _isFavorited;
+  // Set after a tap; until then the value comes from the API's service data.
+  bool? _isFavorited;
+
+  Future<void> _toggleFavorite(ServiceModel service, bool current) async {
+    setState(() => _isFavorited = !current);
+    final error = await context.read<FavoritesCubit>().toggle(
+      service.id.toString(),
+    );
+    if (error == null || !mounted) return;
+    setState(() => _isFavorited = current);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+  }
 
   @override
   void initState() {
     super.initState();
-    _isFavorited = widget.service?.isFavorited ?? false;
+    if (widget.service == null && widget.serviceId != null) {
+      context.read<ServiceDetailCubit>().load(widget.serviceId.toString());
+    }
   }
 
   @override
@@ -141,11 +155,12 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
             children: [
               ServiceDetailHeaderWidget(
                 images: allImages,
-                isFavorited: _isFavorited,
+                isFavorited: _isFavorited ?? service.isFavorited,
                 onBackTap: () => Navigator.pop(context),
-                onFavoriteTap: () {
-                  setState(() => _isFavorited = !_isFavorited);
-                },
+                onFavoriteTap: () => _toggleFavorite(
+                  service,
+                  _isFavorited ?? service.isFavorited,
+                ),
               ),
               Transform.translate(
                 offset: const Offset(0, -25),
@@ -191,4 +206,3 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
     );
   }
 }
-

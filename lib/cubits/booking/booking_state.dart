@@ -18,8 +18,6 @@ class BookingsLoaded extends BookingState {
 
 class BookingCancelled extends BookingState {}
 
-class BookingConfirmed extends BookingState {}
-
 class BookingError extends BookingState {
   final String message;
   BookingError(this.message);

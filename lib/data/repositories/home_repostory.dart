@@ -12,5 +12,16 @@ class HomeRepository {
 
     return HomeResponseModel.fromJson(response.data);
   }
+
+  Future<List<dynamic>> getCategories() async {
+    final response = await _dioClient.dio.get(ApiEndpoints.categories);
+    return response.data['data'] ?? response.data;
+  }
+
+  Future<List<dynamic>> getCities() async {
+    final response = await _dioClient.dio.get(ApiEndpoints.cities);
+    return response.data['data'] ?? response.data;
+  }
 }
+
 

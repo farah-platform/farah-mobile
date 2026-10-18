@@ -28,6 +28,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   int? selectedCityId;
   List<CityModel> _cities = [];
   bool _isLoadingCities = true;
+  String? _citiesError;
 
   String selectedCountryCode = '+970';
   bool obscurePassword = true;
@@ -48,9 +49,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
           _isLoadingCities = false;
         });
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
-        setState(() => _isLoadingCities = false);
+        setState(() {
+          _isLoadingCities = false;
+          _citiesError = 'تعذر الاتصال بالخادم، يرجى المحاولة لاحقاً';
+        });
       }
     }
   }
@@ -91,7 +95,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ).showSnackBar(SnackBar(content: Text(state.message)));
         } else if (state is AuthSuccess) {
           final route = state.user.role == 'provider'
-              ? AppRoutes.providerHome
+              ? AppRoutes.providerRouter
               : AppRoutes.home;
           Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
         }
@@ -132,11 +136,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       children: [
                         Image.asset("assets/image/google1.png", width: 24),
                         const SizedBox(width: 12),
-                        Text(
-                          "المتابعة باستخدام Google",
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: Colors.black,
-                            fontSize: 16,
+                        Flexible(
+                          child: Text(
+                            "المتابعة باستخدام Google",
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: Colors.black,
+                              fontSize: 16,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -181,7 +188,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  _buildLabel('رقم الجوال', theme),
+                  _buildLabel(' رقم الهاتف', theme),
                   TextFormField(
                     controller: phoneController,
                     keyboardType: TextInputType.phone,
@@ -221,11 +228,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'الرجاء إدخال رقم الجوال';
+                        return 'الرجاء إدخال رقم الهاتف';
                       }
                       final phoneRegex = RegExp(r'^5[69][0-9]{7}$');
                       if (!phoneRegex.hasMatch(value.trim())) {
-                        return 'رقم الهاتف غير صحيح';
+                        return 'رقم الهاتف يجب أن يكون 9 أرقام على الأقل';
                       }
                       return null;
                     },
@@ -242,6 +249,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               width: 24,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             ),
+                          ),
+                        )
+                      : _citiesError != null
+                      ? Text(
+                          'خطأ في تحميل المناطق: $_citiesError',
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 12,
                           ),
                         )
                       : DropdownButtonFormField<int>(
@@ -290,17 +305,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'الرجاء إدخال كلمة المرور';
+                        return 'الرجاء إدخال رقم الهاتف';
                       }
-                      if (value.length < 6) {
-                        return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+                      if (value.length < 9) {
+                        return 'رقم الهاتف يجب أن يكون 9 أرقام على الأقل';
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 16),
 
-                  _buildLabel('تأكيد كلمة المرور', theme),
+                  _buildLabel('تأكيد كلمة المرور ', theme),
                   TextFormField(
                     controller: confirmPasswordController,
                     obscureText: obscureConfirmPassword,
@@ -322,7 +337,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'الرجاء تأكيد كلمة المرور';
+                        return 'الرجاء إدخال كلمة المرور';
                       }
                       if (value != passwordController.text) {
                         return 'كلمة المرور غير متطابقة';
@@ -338,28 +353,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.black87,
                       ),
-                      children: [
-                        const TextSpan(
-                          text: 'بالضغط على اشتراك فإنك توافق على ',
-                        ),
-                        TextSpan(
-                          text: 'سياسية الخصوصية والاستخدام',
-                          style: TextStyle(
-                            color: primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const TermsAndConditionsScreen(),
-                                ),
-                              );
-                            },
-                        ),
-                      ],
+                      // children: [
+                      //   const TextSpan(
+                      //     text: 'بالضغط علی اشتراك فانك توافق علی ',
+                      //   ),
+                      //   TextSpan(
+                      //     text: 'سياست الخصوصية والاتفاق',
+                      //     style: TextStyle(
+                      //       color: primary,
+                      //       fontWeight: FontWeight.bold,
+                      //     ),
+                      //     recognizer: TapGestureRecognizer()
+                      //       ..onTap = () {
+                      //         Navigator.push(
+                      //           context,
+                      //           MaterialPageRoute(
+                      //             builder: (context) =>
+                      //                 const TermsAndConditionsScreen(),
+                      //           ),
+                      //         );
+                      //       },
+                      //   ),
+                      // ],
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -378,7 +393,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text('اشتراك'),
+                            : const Text(
+                                'التالي',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
                       );
                     },
                   ),
@@ -391,9 +409,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         color: Colors.black87,
                       ),
                       children: [
-                        const TextSpan(text: 'لديك حساب بالفعل! '),
+                        const TextSpan(text: ' لديك حساب بالفعل!  '),
                         TextSpan(
-                          text: 'تسجيل الدخول',
+                          text: ' تسجيل الدخول',
                           style: TextStyle(
                             color: primary,
                             fontWeight: FontWeight.bold,

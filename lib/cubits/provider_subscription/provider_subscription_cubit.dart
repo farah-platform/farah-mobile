@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:farah/data/repositories/provider_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -26,32 +26,33 @@ class ProviderSubscriptionCubit extends Cubit<ProviderSubscriptionState> {
     emit(ProviderSubscriptionLoading());
     try {
       final plans = await _providerRepository.getSubscriptionPlans();
-      // If no plans mock them for now
-      if (plans.isEmpty) {
-        emit(ProviderSubscriptionPlansLoaded(plans: [
-          {'id': 1, 'name': 'الخطة الشهرية', 'price': '100', 'description': 'أفضل قيمة لإدارة المبيعات على مدار الشهر'},
-          {'id': 2, 'name': 'الخطة السنوية', 'price': '1000', 'description': 'أفضل قيمة لإدارة المبيعات على مدار العام'},
-        ]));
-        return;
-      }
       emit(ProviderSubscriptionPlansLoaded(plans: plans));
     } catch (e) {
       emit(ProviderSubscriptionError('فشل في جلب باقات الاشتراك'));
     }
   }
 
-  Future<void> activateSubscription({
-    required String planId,
-    required String bankName,
-    required String accountNumber,
-    required File receiptImage,
-  }) async {
+  Future<void> activateSubscription({required String planSlug}) async {
     emit(ProviderSubscriptionActivating());
     try {
-      await _providerRepository.activateSubscription(planId, bankName, accountNumber, receiptImage);
+      await _providerRepository.activateSubscription(planSlug);
       emit(ProviderSubscriptionSuccess());
     } catch (e) {
-      emit(ProviderSubscriptionError('حدث خطأ أثناء تفعيل الاشتراك'));
+      emit(ProviderSubscriptionError(_mapError(e, 'حدث خطأ أثناء تفعيل الاشتراك')));
     }
+  }
+
+  String _mapError(Object e, String fallback) {
+    if (e is DioException) {
+      final data = e.response?.data;
+      if (data is Map) {
+        final message = (data['title'] ?? data['message'])?.toString();
+        if (message != null && message.isNotEmpty) return message;
+      }
+      if (e.type == DioExceptionType.connectionError) {
+        return 'تحقق من اتصالك بالإنترنت';
+      }
+    }
+    return fallback;
   }
 }

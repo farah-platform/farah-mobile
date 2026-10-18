@@ -18,17 +18,16 @@ class ApiPaymentRepository implements PaymentRepository {
     final fileName = request.receiptImage.path.split('/').last;
 
     final formData = FormData.fromMap({
-      'booking_id': request.bookingId,
-      'payment_method': request.paymentMethod,
+      'method': request.paymentMethod,
       'amount': request.amount,
-      'receipt': await MultipartFile.fromFile(
+      'proof': await MultipartFile.fromFile(
         request.receiptImage.path,
         filename: fileName,
       ),
     });
 
     await _dio.post(
-      '/payments/receipt',
+      '/bookings/${request.bookingId}/payment-proofs',
       data: formData,
       options: Options(contentType: 'multipart/form-data'),
     );

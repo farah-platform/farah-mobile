@@ -51,20 +51,13 @@ class BookingCubit extends Cubit<BookingState> {
     }
   }
 
-  Future<void> confirmBooking(String id) async {
-    emit(BookingLoading());
-    try {
-      await _repo.confirmBooking(id);
-      emit(BookingConfirmed());
-    } catch (e) {
-      emit(BookingError(_mapError(e)));
-    }
-  }
-
   String _mapError(Object e) {
     if (e is DioException) {
-      final message = e.response?.data?['message'] as String?;
-      if (message != null && message.isNotEmpty) return message;
+      final data = e.response?.data;
+      if (data is Map) {
+        final message = (data['title'] ?? data['message'])?.toString();
+        if (message != null && message.isNotEmpty) return message;
+      }
       if (e.type == DioExceptionType.connectionError) {
         return 'تحقق من اتصالك بالإنترنت';
       }

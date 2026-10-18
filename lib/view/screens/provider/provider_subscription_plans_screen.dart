@@ -68,11 +68,11 @@ class _ProviderSubscriptionPlansScreenState
                     itemBuilder: (context, index) {
                       final plan = plans[index];
                       final isSelected =
-                          _selectedPlanId == plan['id'].toString();
+                          _selectedPlanId == plan['slug'].toString();
 
                       return GestureDetector(
                         onTap: () => setState(
-                          () => _selectedPlanId = plan['id'].toString(),
+                          () => _selectedPlanId = plan['slug'].toString(),
                         ),
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 16),

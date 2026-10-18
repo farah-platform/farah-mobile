@@ -20,11 +20,11 @@ class ApiNotificationRepository implements NotificationRepository {
 
   @override
   Future<void> markAsRead(String id) async {
-    await _dio.put('/notifications/$id/read');
+    await _dio.post('/notifications/$id/read');
   }
 
   @override
   Future<void> markAllAsRead() async {
-    await _dio.put('/notifications/read-all');
+    await _dio.post('/notifications/read-all');
   }
 }

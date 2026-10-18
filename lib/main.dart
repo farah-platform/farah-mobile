@@ -6,6 +6,7 @@ import 'package:farah/cubits/booking/booking_cubit.dart';
 import 'package:farah/cubits/favorites/favorites_cubit.dart';
 import 'package:farah/cubits/home/home_cubit.dart';
 import 'package:farah/cubits/notification/notification_cubit.dart';
+import 'package:farah/cubits/payment/payment_cubit.dart';
 import 'package:farah/cubits/profile/profile_cubit.dart';
 import 'package:farah/cubits/settings/settings_cubit.dart';
 
@@ -21,8 +22,10 @@ import 'package:farah/data/repositories/api_provider_repository.dart';
 import 'package:farah/data/repositories/auth_repository.dart';
 import 'package:farah/data/repositories/booking_repository.dart';
 import 'package:farah/data/repositories/home_repostory.dart';
-import 'package:farah/data/repositories/local_favorites_repository.dart';
+import 'package:farah/data/repositories/api_favorites_repository.dart';
+import 'package:farah/data/repositories/favorites_repository.dart';
 import 'package:farah/data/repositories/notification_repository.dart';
+import 'package:farah/data/repositories/payment_repository.dart';
 import 'package:farah/data/repositories/profile_repository.dart';
 import 'package:farah/data/repositories/service_repository.dart';
 import 'package:farah/data/repositories/provider_repository.dart';
@@ -35,17 +38,24 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   final cache = CacheDatasource();
   final dioClient = DioClient(cache);
 
-  final AuthRepository authRepository = ApiAuthRepository(dioClient: dioClient, cache: cache);
-  final ServiceRepository serviceRepository = ApiServiceRepository(dioClient: dioClient);
+  final AuthRepository authRepository = ApiAuthRepository(
+    dioClient: dioClient,
+    cache: cache,
+  );
+  final ServiceRepository serviceRepository = ApiServiceRepository(
+    dioClient: dioClient,
+  );
   final HomeRepository homeRepository = HomeRepository(dioClient);
   final BookingRepository bookingRepository = ApiBookingRepository(dioClient: dioClient);
   final ProfileRepository profileRepository = ApiProfileRepository(dioClient: dioClient);
   final NotificationRepository notificationRepository = ApiNotificationRepository(dioClient: dioClient);
   final ProviderRepository providerRepository = ApiProviderRepository(dioClient: dioClient);
+  final PaymentRepository paymentRepository = ApiPaymentRepository(dioClient: dioClient);
+  final FavoritesRepository favoritesRepository = ApiFavoritesRepository(dioClient: dioClient);
 
   runApp(
     FarhaApp(
@@ -56,6 +66,8 @@ Future<void> main() async {
       profileRepository: profileRepository,
       notificationRepository: notificationRepository,
       providerRepository: providerRepository,
+      paymentRepository: paymentRepository,
+      favoritesRepository: favoritesRepository,
     ),
   );
 }
@@ -68,6 +80,8 @@ class FarhaApp extends StatelessWidget {
   final ProfileRepository profileRepository;
   final NotificationRepository notificationRepository;
   final ProviderRepository providerRepository;
+  final PaymentRepository paymentRepository;
+  final FavoritesRepository favoritesRepository;
 
   const FarhaApp({
     super.key,
@@ -78,6 +92,8 @@ class FarhaApp extends StatelessWidget {
     required this.profileRepository,
     required this.notificationRepository,
     required this.providerRepository,
+    required this.paymentRepository,
+    required this.favoritesRepository,
   });
 
   @override
@@ -89,6 +105,7 @@ class FarhaApp extends StatelessWidget {
         RepositoryProvider<ProviderRepository>.value(value: providerRepository),
         RepositoryProvider<HomeRepository>.value(value: homeRepository),
         RepositoryProvider<ServiceRepository>.value(value: serviceRepository),
+        RepositoryProvider<BookingRepository>.value(value: bookingRepository),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -98,7 +115,8 @@ class FarhaApp extends StatelessWidget {
           BlocProvider(create: (_) => ProfileCubit(profileRepository)),
           BlocProvider(create: (_) => SettingsCubit(profileRepository)),
           BlocProvider(create: (_) => NotificationCubit(notificationRepository)),
-          BlocProvider(create: (_) => FavoritesCubit(LocalFavoritesRepository())),
+          BlocProvider(create: (_) => PaymentCubit(paymentRepository)),
+          BlocProvider(create: (_) => FavoritesCubit(favoritesRepository)),
         ],
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
@@ -115,7 +133,10 @@ class FarhaApp extends StatelessWidget {
           onUnknownRoute: (_) => MaterialPageRoute(
             builder: (_) => const Scaffold(
               body: Center(
-                child: Text('?????? ??? ??????', style: TextStyle(fontSize: 18)),
+                child: Text(
+                  '?????? ??? ??????',
+                  style: TextStyle(fontSize: 18),
+                ),
               ),
             ),
           ),

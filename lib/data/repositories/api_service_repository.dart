@@ -53,6 +53,7 @@ class ApiServiceRepository implements ServiceRepository {
     return ServiceModel.fromJson(data['data'] as Map<String, dynamic>);
   }
 
+  // TODO: /providers/{id} and /providers/{id}/services are not in the API.
   @override
   Future<ServiceProviderModel> fetchProviderProfile(String providerId) async {
     final res = await _dio.get('/providers/$providerId');

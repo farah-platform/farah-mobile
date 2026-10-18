@@ -216,7 +216,7 @@ class ApiAuthRepository implements AuthRepository {
     final token = await _cache.getToken();
     if (token == null) throw Exception('No session token');
     await _dio.post(
-      '/change-password',
+      ApiEndpoints.changePassword,
       data: {
         'current_password': currentPassword,
         'new_password': newPassword,
@@ -230,9 +230,7 @@ class ApiAuthRepository implements AuthRepository {
   Future<void> deleteAccount() async {
     final token = await _cache.getToken();
     if (token == null) throw Exception('No session token');
-    // Using dummy endpoint since API doesn't exist yet
-    // await _dio.delete('/account', options: Options(headers: {'Authorization': 'Bearer $token'}));
-    await Future.delayed(const Duration(seconds: 1));
+    await _dio.delete(ApiEndpoints.deleteAccount);
     await logout();
   }
 
