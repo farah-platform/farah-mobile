@@ -100,6 +100,7 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
                 style: theme.textTheme.headlineMedium?.copyWith(
                   color: primary,
                   fontWeight: FontWeight.bold,
+                  fontSize: 18,
                 ),
               ),
 
@@ -110,6 +111,7 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: Colors.grey.shade600,
+                  fontSize: 16,
                 ),
               ),
 
@@ -149,6 +151,7 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
                       'لم يصلك الرمز؟ ',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: Colors.black87,
+                        fontSize: 14,
                       ),
                     ),
                     TextButton(
@@ -164,6 +167,7 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
                           color: primary,
                           fontWeight: FontWeight.bold,
                           decoration: TextDecoration.underline,
+                          fontSize: 14,
                         ),
                       ),
                     ),
