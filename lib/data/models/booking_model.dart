@@ -14,6 +14,7 @@ class BookingModel extends Equatable {
   final BookingStatus status;
   final double totalPrice;
   final String? notes;
+  final String? paymentInstructions;
   final DateTime createdAt;
 
   const BookingModel({
@@ -28,6 +29,7 @@ class BookingModel extends Equatable {
     required this.status,
     required this.totalPrice,
     this.notes,
+    this.paymentInstructions,
     required this.createdAt,
   });
 
@@ -57,6 +59,7 @@ class BookingModel extends Equatable {
           (map['total_amount'] as num?)?.toDouble() ??
           0.0,
       notes: map['notes'] as String?,
+      paymentInstructions: map['payment_instructions']?.toString(),
       createdAt: map['created_at'] != null
           ? DateTime.tryParse(map['created_at'].toString()) ?? DateTime.now()
           : DateTime.now(),
@@ -78,6 +81,7 @@ class BookingModel extends Equatable {
     'status': status.name,
     'total_price': totalPrice,
     'notes': notes,
+    'payment_instructions': paymentInstructions,
     'created_at': createdAt.toIso8601String(),
   };
 

@@ -6,6 +6,7 @@ import 'package:farah/cubits/booking/booking_cubit.dart';
 import 'package:farah/cubits/favorites/favorites_cubit.dart';
 import 'package:farah/cubits/home/home_cubit.dart';
 import 'package:farah/cubits/notification/notification_cubit.dart';
+import 'package:farah/cubits/payment/payment_cubit.dart';
 import 'package:farah/cubits/profile/profile_cubit.dart';
 import 'package:farah/cubits/settings/settings_cubit.dart';
 
@@ -23,6 +24,7 @@ import 'package:farah/data/repositories/booking_repository.dart';
 import 'package:farah/data/repositories/home_repostory.dart';
 import 'package:farah/data/repositories/local_favorites_repository.dart';
 import 'package:farah/data/repositories/notification_repository.dart';
+import 'package:farah/data/repositories/payment_repository.dart';
 import 'package:farah/data/repositories/profile_repository.dart';
 import 'package:farah/data/repositories/service_repository.dart';
 import 'package:farah/data/repositories/provider_repository.dart';
@@ -46,6 +48,7 @@ Future<void> main() async {
   final ProfileRepository profileRepository = ApiProfileRepository(dioClient: dioClient);
   final NotificationRepository notificationRepository = ApiNotificationRepository(dioClient: dioClient);
   final ProviderRepository providerRepository = ApiProviderRepository(dioClient: dioClient);
+  final PaymentRepository paymentRepository = ApiPaymentRepository(dioClient: dioClient);
 
   runApp(
     FarhaApp(
@@ -56,6 +59,7 @@ Future<void> main() async {
       profileRepository: profileRepository,
       notificationRepository: notificationRepository,
       providerRepository: providerRepository,
+      paymentRepository: paymentRepository,
     ),
   );
 }
@@ -68,6 +72,7 @@ class FarhaApp extends StatelessWidget {
   final ProfileRepository profileRepository;
   final NotificationRepository notificationRepository;
   final ProviderRepository providerRepository;
+  final PaymentRepository paymentRepository;
 
   const FarhaApp({
     super.key,
@@ -78,6 +83,7 @@ class FarhaApp extends StatelessWidget {
     required this.profileRepository,
     required this.notificationRepository,
     required this.providerRepository,
+    required this.paymentRepository,
   });
 
   @override
@@ -98,6 +104,7 @@ class FarhaApp extends StatelessWidget {
           BlocProvider(create: (_) => ProfileCubit(profileRepository)),
           BlocProvider(create: (_) => SettingsCubit(profileRepository)),
           BlocProvider(create: (_) => NotificationCubit(notificationRepository)),
+          BlocProvider(create: (_) => PaymentCubit(paymentRepository)),
           BlocProvider(create: (_) => FavoritesCubit(LocalFavoritesRepository())),
         ],
         child: MaterialApp(

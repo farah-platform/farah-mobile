@@ -9,7 +9,7 @@ class ApiProviderRepository implements ProviderRepository {
 
   @override
   Future<Map<String, dynamic>> getOnboardingData() async {
-    final res = await dioClient.dio.get('/api/provider/onboarding');
+    final res = await dioClient.dio.get('/provider/onboarding');
     return res.data['data'] ?? {};
   }
 
@@ -24,18 +24,18 @@ class ApiProviderRepository implements ProviderRepository {
       formData.files.add(MapEntry('cover_image', await MultipartFile.fromFile(coverImage.path)));
     }
 
-    await dioClient.dio.post('/api/provider/onboarding', data: formData);
+    await dioClient.dio.post('/provider/onboarding', data: formData);
   }
 
   @override
   Future<Map<String, dynamic>> getVerificationStatus() async {
-    final res = await dioClient.dio.get('/api/provider/verification');
+    final res = await dioClient.dio.get('/provider/verification');
     return res.data['data'] ?? {};
   }
 
   @override
   Future<List<dynamic>> getSubscriptionPlans() async {
-    final res = await dioClient.dio.get('/api/provider/subscription-plans');
+    final res = await dioClient.dio.get('/provider/subscription-plans');
     return res.data['data'] ?? [];
   }
 
@@ -51,12 +51,12 @@ class ApiProviderRepository implements ProviderRepository {
       formData.files.add(MapEntry('receipt_image', await MultipartFile.fromFile(receiptImage.path)));
     }
 
-    await dioClient.dio.post('/api/provider/subscription', data: formData);
+    await dioClient.dio.post('/provider/subscription', data: formData);
   }
 
   @override
   Future<Map<String, dynamic>> getDashboardData() async {
-    final res = await dioClient.dio.get('/api/provider/dashboard');
+    final res = await dioClient.dio.get('/provider/dashboard');
     return res.data['data'] ?? {};
   }
 }

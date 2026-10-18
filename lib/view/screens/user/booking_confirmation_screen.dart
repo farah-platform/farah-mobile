@@ -287,6 +287,8 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                           service: widget.service,
                           depositAmount: depositAmount,
                           bookingId: state.booking.id.toString(),
+                          paymentInstructions:
+                              state.booking.paymentInstructions,
                         ),
                       ),
                     );

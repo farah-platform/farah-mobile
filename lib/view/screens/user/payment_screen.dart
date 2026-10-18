@@ -15,20 +15,15 @@ class PaymentScreen extends StatefulWidget {
   final double depositAmount;
   final String bookingId;
 
-  final String bankAccountNumber;
-  final String bankIban;
-  final String jawwalPayNumber;
-  final String palPayNumber;
+  // Transfer details set by the provider; null until the booking is accepted.
+  final String? paymentInstructions;
 
   const PaymentScreen({
     super.key,
     required this.service,
     required this.depositAmount,
     required this.bookingId,
-    this.bankAccountNumber = '1654987',
-    this.bankIban = 'PS00PALS00000000001234567',
-    this.jawwalPayNumber = '0592467931',
-    this.palPayNumber = '0599123456',
+    this.paymentInstructions,
   });
 
   @override
@@ -325,6 +320,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     ),
                   ),
                   onPressed: () {
+                    if (!_hasInstructions) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'لا يمكن إرسال إشعار التحويل قبل قبول مقدّم الخدمة لطلبك.',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
                     if (_receiptImage == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -435,73 +441,44 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  Widget _buildDynamicPaymentDetails() {
-    if (_selectedMethod == PaymentMethod.bankOfPalestine) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _cardBorder),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            const Text(
-              'رقم الحساب',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-                color: _maroon,
-              ),
-            ),
-            const SizedBox(height: 8),
-            _buildReadOnlyField(widget.bankAccountNumber, 'رقم الحساب'),
-            const SizedBox(height: 14),
-            const Text(
-              'الايبان',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-                color: _maroon,
-              ),
-            ),
-            const SizedBox(height: 8),
-            _buildReadOnlyField(widget.bankIban, 'الآيبان'),
-          ],
-        ),
-      );
-    } else {
-      final isJawwal = _selectedMethod == PaymentMethod.jawwalPay;
-      final walletLabel = isJawwal ? 'رقم محفظة جوال باي' : 'رقم محفظة بال باي';
-      final walletNumber = isJawwal
-          ? widget.jawwalPayNumber
-          : widget.palPayNumber;
+  bool get _hasInstructions =>
+      widget.paymentInstructions?.trim().isNotEmpty == true;
 
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _cardBorder),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              walletLabel,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-                color: _maroon,
-              ),
+  Widget _buildDynamicPaymentDetails() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          const Text(
+            'تعليمات التحويل',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: _maroon,
             ),
-            const SizedBox(height: 8),
-            _buildReadOnlyField(walletNumber, walletLabel),
-          ],
-        ),
-      );
-    }
+          ),
+          const SizedBox(height: 8),
+          if (_hasInstructions)
+            _buildReadOnlyField(
+              widget.paymentInstructions!.trim(),
+              'تعليمات التحويل',
+            )
+          else
+            const Text(
+              'ستظهر تفاصيل التحويل هنا بعد قبول مقدّم الخدمة لطلبك.',
+              textAlign: TextAlign.right,
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+        ],
+      ),
+    );
   }
 
   Widget _buildReadOnlyField(String value, String label) {
@@ -526,12 +503,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
             onPressed: () => _copyToClipboard(value, label),
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
             ),
           ),
         ],
