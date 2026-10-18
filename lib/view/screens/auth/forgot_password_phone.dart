@@ -15,7 +15,6 @@ class _ForgotPasswordPhoneScreenState extends State<ForgotPasswordPhoneScreen> {
 
   String selectedCountryCode = '+970';
 
-  // TODO: هذا المتغير مؤقت للتجربة، هيتشال لما يترابط الـ Cubit
   bool isLoading = false;
 
   @override
@@ -26,7 +25,6 @@ class _ForgotPasswordPhoneScreenState extends State<ForgotPasswordPhoneScreen> {
 
   void _onSubmitPressed() {
     if (_formKey.currentState!.validate()) {
-      // مؤقت للتجربة فقط، هيتشال لما يترابط الـ Cubit
       Navigator.pushNamed(context, '/verify-code');
     }
   }

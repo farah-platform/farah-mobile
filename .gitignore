@@ -14,6 +14,7 @@ secrets/
 config/local.*
 google-services.json
 GoogleService-Info.plist
+lib/firebase_options.dart
 
 # ---------- Flutter / Dart ----------
 .dart_tool/
@@ -30,6 +31,7 @@ build/
 mobile/android/local.properties
 mobile/android/.gradle/
 mobile/android/app/release/
+key.properties
 mobile/android/key.properties
 mobile/ios/Pods/
 mobile/ios/.symlinks/
@@ -109,3 +111,15 @@ temp/
 *.cache
 coverage/
 .nyc_output/
+
+# ????? ????? ?????
+repro*.png
+verify*.png
+screenshot.png
+v[0-9].png
+stack.json
+vm.json
+web_entrypoint.dart
+
+# Junk shell-output files accidentally created at repo root
+pec.yaml*
