@@ -18,6 +18,7 @@ class _ProviderOnboardingScreenState extends State<ProviderOnboardingScreen> {
 
   final _businessNameController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _addressController = TextEditingController();
   final _profitAccountController = TextEditingController();
   final _crController = TextEditingController();
 
@@ -36,6 +37,7 @@ class _ProviderOnboardingScreenState extends State<ProviderOnboardingScreen> {
   void dispose() {
     _businessNameController.dispose();
     _descriptionController.dispose();
+    _addressController.dispose();
     _profitAccountController.dispose();
     _crController.dispose();
     super.dispose();
@@ -73,6 +75,7 @@ class _ProviderOnboardingScreenState extends State<ProviderOnboardingScreen> {
         categoryId: _selectedCategoryId!,
         description: _descriptionController.text.trim(),
         cityId: _selectedCityId!,
+        address: _addressController.text.trim(),
         idProof: _idProof!,
         profitAccount: _profitAccountController.text.trim(),
         commercialRegister: _crController.text.trim(),
@@ -198,6 +201,17 @@ class _ProviderOnboardingScreenState extends State<ProviderOnboardingScreen> {
                     }).toList(),
                     onChanged: (val) => setState(() => _selectedCityId = val),
                     validator: (val) => val == null ? 'مطلوب' : null,
+                  ),
+                  const SizedBox(height: 16),
+
+                  _buildLabel('العنوان التفصيلي', theme),
+                  TextFormField(
+                    controller: _addressController,
+                    decoration: const InputDecoration(
+                      hintText: 'الحي، الشارع، أقرب معلم',
+                    ),
+                    validator: (val) =>
+                        val == null || val.trim().isEmpty ? 'مطلوب' : null,
                   ),
                   const SizedBox(height: 16),
 

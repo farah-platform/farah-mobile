@@ -1,6 +1,6 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:farah/data/repositories/provider_repository.dart';
-import 'package:farah/data/repositories/home_repostory.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 abstract class ProviderOnboardingState {}
@@ -21,27 +21,18 @@ class ProviderOnboardingError extends ProviderOnboardingState {
 
 class ProviderOnboardingCubit extends Cubit<ProviderOnboardingState> {
   final ProviderRepository _providerRepository;
-  final HomeRepository _homeRepository;
 
-  ProviderOnboardingCubit(this._providerRepository, this._homeRepository) : super(ProviderOnboardingInitial());
+  ProviderOnboardingCubit(this._providerRepository) : super(ProviderOnboardingInitial());
 
   Future<void> loadData() async {
     emit(ProviderOnboardingLoading());
     try {
-      // Mocking categories and cities fetch since endpoints are missing in repositories or we can just fetch them via Dio.
-      // Wait, HomeRepository might have categories. Let's just emit empty for now and let the UI handle or use DioClient.
-      // Since we don't have a direct CityRepository, we'll just mock them for now.
-      
-      final categories = [
-        {'id': 1, 'name': 'صالات أفراح'},
-        {'id': 2, 'name': 'كوافير'},
-        {'id': 3, 'name': 'دي جي'},
-      ];
-      final cities = [
-        {'id': 1, 'name': 'شمال غزة'},
-        {'id': 2, 'name': 'وسط غزة'},
-        {'id': 3, 'name': 'جنوب غزة'},
-      ];
+      final results = await Future.wait([
+        _providerRepository.getCategories(),
+        _providerRepository.getCities(),
+      ]);
+      final categories = results[0];
+      final cities = results[1];
 
       emit(ProviderOnboardingLoaded(categories: categories, cities: cities));
     } catch (e) {
@@ -54,6 +45,7 @@ class ProviderOnboardingCubit extends Cubit<ProviderOnboardingState> {
     required String categoryId,
     required String description,
     required String cityId,
+    required String address,
     required File idProof,
     required String profitAccount,
     String? commercialRegister,
@@ -66,13 +58,30 @@ class ProviderOnboardingCubit extends Cubit<ProviderOnboardingState> {
         'category_id': categoryId,
         'description': description,
         'city_id': cityId,
+        'address': address,
+        // TODO: the API has no earnings-account field yet; it ignores this value.
         'profit_account': profitAccount,
-        'commercial_register': commercialRegister ?? '',
+        // TODO: the API expects commercial_register as a file, not a number,
+        // so the typed number is not sent until the two sides agree.
       }, idProof, coverImage);
       
       emit(ProviderOnboardingSuccess());
     } catch (e) {
-      emit(ProviderOnboardingError('حدث خطأ أثناء حفظ البيانات'));
+      emit(ProviderOnboardingError(_mapError(e, 'حدث خطأ أثناء حفظ البيانات')));
     }
+  }
+
+  String _mapError(Object e, String fallback) {
+    if (e is DioException) {
+      final data = e.response?.data;
+      if (data is Map) {
+        final message = (data['title'] ?? data['message'])?.toString();
+        if (message != null && message.isNotEmpty) return message;
+      }
+      if (e.type == DioExceptionType.connectionError) {
+        return 'تحقق من اتصالك بالإنترنت';
+      }
+    }
+    return fallback;
   }
 }

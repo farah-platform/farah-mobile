@@ -8,7 +8,6 @@ import 'package:farah/cubits/provider_verification/provider_verification_cubit.d
 import 'package:farah/cubits/service_detail/service_detail_cubit.dart';
 import 'package:farah/data/models/service_model.dart';
 import 'package:farah/data/repositories/auth_repository.dart';
-import 'package:farah/data/repositories/home_repostory.dart';
 import 'package:farah/data/repositories/profile_repository.dart';
 import 'package:farah/data/repositories/provider_repository.dart';
 import 'package:farah/data/repositories/service_repository.dart';
@@ -165,10 +164,7 @@ class AppRoutes {
     ),
     providerOnboarding: (context) => _ProviderGuard(
       child: BlocProvider(
-        create: (c) => ProviderOnboardingCubit(
-          c.read<ProviderRepository>(),
-          c.read<HomeRepository>(),
-        ),
+        create: (c) => ProviderOnboardingCubit(c.read<ProviderRepository>()),
         child: const ProviderOnboardingScreen(),
       ),
     ),

@@ -49,11 +49,10 @@ class _ProviderActivateSubscriptionScreenState
       return;
     }
 
+    // TODO: bank details and receipt are not sent yet — the API only grants
+    // the free first month and accepts the plan alone until paid plans ship.
     context.read<ProviderSubscriptionCubit>().activateSubscription(
-      planId: widget.planId,
-      bankName: _bankNameController.text,
-      accountNumber: _accountNumberController.text,
-      receiptImage: _receiptImage!,
+      planSlug: widget.planId,
     );
   }
 
