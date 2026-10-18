@@ -36,6 +36,14 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.service == null && widget.serviceId != null) {
+      context.read<ServiceDetailCubit>().load(widget.serviceId.toString());
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;

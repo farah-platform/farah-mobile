@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+﻿import 'package:dio/dio.dart';
 import 'package:farah/core/network/api_endpoints.dart';
 import 'package:farah/data/datasources/local/cache_datasource.dart';
 
@@ -13,7 +13,7 @@ class DioClient {
         connectTimeout: const Duration(seconds: 60),
         receiveTimeout: const Duration(seconds: 60),
         sendTimeout: const Duration(seconds: 60),
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
       ),
     );
     _dio.interceptors.add(_AuthInterceptor(_cache));
@@ -38,3 +38,4 @@ class _AuthInterceptor extends Interceptor {
     handler.next(options);
   }
 }
+

@@ -3,6 +3,7 @@ import 'package:farah/cubits/change_password/change_password_cubit.dart';
 import 'package:farah/cubits/profile_edit/profile_edit_cubit.dart';
 import 'package:farah/cubits/provider_dashboard/provider_dashboard_cubit.dart';
 import 'package:farah/cubits/provider_onboarding/provider_onboarding_cubit.dart';
+import 'package:farah/cubits/provider_services/provider_services_cubit.dart';
 import 'package:farah/cubits/provider_subscription/provider_subscription_cubit.dart';
 import 'package:farah/cubits/provider_verification/provider_verification_cubit.dart';
 import 'package:farah/cubits/service_detail/service_detail_cubit.dart';
@@ -25,6 +26,11 @@ import 'package:farah/view/screens/provider/provider_onboarding_screen.dart';
 import 'package:farah/view/screens/provider/provider_subscription_plans_screen.dart';
 import 'package:farah/view/screens/provider/provider_subscription_success_screen.dart';
 import 'package:farah/view/screens/provider/provider_verification_screen.dart';
+import 'package:farah/view/screens/provider/provider_router_screen.dart';
+import 'package:farah/view/screens/provider/services/provider_add_package_screen.dart';
+import 'package:farah/view/screens/provider/services/provider_add_service_screen.dart';
+import 'package:farah/view/screens/provider/services/provider_edit_package_screen.dart';
+import 'package:farah/view/screens/provider/services/provider_edit_service_screen.dart';
 import 'package:farah/view/screens/service1/service_info_screen.dart';
 import 'package:farah/view/screens/user/change_password_screen.dart';
 import 'package:farah/view/screens/user/favorites_screen.dart';
@@ -37,6 +43,11 @@ import 'package:farah/cubits/service/service_cubit.dart';
 import 'package:farah/view/screens/user/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../cubits/notification/notification_cubit.dart';
+import '../../data/repositories/notification_repository.dart';
+import '../../view/screens/notifications/notifications_screen.dart';
+import '../../cubits/provider_payment_review/provider_payment_review_cubit.dart';
+import '../../view/screens/provider/bookings/provider_payment_review_screen.dart';
 
 // Dead route constants removed (screens not yet built):
 //   search, booking, orders, profile,
@@ -53,6 +64,7 @@ class AppRoutes {
   static const String terms = '/terms';
   static const String serviceInfo = '/service-info';
   static const String home = '/home';
+  static const String providerRouter = '/provider/router';
   static const String providerHome = '/provider/home';
   static const String settings = '/settings';
   static const String profileEdit = '/settings/profile-edit';
@@ -68,10 +80,16 @@ class AppRoutes {
   static const String providerSubscriptionPlans = '/provider/subscription-plans';
   static const String providerActivateSubscription = '/provider/activate-subscription';
   static const String providerSubscriptionSuccess = '/provider/subscription-success';
+  static const String providerAddService = '/provider/add-service';
+  static const String notifications = '/notifications';
+  static const String providerPaymentReview = '/provider/payment-review';
+  static const String providerEditService = '/provider/edit-service';
+  static const String providerAddPackage = '/provider/add-package';
+  static const String providerEditPackage = '/provider/edit-package';
 
   /// Returns the correct home route for the given server role string.
   static String homeForRole(String? role) {
-    return role == 'provider' ? providerHome : home;
+    return role == 'provider' ? providerRouter : home;
   }
 
   /// Shows a dialog telling the guest they must log in, then optionally
@@ -81,15 +99,15 @@ class AppRoutes {
     final goLogin = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('سجّل الدخول للمتابعة'),
+        title: const Text('Ø³Ø¬Ù‘Ù„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ù„Ù„Ù…ØªØ§Ø¨Ø¹Ø©'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('إلغاء'),
+            child: const Text('Ø¥Ù„ØºØ§Ø¡'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('تسجيل الدخول'),
+            child: const Text('ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„'),
           ),
         ],
       ),
@@ -109,7 +127,7 @@ class AppRoutes {
     newPassword: (_) => const NewPasswordScreen(),
     terms: (_) => const TermsAndConditionsScreen(),
     serviceInfo: (_) => const ServiceInfoScreen(),
-    // Customer + guest routes — providers are redirected to providerHome.
+    // Customer + guest routes â€” providers are redirected to providerHome.
     home: (_) => const _CustomerGuard(child: UserHomeScreen()),
     settings: (_) => const _CustomerGuard(child: SettingsScreen()),
     profileEdit: (ctx) => _CustomerGuard(
@@ -155,10 +173,19 @@ class AppRoutes {
       );
     },
     
-    // Provider-only routes — customers/guests are redirected to home.
-    providerHome: (context) => _ProviderGuard(
+    // Provider-only routes â€” customers/guests are redirected to home.
+    providerRouter: (context) => _ProviderGuard(
       child: BlocProvider(
-        create: (c) => ProviderDashboardCubit(c.read<ProviderRepository>()),
+        create: (c) => ProviderVerificationCubit(c.read<ProviderRepository>()),
+        child: const ProviderRouterScreen(),
+      ),
+    ),
+    providerHome: (context) => _ProviderGuard(
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (c) => ProviderDashboardCubit(c.read<ProviderRepository>())),
+          BlocProvider(create: (c) => ProviderServicesCubit(c.read<ProviderRepository>())..loadServices()),
+        ],
         child: const ProviderHomeScreen(),
       ),
     ),
@@ -191,6 +218,49 @@ class AppRoutes {
     },
     providerSubscriptionSuccess: (_) => const _ProviderGuard(
       child: ProviderSubscriptionSuccessScreen(),
+    ),
+    providerEditService: (context) {
+      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      return _ProviderGuard(
+        child: BlocProvider(
+          create: (c) => ProviderServicesCubit(c.read<ProviderRepository>()),
+          child: ProviderEditServiceScreen(serviceData: args),
+        ),
+      );
+    },
+    providerAddPackage: (context) => _ProviderGuard(
+      child: BlocProvider(
+        create: (c) => ProviderServicesCubit(c.read<ProviderRepository>()),
+        child: const ProviderAddPackageScreen(),
+      ),
+    ),
+    providerEditPackage: (context) {
+      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      return _ProviderGuard(
+        child: BlocProvider(
+          create: (c) => ProviderServicesCubit(c.read<ProviderRepository>()),
+          child: ProviderEditPackageScreen(packageData: args),
+        ),
+      );
+    },
+    notifications: (context) => BlocProvider(
+      create: (c) => NotificationCubit(c.read<NotificationRepository>()),
+      child: const NotificationsScreen(),
+    ),
+    providerPaymentReview: (context) {
+      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+      return _ProviderGuard(
+        child: BlocProvider(
+          create: (c) => ProviderPaymentReviewCubit(c.read<ProviderRepository>()),
+          child: ProviderPaymentReviewScreen(bookingId: args['bookingId'], paymentId: args['paymentId']),
+        ),
+      );
+    },
+    providerAddService: (context) => _ProviderGuard(
+      child: BlocProvider(
+        create: (c) => ProviderServicesCubit(c.read<ProviderRepository>()),
+        child: const ProviderAddServiceScreen(),
+      ),
     ),
   };
 }
@@ -248,4 +318,6 @@ class _ProviderGuard extends StatelessWidget {
     );
   }
 }
+
+
 

@@ -1,7 +1,7 @@
 class ApiEndpoints {
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://farahbackend-production.up.railway.app/api',
+    defaultValue: 'https://farah-production.up.railway.app/api',
   );
 
   // Auth
@@ -23,4 +23,8 @@ class ApiEndpoints {
   static const String cities = '/cities';
   static const String home = '/home';
   static const String services = '/services';
+
+  // Provider Services
+  static const String providerServices = '/provider/services';
+  static const String providerBookings = '/provider/bookings';
 }

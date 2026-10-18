@@ -58,8 +58,76 @@ class ApiProviderRepository implements ProviderRepository {
   }
 
   @override
+  Future<List<dynamic>> getProviderServices() async {
+    final response = await dioClient.dio.get(ApiEndpoints.providerServices);
+    if (response.data is Map && response.data['data'] != null) {
+      return response.data['data'] as List<dynamic>;
+    } else if (response.data is List) {
+      return response.data as List<dynamic>;
+    }
+    return [];
+  }
+
+  @override
+  Future<void> addProviderService(Map<String, dynamic> data, List<dynamic> images) async {
+    final formData = FormData.fromMap(data);
+    
+    // Add images if any
+    for (int i = 0; i < images.length; i++) {
+      if (images[i] != null) {
+        formData.files.add(MapEntry(
+          'images[]',
+          await MultipartFile.fromFile(images[i].path),
+        ));
+      }
+    }
+    
+    await dioClient.dio.post(ApiEndpoints.providerServices, data: formData);
+  }
+
+  @override
+  Future<void> updateProviderService(int id, Map<String, dynamic> data, List<dynamic> newImages) async {
+    final formData = FormData.fromMap(data);
+    formData.fields.add(const MapEntry('_method', 'PUT'));
+
+    for (int i = 0; i < newImages.length; i++) {
+      if (newImages[i] != null) {
+        formData.files.add(MapEntry(
+          'images[]',
+          await MultipartFile.fromFile(newImages[i].path),
+        ));
+      }
+    }
+    
+    await dioClient.dio.post('${ApiEndpoints.providerServices}/$id', data: formData);
+  }
+
+  @override
+  Future<void> deleteProviderService(int id) async {
+    await dioClient.dio.delete('${ApiEndpoints.providerServices}/$id');
+  }
+
+  @override
+  Future<void> toggleServiceVisibility(int id) async {
+    await dioClient.dio.patch('${ApiEndpoints.providerServices}/$id/visibility');
+  }
+
+  @override
   Future<Map<String, dynamic>> getDashboardData() async {
     final res = await dioClient.dio.get('/provider/dashboard');
     return res.data['data'] ?? {};
+  }
+  @override
+  Future<void> reviewPaymentProof(int bookingId, int paymentId, String decision, {String? reviewNote}) async {
+    final data = {
+      'decision': decision,
+      if (reviewNote != null) 'review_note': reviewNote,
+    };
+    await dioClient.dio.post('${ApiEndpoints.providerBookings}/$bookingId/payments/$paymentId/review', data: data);
+  }
+  @override
+  Future<Map<String, dynamic>> getBookingDetails(int bookingId) async {
+    final response = await dioClient.dio.get('${ApiEndpoints.providerBookings}/$bookingId');
+    return response.data['data'] ?? {};
   }
 }

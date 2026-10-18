@@ -25,6 +25,7 @@ class ProviderOnboardingCubit extends Cubit<ProviderOnboardingState> {
   ProviderOnboardingCubit(this._providerRepository) : super(ProviderOnboardingInitial());
 
   Future<void> loadData() async {
+    if (isClosed) return;
     emit(ProviderOnboardingLoading());
     try {
       final results = await Future.wait([
@@ -34,8 +35,10 @@ class ProviderOnboardingCubit extends Cubit<ProviderOnboardingState> {
       final categories = results[0];
       final cities = results[1];
 
+      if (isClosed) return;
       emit(ProviderOnboardingLoaded(categories: categories, cities: cities));
     } catch (e) {
+      if (isClosed) return;
       emit(ProviderOnboardingError('فشل في جلب البيانات'));
     }
   }
@@ -51,6 +54,7 @@ class ProviderOnboardingCubit extends Cubit<ProviderOnboardingState> {
     String? commercialRegister,
     required File coverImage,
   }) async {
+    if (isClosed) return;
     emit(ProviderOnboardingSaving());
     try {
       await _providerRepository.submitOnboardingData({
@@ -65,8 +69,10 @@ class ProviderOnboardingCubit extends Cubit<ProviderOnboardingState> {
         // so the typed number is not sent until the two sides agree.
       }, idProof, coverImage);
       
+      if (isClosed) return;
       emit(ProviderOnboardingSuccess());
     } catch (e) {
+      if (isClosed) return;
       emit(ProviderOnboardingError(_mapError(e, 'حدث خطأ أثناء حفظ البيانات')));
     }
   }

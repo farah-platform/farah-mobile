@@ -38,12 +38,17 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   final cache = CacheDatasource();
   final dioClient = DioClient(cache);
 
-  final AuthRepository authRepository = ApiAuthRepository(dioClient: dioClient, cache: cache);
-  final ServiceRepository serviceRepository = ApiServiceRepository(dioClient: dioClient);
+  final AuthRepository authRepository = ApiAuthRepository(
+    dioClient: dioClient,
+    cache: cache,
+  );
+  final ServiceRepository serviceRepository = ApiServiceRepository(
+    dioClient: dioClient,
+  );
   final HomeRepository homeRepository = HomeRepository(dioClient);
   final BookingRepository bookingRepository = ApiBookingRepository(dioClient: dioClient);
   final ProfileRepository profileRepository = ApiProfileRepository(dioClient: dioClient);
@@ -128,7 +133,10 @@ class FarhaApp extends StatelessWidget {
           onUnknownRoute: (_) => MaterialPageRoute(
             builder: (_) => const Scaffold(
               body: Center(
-                child: Text('?????? ??? ??????', style: TextStyle(fontSize: 18)),
+                child: Text(
+                  '?????? ??? ??????',
+                  style: TextStyle(fontSize: 18),
+                ),
               ),
             ),
           ),

@@ -120,7 +120,10 @@ class BookingModel extends Equatable {
     final clean = rawStatus.toString().trim().toLowerCase().replaceAll('_', '');
     return BookingStatus.values.firstWhere(
       (e) => e.name.toLowerCase() == clean,
-      orElse: () => BookingStatus.pending,
+      orElse: () {
+        assert(false, 'Unknown booking status from server: "$rawStatus"');
+        return BookingStatus.pending;
+      },
     );
   }
 
