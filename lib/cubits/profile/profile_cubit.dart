@@ -85,8 +85,13 @@ class ProfileCubit extends Cubit<ProfileState> {
 
   String _mapError(Object e) {
     if (e is DioException) {
-      final message = e.response?.data?['message'] as String?;
-      if (message != null && message.isNotEmpty) return message;
+      // /provider/profile does not exist in the API yet.
+      if (e.response?.statusCode == 404) return 'هذه الميزة غير متاحة حالياً';
+      final data = e.response?.data;
+      if (data is Map) {
+        final message = (data['title'] ?? data['message'])?.toString();
+        if (message != null && message.isNotEmpty) return message;
+      }
       if (e.type == DioExceptionType.connectionError) {
         return 'تحقق من اتصالك بالإنترنت';
       }

@@ -22,7 +22,8 @@ import 'package:farah/data/repositories/api_provider_repository.dart';
 import 'package:farah/data/repositories/auth_repository.dart';
 import 'package:farah/data/repositories/booking_repository.dart';
 import 'package:farah/data/repositories/home_repostory.dart';
-import 'package:farah/data/repositories/local_favorites_repository.dart';
+import 'package:farah/data/repositories/api_favorites_repository.dart';
+import 'package:farah/data/repositories/favorites_repository.dart';
 import 'package:farah/data/repositories/notification_repository.dart';
 import 'package:farah/data/repositories/payment_repository.dart';
 import 'package:farah/data/repositories/profile_repository.dart';
@@ -49,6 +50,7 @@ Future<void> main() async {
   final NotificationRepository notificationRepository = ApiNotificationRepository(dioClient: dioClient);
   final ProviderRepository providerRepository = ApiProviderRepository(dioClient: dioClient);
   final PaymentRepository paymentRepository = ApiPaymentRepository(dioClient: dioClient);
+  final FavoritesRepository favoritesRepository = ApiFavoritesRepository(dioClient: dioClient);
 
   runApp(
     FarhaApp(
@@ -60,6 +62,7 @@ Future<void> main() async {
       notificationRepository: notificationRepository,
       providerRepository: providerRepository,
       paymentRepository: paymentRepository,
+      favoritesRepository: favoritesRepository,
     ),
   );
 }
@@ -73,6 +76,7 @@ class FarhaApp extends StatelessWidget {
   final NotificationRepository notificationRepository;
   final ProviderRepository providerRepository;
   final PaymentRepository paymentRepository;
+  final FavoritesRepository favoritesRepository;
 
   const FarhaApp({
     super.key,
@@ -84,6 +88,7 @@ class FarhaApp extends StatelessWidget {
     required this.notificationRepository,
     required this.providerRepository,
     required this.paymentRepository,
+    required this.favoritesRepository,
   });
 
   @override
@@ -106,7 +111,7 @@ class FarhaApp extends StatelessWidget {
           BlocProvider(create: (_) => SettingsCubit(profileRepository)),
           BlocProvider(create: (_) => NotificationCubit(notificationRepository)),
           BlocProvider(create: (_) => PaymentCubit(paymentRepository)),
-          BlocProvider(create: (_) => FavoritesCubit(LocalFavoritesRepository())),
+          BlocProvider(create: (_) => FavoritesCubit(favoritesRepository)),
         ],
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
