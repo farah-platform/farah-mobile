@@ -10,6 +10,8 @@ class ProviderOrderDetailsState {
 
   /// Saved payment instructions, used to prefill the accept sheet.
   final String? paymentInstructions;
+  /// The provider's earnings account (bank_name, account_number, iban).
+  final Map<String, dynamic> payoutAccount;
   final Map<int, Uint8List> proofs;
   final bool loading;
   final bool acting;
@@ -21,6 +23,7 @@ class ProviderOrderDetailsState {
   const ProviderOrderDetailsState({
     this.booking,
     this.paymentInstructions,
+    this.payoutAccount = const {},
     this.proofs = const {},
     this.loading = false,
     this.acting = false,
@@ -31,6 +34,7 @@ class ProviderOrderDetailsState {
   ProviderOrderDetailsState copyWith({
     Map<String, dynamic>? booking,
     String? paymentInstructions,
+    Map<String, dynamic>? payoutAccount,
     Map<int, Uint8List>? proofs,
     bool? loading,
     bool? acting,
@@ -40,6 +44,7 @@ class ProviderOrderDetailsState {
     return ProviderOrderDetailsState(
       booking: booking ?? this.booking,
       paymentInstructions: paymentInstructions ?? this.paymentInstructions,
+      payoutAccount: payoutAccount ?? this.payoutAccount,
       proofs: proofs ?? this.proofs,
       loading: loading ?? this.loading,
       acting: acting ?? this.acting,
@@ -63,18 +68,23 @@ class ProviderOrderDetailsCubit extends Cubit<ProviderOrderDetailsState> {
     try {
       final booking = await _repository.getBookingDetails(bookingId);
       String? instructions;
+      Map<String, dynamic>? payout;
       try {
-        final dashboard = await _repository.getDashboardData();
-        instructions = (dashboard['provider'] as Map?)?['payment_instructions']
-            ?.toString();
+        final provider = (await _repository.getDashboardData())['provider'];
+        if (provider is Map) {
+          instructions = provider['payment_instructions']?.toString();
+          final account = provider['payout_account'];
+          if (account is Map) payout = Map<String, dynamic>.from(account);
+        }
       } catch (_) {
-        // Only used to prefill a field.
+        // Only used to prefill fields.
       }
       if (isClosed) return;
       emit(
         state.copyWith(
           booking: booking,
           paymentInstructions: instructions,
+          payoutAccount: payout,
           loading: false,
         ),
       );

@@ -414,17 +414,9 @@ void main() {
     expect(find.text('بانتظار الدفع'), findsOneWidget);
   });
 
-  testWidgets('provider approves the deposit proof, then completes', (
-    tester,
-  ) async {
-    final repo = _FakeRepo(bookingStatus: 'review_under_proof');
+  testWidgets('a confirmed booking can be marked done', (tester) async {
+    final repo = _FakeRepo(bookingStatus: 'confirmed');
     await _pump(tester, details(repo));
-
-    await tester.ensureVisible(find.text('اعتماد الدفع'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('اعتماد الدفع'));
-    await tester.pumpAndSettle();
-    expect(repo.calls, ['review:3:confirmed']);
 
     await tester.ensureVisible(find.text('تم تنفيذ الطلب'));
     await tester.pumpAndSettle();

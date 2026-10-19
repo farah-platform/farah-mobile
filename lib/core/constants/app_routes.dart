@@ -48,6 +48,16 @@ import '../../view/screens/notifications/notifications_screen.dart';
 import '../../cubits/provider_orders/provider_order_details_cubit.dart';
 import '../../cubits/provider_orders/provider_orders_cubit.dart';
 import '../../view/screens/provider/orders/provider_order_details_screen.dart';
+import '../../view/screens/provider/orders/provider_payment_review_screen.dart';
+import '../../view/screens/provider/orders/provider_external_booking_screen.dart';
+import '../../view/screens/provider/notifications/provider_notifications_screen.dart';
+import '../../view/screens/provider/settings/provider_store_profile_screen.dart';
+import '../../view/screens/provider/settings/provider_payout_account_screen.dart';
+import '../../view/screens/provider/settings/provider_reviews_screen.dart';
+import '../../cubits/provider_external_booking/provider_external_booking_cubit.dart';
+import '../../cubits/provider_settings/provider_settings_cubit.dart';
+import '../../cubits/provider_settings/provider_store_settings_cubit.dart';
+import '../../cubits/provider_settings/provider_reviews_cubit.dart';
 
 // Dead route constants removed (screens not yet built):
 //   search, booking, orders, profile,
@@ -84,6 +94,14 @@ class AppRoutes {
   static const String notifications = '/notifications';
   static const String providerPaymentReview = '/provider/payment-review';
   static const String providerOrderDetails = '/provider/order-details';
+  static const String providerNotifications = '/provider/notifications';
+  static const String providerExternalBooking = '/provider/external-booking';
+  static const String providerProfileEdit = '/provider/profile-edit';
+  static const String providerChangePassword = '/provider/change-password';
+  static const String providerHelpCenter = '/provider/help';
+  static const String providerStoreProfile = '/provider/store-profile';
+  static const String providerPayoutAccount = '/provider/payout-account';
+  static const String providerReviews = '/provider/reviews';
   static const String providerEditService = '/provider/edit-service';
   static const String providerAddPackage = '/provider/add-package';
   static const String providerEditPackage = '/provider/edit-package';
@@ -187,6 +205,7 @@ class AppRoutes {
           BlocProvider(create: (c) => ProviderDashboardCubit(c.read<ProviderRepository>())),
           BlocProvider(create: (c) => ProviderServicesCubit(c.read<ProviderRepository>())..loadServices()),
           BlocProvider(create: (c) => ProviderOrdersCubit(c.read<ProviderRepository>())),
+          BlocProvider(create: (c) => ProviderSettingsCubit(c.read<ProviderRepository>())),
         ],
         child: const ProviderHomeScreen(),
       ),
@@ -242,10 +261,60 @@ class AppRoutes {
       context,
       ModalRoute.of(context)!.settings.arguments as int,
     ),
-    // Older links pass {'bookingId': ..}; payment review lives in the order.
-    providerPaymentReview: (context) => _orderDetailsRoute(
-      context,
-      (ModalRoute.of(context)!.settings.arguments as Map)['bookingId'] as int,
+    providerPaymentReview: (context) {
+      final args = ModalRoute.of(context)!.settings.arguments;
+      return _ProviderGuard(
+        child: BlocProvider(
+          create: (c) => ProviderOrderDetailsCubit(
+            c.read<ProviderRepository>(),
+            args is Map ? args['bookingId'] as int : args as int,
+          ),
+          child: const ProviderPaymentReviewScreen(),
+        ),
+      );
+    },
+    providerNotifications: (context) => _ProviderGuard(
+      child: BlocProvider(
+        create: (c) => NotificationCubit(c.read<NotificationRepository>()),
+        child: const ProviderNotificationsScreen(),
+      ),
+    ),
+    providerExternalBooking: (context) => _ProviderGuard(
+      child: BlocProvider(
+        create: (c) => ProviderExternalBookingCubit(c.read<ProviderRepository>()),
+        child: const ProviderExternalBookingScreen(),
+      ),
+    ),
+    providerProfileEdit: (context) => _ProviderGuard(
+      child: BlocProvider(
+        create: (c) => ProfileEditCubit(c.read<ProfileRepository>()),
+        child: const ProfileEditScreen(),
+      ),
+    ),
+    providerChangePassword: (context) => _ProviderGuard(
+      child: BlocProvider(
+        create: (c) => ChangePasswordCubit(c.read<AuthRepository>()),
+        child: const ChangePasswordScreen(),
+      ),
+    ),
+    providerHelpCenter: (_) => const _ProviderGuard(child: HelpCenterScreen()),
+    providerStoreProfile: (context) => _ProviderGuard(
+      child: BlocProvider(
+        create: (c) => ProviderStoreSettingsCubit(c.read<ProviderRepository>()),
+        child: const ProviderStoreProfileScreen(),
+      ),
+    ),
+    providerPayoutAccount: (context) => _ProviderGuard(
+      child: BlocProvider(
+        create: (c) => ProviderStoreSettingsCubit(c.read<ProviderRepository>()),
+        child: const ProviderPayoutAccountScreen(),
+      ),
+    ),
+    providerReviews: (context) => _ProviderGuard(
+      child: BlocProvider(
+        create: (c) => ProviderReviewsCubit(c.read<ProviderRepository>()),
+        child: const ProviderReviewsScreen(),
+      ),
     ),
     providerAddService: (context) => _ProviderGuard(
       child: BlocProvider(

@@ -3,6 +3,7 @@ import 'package:farah/cubits/provider_dashboard/provider_dashboard_cubit.dart';
 import 'package:farah/cubits/provider_orders/provider_orders_cubit.dart';
 import 'package:farah/cubits/provider_services/provider_services_cubit.dart';
 import 'package:farah/view/screens/provider/orders/provider_orders_screen.dart';
+import 'package:farah/view/screens/provider/settings/provider_settings_screen.dart';
 import 'package:farah/view/widgets/provider/onboarding/provider_step_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -148,7 +149,7 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
       case _servicesTab:
         return const ProviderServicesScreen();
       case 3:
-        return const Center(child: Text('حسابي (قريباً)'));
+        return const ProviderSettingsScreen();
       default:
         return _buildHomeContent(context);
     }

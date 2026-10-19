@@ -11,6 +11,8 @@ enum NotificationType {
   paymentProofSubmitted,
   paymentConfirmed,
   paymentRejected,
+  paymentReviewReminder,
+  paymentReviewOverdue,
   general;
 
   static NotificationType fromApi(String? raw) {

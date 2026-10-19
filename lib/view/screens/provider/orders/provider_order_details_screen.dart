@@ -1,3 +1,4 @@
+import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/core/utils/arabic_date.dart';
 import 'package:farah/cubits/provider_orders/provider_order_details_cubit.dart';
 import 'package:farah/view/widgets/provider/onboarding/provider_step_widgets.dart';
@@ -312,7 +313,7 @@ class _ProviderOrderDetailsScreenState
               _row('سبب الرفض', p['review_note'].toString()),
             if (p['status'] == 'submitted' &&
                 b['status'] == 'review_under_proof')
-              _proofReview(Map<String, dynamic>.from(p), state, primary),
+              _proofReview(primary),
             const Divider(color: Color(0xFFEDE6E8)),
           ],
         ],
@@ -320,86 +321,25 @@ class _ProviderOrderDetailsScreenState
     ];
   }
 
-  Widget _proofReview(
-    Map<String, dynamic> payment,
-    ProviderOrderDetailsState state,
-    Color primary,
-  ) {
-    final id = int.parse(payment['id'].toString());
-    final bytes = state.proofs[id];
-    final isPdf = payment['proof_type'] == 'pdf';
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: 8),
-        if (bytes != null && !isPdf)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: InteractiveViewer(
-              child: Image.memory(bytes, height: 260, fit: BoxFit.contain),
-            ),
-          )
-        else if (bytes != null)
-          const Text(
-            'الإثبات ملف PDF، راجعه مع العميل عند الحاجة.',
-            style: TextStyle(fontSize: 12, color: Colors.black54),
-          )
-        else
-          OutlinedButton.icon(
-            onPressed: () =>
-                context.read<ProviderOrderDetailsCubit>().loadProof(id),
-            icon: Icon(Icons.receipt_long_outlined, color: primary),
-            label: Text('عرض إثبات الدفع', style: TextStyle(color: primary)),
-          ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton(
-                onPressed: state.acting
-                    ? null
-                    : () => context
-                          .read<ProviderOrderDetailsCubit>()
-                          .reviewPayment(id, 'confirmed'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text('اعتماد الدفع'),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: OutlinedButton(
-                onPressed: state.acting
-                    ? null
-                    : () async {
-                        final note = await _askNote(
-                          'رفض إثبات الدفع',
-                          'سبب الرفض (يظهر للعميل)',
-                        );
-                        if (note != null && mounted) {
-                          context
-                              .read<ProviderOrderDetailsCubit>()
-                              .reviewPayment(id, 'rejected', note: note);
-                        }
-                      },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: _red,
-                  side: const BorderSide(color: _red),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text('رفض'),
-              ),
-            ),
-          ],
-        ),
-      ],
+  Widget _proofReview(Color primary) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: OutlinedButton.icon(
+        onPressed: () async {
+          final cubit = context.read<ProviderOrderDetailsCubit>();
+          final changed = await Navigator.pushNamed(
+            context,
+            AppRoutes.providerPaymentReview,
+            arguments: cubit.bookingId,
+          );
+          if (changed == true) {
+            _changed = true;
+            cubit.load();
+          }
+        },
+        icon: Icon(Icons.receipt_long_outlined, color: primary),
+        label: Text('مراجعة إشعار الدفع', style: TextStyle(color: primary)),
+      ),
     );
   }
 

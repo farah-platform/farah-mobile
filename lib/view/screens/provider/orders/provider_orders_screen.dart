@@ -67,6 +67,30 @@ class _ProviderOrdersScreenState extends State<ProviderOrdersScreen> {
                 ),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final added = await Navigator.pushNamed(
+                      context,
+                      AppRoutes.providerExternalBooking,
+                    );
+                    if (added == true) widget.onChanged?.call();
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: primary,
+                    side: BorderSide(color: primary.withValues(alpha: 0.5)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  icon: const Icon(Icons.add_circle_outline, size: 18),
+                  label: const Text('إضافة حجز خارجي'),
+                ),
+              ),
+            ),
             SizedBox(
               height: 34,
               child: ListView.separated(
