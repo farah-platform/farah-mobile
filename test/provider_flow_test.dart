@@ -149,6 +149,7 @@ void main() {
     await cubit.activateSubscription(planSlug: 'monthly');
 
     expect(cubit.state, isA<ProviderSubscriptionSuccess>());
+    expect((cubit.state as ProviderSubscriptionSuccess).pendingReview, isFalse);
     expect(recorder.requests.single.path, '/provider/subscription');
     expect(recorder.requests.single.data, {'plan': 'monthly'});
   });
@@ -164,6 +165,47 @@ void main() {
       (cubit.state as ProviderSubscriptionError).message,
       'free month already used',
     );
+  });
+
+  test('paid plan sends the transfer proof and waits for review', () async {
+    final (repo, recorder) = _repo(
+      (_) => {
+        'data': <String, dynamic>{'id': 3, 'status': 'submitted'},
+      },
+    );
+    final cubit = ProviderSubscriptionCubit(repo);
+    await cubit.activateSubscription(
+      planSlug: 'yearly',
+      proof: await _tempImage('transfer.jpg'),
+    );
+
+    expect((cubit.state as ProviderSubscriptionSuccess).pendingReview, isTrue);
+    final req = recorder.requests.single;
+    expect(req.path, '/provider/subscription');
+    final form = req.data as FormData;
+    expect(Map.fromEntries(form.fields), {'plan': 'yearly'});
+    expect(form.files.single.key, 'proof');
+  });
+
+  test('bank details come from the public settings', () async {
+    final (repo, recorder) = _repo(
+      (_) => {
+        'data': {
+          'bank_transfer': {
+            'bank_name': 'api bank',
+            'account_number': null,
+            'iban': 'api iban',
+          },
+        },
+      },
+    );
+    final cubit = ProviderSubscriptionCubit(repo);
+    await cubit.fetchBankDetails();
+
+    expect(recorder.requests.single.path, '/settings');
+    final bank = (cubit.state as ProviderSubscriptionBankLoaded).bank;
+    expect(bank['bank_name'], 'api bank');
+    expect(bank['iban'], 'api iban');
   });
 
   test(
