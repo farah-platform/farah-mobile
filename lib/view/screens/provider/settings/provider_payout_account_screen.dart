@@ -1,5 +1,6 @@
 import 'package:farah/cubits/provider_settings/provider_store_settings_cubit.dart';
 import 'package:farah/view/widgets/provider/onboarding/provider_step_widgets.dart';
+import 'package:farah/view/widgets/provider/settings/provider_form_fields.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -67,67 +68,78 @@ class _ProviderPayoutAccountScreenState
             _ibanController.text =
                 state.payoutAccount['iban']?.toString() ?? '';
           }
-          return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(28, 8, 28, 24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: kProviderNoteFill,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
+          // فرح: حسب تصميم "حساب استلام الارباح": ملاحظة التحويل ثم البنك ورقم الحساب والايبان.
+          return Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(32, 12, 32, 16),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Icon(Icons.info_outline, color: primary),
-                        const SizedBox(width: 10),
-                        const Expanded(
-                          child: Text(
-                            'يظهر هذا الحساب لك عند مراجعة دفعات العملاء، وتحوّل المنصة مستحقاتك عليه.',
-                            style: TextStyle(fontSize: 12, height: 1.6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
                           ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF6EFF1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.info_outline, color: primary),
+                              const SizedBox(width: 10),
+                              const Expanded(
+                                child: Text(
+                                  'سيتم التحويل من حجوزات عملائك على هذا الحساب',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        _field(
+                          'اسم البنك',
+                          _bankController,
+                          'مثال: بنك فلسطين أو محفظة جوال باي',
+                          required: true,
+                        ),
+                        _field(
+                          'رقم الحساب',
+                          _accountController,
+                          'رقم الحساب أو المحفظة',
+                          labelColor: primary,
+                          required: true,
+                        ),
+                        _field(
+                          'الايبان',
+                          _ibanController,
+                          'اختياري',
+                          labelColor: primary,
                         ),
                       ],
                     ),
                   ),
-                  _field(
-                    'مكان التحويل',
-                    _bankController,
-                    'مثال: بنك فلسطين أو محفظة جوال باي',
-                    required: true,
-                  ),
-                  _field(
-                    'رقم الحساب',
-                    _accountController,
-                    'رقم الحساب أو المحفظة',
-                    required: true,
-                    ltr: true,
-                  ),
-                  _field(
-                    'الايبان (اختياري)',
-                    _ibanController,
-                    'PS00...',
-                    ltr: true,
-                  ),
-                  const SizedBox(height: 28),
-                  ProviderPrimaryButton(
-                    label: 'حفظ',
-                    loading: state.saving,
-                    onPressed: () {
-                      if (!_formKey.currentState!.validate()) return;
-                      context.read<ProviderStoreSettingsCubit>().savePayout(
-                        bankName: _bankController.text.trim(),
-                        accountNumber: _accountController.text.trim(),
-                        iban: _ibanController.text.trim(),
-                      );
-                    },
-                  ),
-                ],
+                ),
               ),
-            ),
+              ProviderBottomAction(
+                child: ProviderPrimaryButton(
+                  label: 'حفظ التغيرات',
+                  loading: state.saving,
+                  onPressed: () {
+                    if (!_formKey.currentState!.validate()) return;
+                    context.read<ProviderStoreSettingsCubit>().savePayout(
+                      bankName: _bankController.text.trim(),
+                      accountNumber: _accountController.text.trim(),
+                      iban: _ibanController.text.trim(),
+                    );
+                  },
+                ),
+              ),
+            ],
           );
         },
       ),
@@ -138,34 +150,16 @@ class _ProviderPayoutAccountScreenState
     String label,
     TextEditingController controller,
     String hint, {
+    Color? labelColor,
     bool required = false,
-    bool ltr = false,
   }) {
-    OutlineInputBorder border(Color c) => OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: c),
-    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 18, bottom: 8),
-          child: Text(
-            label,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-          ),
-        ),
+        ProviderFieldLabel(label, color: labelColor),
         TextFormField(
           controller: controller,
-          textDirection: ltr ? TextDirection.ltr : null,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(color: Colors.black38, fontSize: 13),
-            filled: true,
-            fillColor: Colors.white,
-            enabledBorder: border(const Color(0xFFDADADA)),
-            border: border(const Color(0xFFDADADA)),
-          ),
+          decoration: providerFieldDecoration(hint: hint),
           validator: required
               ? (v) => (v ?? '').trim().isEmpty ? 'هذا الحقل مطلوب' : null
               : null,

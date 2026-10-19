@@ -52,6 +52,13 @@ import '../../view/screens/provider/orders/provider_payment_review_screen.dart';
 import '../../view/screens/provider/orders/provider_external_booking_screen.dart';
 import '../../view/screens/provider/notifications/provider_notifications_screen.dart';
 import '../../view/screens/provider/settings/provider_store_profile_screen.dart';
+import '../../view/screens/provider/settings/provider_profile_edit_screen.dart';
+import '../../view/screens/provider/settings/provider_change_password_screen.dart';
+import '../../view/screens/provider/settings/provider_help_center_screen.dart';
+import '../../view/screens/provider/settings/provider_current_subscription_screen.dart';
+import '../../view/screens/provider/settings/provider_delete_account_screen.dart';
+import '../../cubits/provider_settings/provider_help_center_cubit.dart';
+import '../../cubits/provider_subscription/provider_current_subscription_cubit.dart';
 import '../../view/screens/provider/settings/provider_payout_account_screen.dart';
 import '../../view/screens/provider/settings/provider_reviews_screen.dart';
 import '../../cubits/provider_external_booking/provider_external_booking_cubit.dart';
@@ -99,6 +106,9 @@ class AppRoutes {
   static const String providerProfileEdit = '/provider/profile-edit';
   static const String providerChangePassword = '/provider/change-password';
   static const String providerHelpCenter = '/provider/help';
+  // فرح: شاشتا "الاشتراك الحالي" و"حذف الحساب" للمزود.
+  static const String providerCurrentSubscription = '/provider/subscription';
+  static const String providerDeleteAccount = '/provider/delete-account';
   static const String providerStoreProfile = '/provider/store-profile';
   static const String providerPayoutAccount = '/provider/payout-account';
   static const String providerReviews = '/provider/reviews';
@@ -285,19 +295,34 @@ class AppRoutes {
         child: const ProviderExternalBookingScreen(),
       ),
     ),
+    // فرح: شاشات حساب المزود بتصميمها الخاص، مربوطة بنفس الكيوبتات والـ API.
     providerProfileEdit: (context) => _ProviderGuard(
       child: BlocProvider(
         create: (c) => ProfileEditCubit(c.read<ProfileRepository>()),
-        child: const ProfileEditScreen(),
+        child: const ProviderProfileEditScreen(),
       ),
     ),
     providerChangePassword: (context) => _ProviderGuard(
       child: BlocProvider(
         create: (c) => ChangePasswordCubit(c.read<AuthRepository>()),
-        child: const ChangePasswordScreen(),
+        child: const ProviderChangePasswordScreen(),
       ),
     ),
-    providerHelpCenter: (_) => const _ProviderGuard(child: HelpCenterScreen()),
+    providerHelpCenter: (context) => _ProviderGuard(
+      child: BlocProvider(
+        create: (c) => ProviderHelpCenterCubit(c.read<ProviderRepository>()),
+        child: const ProviderHelpCenterScreen(),
+      ),
+    ),
+    providerCurrentSubscription: (context) => _ProviderGuard(
+      child: BlocProvider(
+        create: (c) =>
+            ProviderCurrentSubscriptionCubit(c.read<ProviderRepository>()),
+        child: const ProviderCurrentSubscriptionScreen(),
+      ),
+    ),
+    providerDeleteAccount: (_) =>
+        const _ProviderGuard(child: ProviderDeleteAccountScreen()),
     providerStoreProfile: (context) => _ProviderGuard(
       child: BlocProvider(
         create: (c) => ProviderStoreSettingsCubit(c.read<ProviderRepository>()),

@@ -229,10 +229,13 @@ class ApiProviderRepository implements ProviderRepository {
   }
 
   @override
-  Future<void> updateStoreProfile(Map<String, dynamic> data, dynamic coverImage) async {
+  Future<void> updateStoreProfile(Map<String, dynamic> data, dynamic coverImage, {dynamic logo}) async {
     final form = FormData.fromMap(data);
     if (coverImage != null) {
       form.files.add(MapEntry('cover_image', await MultipartFile.fromFile(coverImage.path)));
+    }
+    if (logo != null) {
+      form.files.add(MapEntry('logo', await MultipartFile.fromFile(logo.path)));
     }
     await dioClient.dio.post('/provider/profile', data: form);
   }
@@ -246,5 +249,31 @@ class ApiProviderRepository implements ProviderRepository {
   @override
   Future<void> setNotificationsEnabled(bool enabled) async {
     await dioClient.dio.put('/notification-settings', data: {'enabled': enabled});
+  }
+
+  @override
+  Future<Map<String, dynamic>?> getCurrentSubscription() async {
+    final res = await dioClient.dio.get('/provider/subscription');
+    final data = res.data['data'];
+    return data is Map ? Map<String, dynamic>.from(data) : null;
+  }
+
+  @override
+  Future<void> cancelSubscription() async {
+    await dioClient.dio.post('/provider/subscription/cancel');
+  }
+
+  @override
+  Future<List<dynamic>> getFaqs() async {
+    final res = await dioClient.dio.get('/faqs', queryParameters: {'audience': 'provider'});
+    final data = res.data['data'];
+    return data is List ? data : [];
+  }
+
+  @override
+  Future<Map<String, dynamic>> getSupportContacts() async {
+    final res = await dioClient.dio.get(ApiEndpoints.settings);
+    final data = res.data['data'];
+    return data is Map ? Map<String, dynamic>.from(data) : {};
   }
 }

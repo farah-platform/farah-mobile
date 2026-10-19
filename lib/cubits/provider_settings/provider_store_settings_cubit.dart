@@ -6,6 +6,8 @@ class ProviderStoreSettingsState {
   /// `profile` block of GET /provider/onboarding.
   final Map<String, dynamic> profile;
   final List<dynamic> cities;
+  // فرح: قائمة فئات الخدمة من السيرفر لحقل "فئة الخدمة".
+  final List<dynamic> categories;
   final Map<String, dynamic> payoutAccount;
   final bool loading;
   final bool saving;
@@ -15,6 +17,7 @@ class ProviderStoreSettingsState {
   const ProviderStoreSettingsState({
     this.profile = const {},
     this.cities = const [],
+    this.categories = const [],
     this.payoutAccount = const {},
     this.loading = true,
     this.saving = false,
@@ -25,6 +28,7 @@ class ProviderStoreSettingsState {
   ProviderStoreSettingsState copyWith({
     Map<String, dynamic>? profile,
     List<dynamic>? cities,
+    List<dynamic>? categories,
     Map<String, dynamic>? payoutAccount,
     bool? loading,
     bool? saving,
@@ -34,6 +38,7 @@ class ProviderStoreSettingsState {
     return ProviderStoreSettingsState(
       profile: profile ?? this.profile,
       cities: cities ?? this.cities,
+      categories: categories ?? this.categories,
       payoutAccount: payoutAccount ?? this.payoutAccount,
       loading: loading ?? this.loading,
       saving: saving ?? this.saving,
@@ -56,6 +61,7 @@ class ProviderStoreSettingsCubit extends Cubit<ProviderStoreSettingsState> {
         _repository.getOnboardingData(),
         _repository.getCities(),
         _repository.getDashboardData(),
+        _repository.getCategories(),
       ]);
       if (isClosed) return;
       final onboarding = results[0] as Map<String, dynamic>;
@@ -68,6 +74,7 @@ class ProviderStoreSettingsCubit extends Cubit<ProviderStoreSettingsState> {
               ? Map<String, dynamic>.from(onboarding['profile'])
               : {},
           cities: results[1] as List<dynamic>,
+          categories: results[3] as List<dynamic>,
           payoutAccount: payout is Map ? Map<String, dynamic>.from(payout) : {},
         ),
       );
@@ -82,8 +89,11 @@ class ProviderStoreSettingsCubit extends Cubit<ProviderStoreSettingsState> {
     }
   }
 
-  Future<void> saveProfile(Map<String, dynamic> data, dynamic cover) =>
-      _save(() => _repository.updateStoreProfile(data, cover));
+  Future<void> saveProfile(
+    Map<String, dynamic> data,
+    dynamic cover, {
+    dynamic logo,
+  }) => _save(() => _repository.updateStoreProfile(data, cover, logo: logo));
 
   Future<void> savePayout({
     required String bankName,

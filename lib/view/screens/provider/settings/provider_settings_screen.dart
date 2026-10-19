@@ -33,41 +33,6 @@ class _ProviderSettingsScreenState extends State<ProviderSettingsScreen> {
     auth.logout();
   }
 
-  Future<void> _deleteAccount() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialog) => AlertDialog(
-        backgroundColor: Colors.white,
-        title: const Text('حذف الحساب'),
-        content: const Text(
-          'سيتم حذف حسابك ومتجرك نهائياً ولن تتمكن من التراجع. هل أنت متأكد؟',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialog, false),
-            child: const Text('إلغاء'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialog, true),
-            child: const Text('حذف الحساب', style: TextStyle(color: _red)),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-    final auth = context.read<AuthCubit>();
-    final messenger = ScaffoldMessenger.of(context);
-    // Leave the provider screens before the auth state changes under them.
-    Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (_) => false);
-    await auth.deleteAccount();
-    final state = auth.state;
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(state is AuthError ? state.message : 'تم حذف الحساب'),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
@@ -117,7 +82,7 @@ class _ProviderSettingsScreenState extends State<ProviderSettingsScreen> {
               Icons.star_border,
               'الاشتراك  الحالي',
               primary,
-              () => _open(AppRoutes.providerSubscriptionPlans),
+              () => _open(AppRoutes.providerCurrentSubscription),
             ),
           ]),
           _section('التفضيلات'),
@@ -192,7 +157,8 @@ class _ProviderSettingsScreenState extends State<ProviderSettingsScreen> {
             ),
           ),
           TextButton(
-            onPressed: _deleteAccount,
+            // فرح: يفتح شاشة "حذف الحساب" حسب التصميم بدل نافذة التأكيد.
+            onPressed: () => _open(AppRoutes.providerDeleteAccount),
             child: const Text(
               'حذف الحساب',
               style: TextStyle(color: _red, fontSize: 16),
