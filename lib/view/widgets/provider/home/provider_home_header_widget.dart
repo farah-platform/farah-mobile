@@ -57,7 +57,7 @@ class ProviderHomeHeaderWidget extends StatelessWidget {
             IconButton(
               tooltip: 'الإشعارات',
               onPressed: () =>
-                  Navigator.pushNamed(context, AppRoutes.notifications),
+                  Navigator.pushNamed(context, AppRoutes.providerNotifications),
               icon: Badge(
                 isLabelVisible: unread > 0,
                 smallSize: 8,

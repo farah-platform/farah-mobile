@@ -206,4 +206,45 @@ class ApiProviderRepository implements ProviderRepository {
       if (unblock.isNotEmpty) 'unblock_dates': unblock,
     });
   }
+
+  @override
+  Future<void> addExternalBooking(Map<String, dynamic> data) async {
+    await dioClient.dio.post('/provider/external-bookings', data: data);
+  }
+
+  @override
+  Future<List<dynamic>> getProviderReviews() async {
+    final res = await dioClient.dio.get('/provider/reviews');
+    final data = res.data['data'];
+    return data is List ? data : [];
+  }
+
+  @override
+  Future<void> updatePayoutAccount({required String bankName, required String accountNumber, String? iban}) async {
+    await dioClient.dio.put('/provider/payout-account', data: {
+      'bank_name': bankName,
+      'account_number': accountNumber,
+      'iban': iban,
+    });
+  }
+
+  @override
+  Future<void> updateStoreProfile(Map<String, dynamic> data, dynamic coverImage) async {
+    final form = FormData.fromMap(data);
+    if (coverImage != null) {
+      form.files.add(MapEntry('cover_image', await MultipartFile.fromFile(coverImage.path)));
+    }
+    await dioClient.dio.post('/provider/profile', data: form);
+  }
+
+  @override
+  Future<bool> getNotificationsEnabled() async {
+    final res = await dioClient.dio.get('/notification-settings');
+    return res.data['data']?['enabled'] != false;
+  }
+
+  @override
+  Future<void> setNotificationsEnabled(bool enabled) async {
+    await dioClient.dio.put('/notification-settings', data: {'enabled': enabled});
+  }
 }

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:farah/cubits/provider_service_editor/provider_service_editor_cubit.dart';
 import 'package:farah/view/widgets/provider/onboarding/provider_step_widgets.dart';
+import 'package:farah/view/widgets/provider/provider_month_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -129,8 +130,7 @@ class _ProviderEditServiceScreenState extends State<ProviderEditServiceScreen> {
     super.dispose();
   }
 
-  String _monthKey(DateTime m) =>
-      '${m.year}-${m.month.toString().padLeft(2, '0')}';
+  String _monthKey(DateTime m) => ProviderMonthCalendar.monthKey(m);
 
   String _dateKey(DateTime d) =>
       '${_monthKey(d)}-${d.day.toString().padLeft(2, '0')}';
@@ -893,21 +893,8 @@ class _ProviderEditServiceScreenState extends State<ProviderEditServiceScreen> {
   }
 
   Widget _datesCard(Color primary) {
-    const weekdays = [
-      'جمعة',
-      'سبت',
-      'أحد',
-      'اثنين',
-      'ثلاثاء',
-      'اربعاء',
-      'خميس',
-    ];
     final today = DateTime.now();
     final todayStart = DateTime(today.year, today.month, today.day);
-    final daysInMonth = DateTime(_month.year, _month.month + 1, 0).day;
-    // The design's weeks start on Friday.
-    final offset =
-        (DateTime(_month.year, _month.month).weekday - DateTime.friday + 7) % 7;
     final canGoBack = _month.isAfter(DateTime(today.year, today.month));
 
     return _card(
@@ -924,81 +911,19 @@ class _ProviderEditServiceScreenState extends State<ProviderEditServiceScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.fromLTRB(10, 4, 10, 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFF1E7EA)),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    IconButton(
-                      tooltip: 'الشهر السابق',
-                      onPressed: canGoBack
-                          ? () {
-                              _month = DateTime(_month.year, _month.month - 1);
-                              _loadMonth();
-                            }
-                          : null,
-                      icon: const Icon(Icons.chevron_right),
-                    ),
-                    Expanded(
-                      child: Text(
-                        '${_monthNames[_month.month - 1]} ${_month.year}',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'الشهر التالي',
-                      onPressed: () {
-                        _month = DateTime(_month.year, _month.month + 1);
-                        _loadMonth();
-                      },
-                      icon: const Icon(Icons.chevron_left),
-                    ),
-                  ],
-                ),
-                const Divider(height: 8),
-                Row(
-                  children: [
-                    for (final d in weekdays)
-                      Expanded(
-                        child: Text(
-                          d,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 11),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                if (_loadingDates)
-                  const Padding(
-                    padding: EdgeInsets.all(24),
-                    child: CircularProgressIndicator(),
-                  )
-                else
-                  GridView.count(
-                    crossAxisCount: 7,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 6,
-                    crossAxisSpacing: 4,
-                    children: [
-                      for (var i = 0; i < offset; i++) const SizedBox(),
-                      for (var day = 1; day <= daysInMonth; day++)
-                        _dayCell(
-                          DateTime(_month.year, _month.month, day),
-                          todayStart,
-                          primary,
-                        ),
-                    ],
-                  ),
-              ],
-            ),
+          ProviderMonthCalendar(
+            month: _month,
+            canGoBack: canGoBack,
+            loading: _loadingDates,
+            onPrevious: () {
+              _month = DateTime(_month.year, _month.month - 1);
+              _loadMonth();
+            },
+            onNext: () {
+              _month = DateTime(_month.year, _month.month + 1);
+              _loadMonth();
+            },
+            dayBuilder: (day) => _dayCell(day, todayStart, primary),
           ),
         ],
       ),
@@ -1272,21 +1197,6 @@ class _ProviderEditServiceScreenState extends State<ProviderEditServiceScreen> {
       ),
     );
   }
-
-  static const _monthNames = [
-    'يناير',
-    'فبراير',
-    'مارس',
-    'أبريل',
-    'مايو',
-    'يونيو',
-    'يوليو',
-    'أغسطس',
-    'سبتمبر',
-    'أكتوبر',
-    'نوفمبر',
-    'ديسمبر',
-  ];
 }
 
 /// Icon for an amenity or package item, picked from its name.

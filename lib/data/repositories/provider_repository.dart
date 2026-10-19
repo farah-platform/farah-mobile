@@ -27,6 +27,13 @@ abstract class ProviderRepository {
   Future<void> updatePaymentInstructions(String instructions);
   /// Blocked dates of a service for a month (YYYY-MM).
   Future<Map<String, dynamic>> getServiceAvailability(int serviceId, String month);
+  /// Records a booking made outside the app; with a service it blocks that date.
+  Future<void> addExternalBooking(Map<String, dynamic> data);
+  Future<List<dynamic>> getProviderReviews();
+  Future<void> updatePayoutAccount({required String bankName, required String accountNumber, String? iban});
+  Future<void> updateStoreProfile(Map<String, dynamic> data, dynamic coverImage);
+  Future<bool> getNotificationsEnabled();
+  Future<void> setNotificationsEnabled(bool enabled);
   Future<void> updateServiceAvailability(int serviceId, {List<String> block = const [], List<String> unblock = const []});
   Future<void> reviewPaymentProof(int bookingId, int paymentId, String decision, {String? reviewNote});
 }
