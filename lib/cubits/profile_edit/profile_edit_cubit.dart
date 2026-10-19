@@ -56,9 +56,12 @@ class ProfileEditCubit extends Cubit<ProfileEditState> {
         final message = e.response?.data?['title'] as String? ??
             'حدث خطأ أثناء الحفظ، يرجى المحاولة مجدداً';
         emit(ProfileEditError(message));
+        // فرح: نرجع للنموذج بعد الخطأ حتى يقدر المستخدم يعيد المحاولة.
+        emit(ProfileEditReady(user: current.user, dirty: true));
       }
     } catch (_) {
       emit(ProfileEditError('حدث خطأ أثناء الحفظ، يرجى المحاولة مجدداً'));
+      emit(ProfileEditReady(user: current.user, dirty: true));
     }
   }
 

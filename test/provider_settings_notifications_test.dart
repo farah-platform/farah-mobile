@@ -173,6 +173,9 @@ class _FakeRepo implements ProviderRepository {
   Future<List<dynamic>> getCities() async => [];
 
   @override
+  Future<List<dynamic>> getCategories() async => [];
+
+  @override
   Future<void> updatePayoutAccount({
     required String bankName,
     required String accountNumber,
@@ -433,7 +436,7 @@ void main() {
 
     expect(find.text('api bank'), findsOneWidget);
     await tester.enterText(find.byType(TextFormField).at(1), '42');
-    await tester.tap(find.text('حفظ'));
+    await tester.tap(find.text('حفظ التغيرات'));
     await tester.pumpAndSettle();
     expect(repo.calls, ['payout:api bank:42:api iban']);
   });

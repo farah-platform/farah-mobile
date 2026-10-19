@@ -31,7 +31,16 @@ abstract class ProviderRepository {
   Future<void> addExternalBooking(Map<String, dynamic> data);
   Future<List<dynamic>> getProviderReviews();
   Future<void> updatePayoutAccount({required String bankName, required String accountNumber, String? iban});
-  Future<void> updateStoreProfile(Map<String, dynamic> data, dynamic coverImage);
+  // فرح: بيانات المتجر مع الشعار (logo) وفئة الخدمة ورقم السجل التجاري.
+  Future<void> updateStoreProfile(Map<String, dynamic> data, dynamic coverImage, {dynamic logo});
+  // فرح: شاشة "الاشتراك الحالي": GET /provider/subscription و POST /provider/subscription/cancel.
+  /// Latest subscription with its plan (and features), or null when none.
+  Future<Map<String, dynamic>?> getCurrentSubscription();
+  Future<void> cancelSubscription();
+  // فرح: مركز المساعدة: GET /faqs?audience=provider وبيانات التواصل من GET /settings.
+  Future<List<dynamic>> getFaqs();
+  /// `support_phone` and `support_email` set by the admin (may be empty).
+  Future<Map<String, dynamic>> getSupportContacts();
   Future<bool> getNotificationsEnabled();
   Future<void> setNotificationsEnabled(bool enabled);
   Future<void> updateServiceAvailability(int serviceId, {List<String> block = const [], List<String> unblock = const []});

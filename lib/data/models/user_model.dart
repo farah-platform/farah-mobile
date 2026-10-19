@@ -7,6 +7,8 @@ class UserModel extends Equatable {
   final String phone;
   final String region;
   final String role;
+  // فرح: صورة الحساب (للمزود هي شعار المتجر) لعرضها في "تعديل الملف الشخصي".
+  final String? avatar;
 
   const UserModel({
     required this.uid,
@@ -15,6 +17,7 @@ class UserModel extends Equatable {
     this.phone = '',
     this.region = '',
     this.role = 'customer',
+    this.avatar,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map) => UserModel(
@@ -25,6 +28,7 @@ class UserModel extends Equatable {
     phone: (map['phone'] as String?) ?? '',
     region: (map['region'] as String?) ?? '',
     role: (map['role'] as String?) ?? 'customer',
+    avatar: map['avatar'] as String?,
   );
 
   Map<String, dynamic> toMap() => {
@@ -34,6 +38,7 @@ class UserModel extends Equatable {
     'phone': phone,
     'region': region,
     'role': role,
+    'avatar': avatar,
   };
 
   @override
