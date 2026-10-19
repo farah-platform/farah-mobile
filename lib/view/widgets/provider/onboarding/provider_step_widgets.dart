@@ -14,6 +14,7 @@ PreferredSizeWidget providerStepAppBar(
   BuildContext context,
   String title, {
   bool showBack = true,
+  List<Widget> actions = const [],
 }) {
   final primary = Theme.of(context).colorScheme.primary;
   return AppBar(
@@ -22,6 +23,14 @@ PreferredSizeWidget providerStepAppBar(
     elevation: 0,
     centerTitle: true,
     automaticallyImplyLeading: false,
+    // The designs put the back arrow on the right (start in RTL), pointing right.
+    leading: showBack && Navigator.canPop(context)
+        ? IconButton(
+            tooltip: 'رجوع',
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.maybePop(context),
+          )
+        : null,
     title: Text(
       title,
       style: TextStyle(
@@ -30,15 +39,7 @@ PreferredSizeWidget providerStepAppBar(
         fontSize: 20,
       ),
     ),
-    // The design puts the back arrow on the left, pointing right.
-    actions: [
-      if (showBack && Navigator.canPop(context))
-        IconButton(
-          tooltip: 'رجوع',
-          icon: const Icon(Icons.arrow_forward, color: Colors.black),
-          onPressed: () => Navigator.maybePop(context),
-        ),
-    ],
+    actions: actions,
   );
 }
 

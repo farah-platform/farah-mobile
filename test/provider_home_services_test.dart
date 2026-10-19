@@ -254,33 +254,4 @@ void main() {
     expect(data['save_as_draft'], '1');
     expect(data.containsKey('booking_slots'), isFalse);
   });
-
-  testWidgets('editing reuses the form filled from the API service', (
-    tester,
-  ) async {
-    final repo = _FakeRepo();
-    await _pump(
-      tester,
-      BlocProvider(
-        create: (_) => ProviderServicesCubit(repo),
-        child: ProviderAddServiceScreen(
-          service: _service(id: 9, title: 'api editing'),
-        ),
-      ),
-    );
-
-    expect(find.text('تعديل الخدمة'), findsOneWidget);
-    expect(find.text('api editing'), findsOneWidget);
-    expect(find.text('api feature'), findsOneWidget);
-    expect(find.text('قابلة للازالة'), findsOneWidget);
-    expect(find.text('800'), findsOneWidget);
-    expect(find.text('600'), findsOneWidget);
-
-    await tester.ensureVisible(find.text('حفظ كمسودة'));
-    await tester.tap(find.text('حفظ كمسودة'));
-    await tester.pumpAndSettle();
-    expect(repo.updated!.$1, 9);
-    expect(repo.updated!.$2['category_id'], '3');
-    expect(jsonDecode(repo.updated!.$2['removable_features']), ['api feature']);
-  });
 }

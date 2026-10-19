@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:farah/cubits/auth/auth_cubit.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../cubits/notification/notification_cubit.dart';
 import '../../../data/models/notification_model.dart';
@@ -71,26 +72,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       return GestureDetector(
                         onTap: () {
                           context.read<NotificationCubit>().markAsRead(n.id);
-                          // Dummy navigating to payment review screen. 
-                          // In reality, we need bookingId and paymentId from referenceId
-                          if (n.referenceId != null) {
-                            final parts = n.referenceId!.split('-'); // e.g. "bookingId-paymentId"
-                            if (parts.length >= 2) {
-                              Navigator.pushNamed(context, AppRoutes.providerPaymentReview, arguments: {
-                                'bookingId': int.tryParse(parts[0]) ?? 0,
-                                'paymentId': int.tryParse(parts[1]) ?? 0,
-                              });
-                            } else {
-                              Navigator.pushNamed(context, AppRoutes.providerPaymentReview, arguments: {
-                                'bookingId': int.tryParse(parts[0]) ?? 0,
-                                'paymentId': 0, // Fallback
-                              });
-                            }
-                          } else {
-                            Navigator.pushNamed(context, AppRoutes.providerPaymentReview, arguments: {
-                                'bookingId': 1,
-                                'paymentId': 1,
-                              });
+                          // Booking notifications open the order for providers.
+                          final auth = context.read<AuthCubit>().state;
+                          final bookingId = int.tryParse(n.referenceId ?? '');
+                          if (n.resourceType == 'booking' &&
+                              bookingId != null &&
+                              auth is AuthSuccess &&
+                              auth.user.role == 'provider') {
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.providerOrderDetails,
+                              arguments: bookingId,
+                            );
                           }
                         },
                         child: Container(

@@ -1,6 +1,8 @@
 import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/cubits/provider_dashboard/provider_dashboard_cubit.dart';
+import 'package:farah/cubits/provider_orders/provider_orders_cubit.dart';
 import 'package:farah/cubits/provider_services/provider_services_cubit.dart';
+import 'package:farah/view/screens/provider/orders/provider_orders_screen.dart';
 import 'package:farah/view/widgets/provider/onboarding/provider_step_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -43,6 +45,18 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
     context.read<ProviderServicesCubit>().loadServices();
   }
 
+  Future<void> _openOrder(int id) async {
+    final changed = await Navigator.pushNamed(
+      context,
+      AppRoutes.providerOrderDetails,
+      arguments: id,
+    );
+    if (changed == true) {
+      _refresh();
+      if (mounted) context.read<ProviderOrdersCubit>().refresh();
+    }
+  }
+
   // The services card is where providers add services and packages.
   void _showServicesActions() {
     final primary = Theme.of(context).colorScheme.primary;
@@ -70,7 +84,10 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
               title: const Text('إضافة باقة جديدة'),
               onTap: () async {
                 Navigator.pop(sheet);
-                await Navigator.pushNamed(context, AppRoutes.providerAddPackage);
+                await Navigator.pushNamed(
+                  context,
+                  AppRoutes.providerAddPackage,
+                );
                 _refresh();
               },
             ),
@@ -127,7 +144,7 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
   Widget _buildBody(BuildContext context) {
     switch (_currentIndex) {
       case _ordersTab:
-        return const Center(child: Text('الطلبات (قريباً)'));
+        return ProviderOrdersScreen(onChanged: _refresh);
       case _servicesTab:
         return const ProviderServicesScreen();
       case 3:
@@ -163,7 +180,8 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
         final data = (state as ProviderDashboardLoaded).data;
 
         return RefreshIndicator(
-          onRefresh: () => context.read<ProviderDashboardCubit>().loadDashboard(),
+          onRefresh: () =>
+              context.read<ProviderDashboardCubit>().loadDashboard(),
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
             children: [
@@ -181,6 +199,7 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
                 data: data,
                 onShowAll: () => setState(() => _currentIndex = _ordersTab),
                 onAddService: _openAddService,
+                onOpenOrder: _openOrder,
               ),
             ],
           ),

@@ -150,4 +150,60 @@ class ApiProviderRepository implements ProviderRepository {
     final response = await dioClient.dio.get('${ApiEndpoints.providerBookings}/$bookingId');
     return response.data['data'] ?? {};
   }
+
+  @override
+  Future<List<dynamic>> getProviderBookings({String? status}) async {
+    final res = await dioClient.dio.get(
+      ApiEndpoints.providerBookings,
+      queryParameters: {'per_page': 50, if (status != null) 'status': status},
+    );
+    final data = res.data['data'];
+    return data is List ? data : [];
+  }
+
+  @override
+  Future<void> decideBooking(int bookingId, String decision, {double? depositAmount, String? note}) async {
+    await dioClient.dio.post('${ApiEndpoints.providerBookings}/$bookingId/decision', data: {
+      'decision': decision,
+      if (depositAmount != null) 'deposit_amount': depositAmount,
+      if (note != null && note.isNotEmpty) 'provider_note': note,
+    });
+  }
+
+  @override
+  Future<void> completeBooking(int bookingId) async {
+    await dioClient.dio.post('${ApiEndpoints.providerBookings}/$bookingId/complete');
+  }
+
+  @override
+  Future<List<int>> getPaymentProof(int bookingId, int paymentId) async {
+    final res = await dioClient.dio.get<List<int>>(
+      '${ApiEndpoints.providerBookings}/$bookingId/payments/$paymentId/proof',
+      options: Options(responseType: ResponseType.bytes),
+    );
+    return res.data ?? [];
+  }
+
+  @override
+  Future<void> updatePaymentInstructions(String instructions) async {
+    await dioClient.dio.put('/provider/payment-instructions', data: {'payment_instructions': instructions});
+  }
+
+  @override
+  Future<Map<String, dynamic>> getServiceAvailability(int serviceId, String month) async {
+    final res = await dioClient.dio.get(
+      '${ApiEndpoints.providerServices}/$serviceId/availability',
+      queryParameters: {'month': month},
+    );
+    final data = res.data['data'];
+    return data is Map ? Map<String, dynamic>.from(data) : {};
+  }
+
+  @override
+  Future<void> updateServiceAvailability(int serviceId, {List<String> block = const [], List<String> unblock = const []}) async {
+    await dioClient.dio.put('${ApiEndpoints.providerServices}/$serviceId/availability', data: {
+      if (block.isNotEmpty) 'block_dates': [for (final d in block) {'date': d}],
+      if (unblock.isNotEmpty) 'unblock_dates': unblock,
+    });
+  }
 }
