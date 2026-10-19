@@ -18,7 +18,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    // Don't call the profile API for guests — there's no token.
     if (context.read<AuthCubit>().state is! AuthError) {
       context.read<SettingsCubit>().load();
     }
@@ -46,7 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (context, authState) {
         final isGuest = authState is AuthError;
         return Scaffold(
-          backgroundColor: AppColors.scaffoldSecondary,
+          backgroundColor: const Color(0xFFFBF8F8),
           appBar: AppBar(
             backgroundColor: Colors.white,
             foregroundColor: AppColors.primary,
@@ -132,18 +131,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Text(
                     'تسجيل الدخول',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   SizedBox(height: 4),
                   Text(
                     'سجّل الدخول للوصول لكافة المميزات',
-                    style: TextStyle(
-                      color: AppColors.textGrey,
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: AppColors.textGrey, fontSize: 13),
                   ),
                 ],
               ),
@@ -274,8 +267,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text('الإشعارات'),
             trailing: Switch(
               value: notificationsEnabled,
-              activeThumbColor: AppColors.primary,
-              activeTrackColor: AppColors.primary.withValues(alpha: 0.5),
+              activeThumbColor: const Color.fromARGB(255, 235, 232, 233),
+              activeTrackColor: AppColors.primary.withValues(alpha: 1),
               onChanged: (val) =>
                   context.read<SettingsCubit>().toggleNotifications(val),
             ),

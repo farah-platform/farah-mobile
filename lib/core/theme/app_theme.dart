@@ -7,7 +7,7 @@ ThemeData appTheme = ThemeData(
   colorScheme: ColorScheme.fromSeed(
     seedColor: const Color(0xFF7B2146),
     primary: const Color(0xFF7B2146),
-    secondary: const Color(0xFFD4AF37),
+    secondary: const Color.fromARGB(255, 146, 115, 14),
     surface: Colors.white,
   ),
 

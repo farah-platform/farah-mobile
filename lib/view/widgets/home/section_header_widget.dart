@@ -26,6 +26,7 @@ class SectionHeaderWidget extends StatelessWidget {
             style: theme.textTheme.titleSmall?.copyWith(
               color: colors.onSurface,
               fontWeight: FontWeight.w700,
+              fontSize: 15,
             ),
           ),
           const Spacer(),
@@ -36,7 +37,8 @@ class SectionHeaderWidget extends StatelessWidget {
                 'عرض الكل',
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: colors.primary,
-                  fontSize: 9,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),

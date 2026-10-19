@@ -65,8 +65,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                 Center(
                   child: Container(
-                    width: 100,
-                    height: 100,
+                    width: 50,
+                    height: 50,
                     decoration: BoxDecoration(
                       color: primary.withOpacity(0.1),
                       shape: BoxShape.circle,
@@ -74,7 +74,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     child: Icon(
                       Icons.lock_person_outlined,
                       color: primary,
-                      size: 46,
+                      size: 20,
                     ),
                   ),
                 ),

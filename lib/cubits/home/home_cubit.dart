@@ -14,7 +14,6 @@ class HomeCubit extends Cubit<HomeState> {
     emit(HomeLoading());
 
     try {
-      // استدعاء الباك إند الحقيقي عبر الـ Repository
       final homeData = await _repo.fetchHome();
       emit(HomeLoaded(home: homeData));
     } catch (e) {
@@ -38,4 +37,3 @@ class HomeCubit extends Cubit<HomeState> {
     return 'حدث خطأ، يرجى المحاولة مجدداً';
   }
 }
-
