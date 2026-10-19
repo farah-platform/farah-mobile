@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:farah/cubits/provider_services/provider_services_cubit.dart';
@@ -9,14 +9,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
-/// "إضافة خدمة جديدة", also used to edit a service when [service] is given.
+/// "إضافة خدمة جديدة" and, with [isPackage], "إضافة باقة جديدة".
 /// Categories come from the API; services without booking periods are
-/// booked for the whole day.
+/// booked for the whole day. Editing has its own screen.
 class ProviderAddServiceScreen extends StatefulWidget {
-  /// A service from GET /provider/services to edit.
-  final Map<String, dynamic>? service;
+  final bool isPackage;
 
-  const ProviderAddServiceScreen({super.key, this.service});
+  const ProviderAddServiceScreen({super.key, this.isPackage = false});
 
   @override
   State<ProviderAddServiceScreen> createState() =>
@@ -40,59 +39,20 @@ class _ProviderAddServiceScreenState extends State<ProviderAddServiceScreen> {
   final _durationController = TextEditingController();
   final List<_FeatureRow> _features = [_FeatureRow()];
   final List<File> _images = [];
-  // Images already on the server (edit mode) and the ones the provider removed.
-  final List<Map<String, dynamic>> _existingImages = [];
-  final List<int> _removedImageIds = [];
 
   List<dynamic> _categories = [];
   String? _categoryId;
   bool _savingDraft = false;
 
-  bool get _editing => widget.service != null;
+  bool get _package => widget.isPackage;
 
-  int get _imageCount => _existingImages.length + _images.length;
+  // Labels that differ between a service and a package.
+  String get _noun => _package ? 'الباقة' : 'الخدمة';
 
   @override
   void initState() {
     super.initState();
-    final service = widget.service;
-    if (service != null) _fill(service);
     context.read<ProviderServicesCubit>().loadFormData();
-  }
-
-  void _fill(Map<String, dynamic> service) {
-    String text(dynamic v) => v == null ? '' : v.toString();
-    String amount(dynamic v) {
-      final n = num.tryParse(text(v));
-      if (n == null) return '';
-      return n == n.roundToDouble() ? n.toInt().toString() : n.toString();
-    }
-
-    final pricing = (service['pricing'] as Map?) ?? const {};
-    final original = pricing['original_price'];
-    _titleController.text = text(service['title']);
-    _descriptionController.text = text(service['description']);
-    _priceController.text = amount(original ?? pricing['price']);
-    _offerController.text = original != null ? amount(pricing['price']) : '';
-    _durationController.text = text(service['execution_duration']);
-    _categoryId = (service['category'] as Map?)?['id']?.toString();
-    final items = (service['feature_items'] as List?) ?? const [];
-    if (items.isNotEmpty) {
-      _features
-        ..clear()
-        ..addAll(
-          items.whereType<Map>().map(
-            (f) => _FeatureRow()
-              ..controller.text = text(f['name'])
-              ..removable = f['removable'] == true,
-          ),
-        );
-    }
-    _existingImages.addAll(
-      ((service['images'] as List?) ?? const []).whereType<Map>().map(
-        (i) => Map<String, dynamic>.from(i),
-      ),
-    );
   }
 
   @override
@@ -113,9 +73,11 @@ class _ProviderAddServiceScreenState extends State<ProviderAddServiceScreen> {
   }
 
   Future<void> _pickImages() async {
-    final left = _maxImages - _imageCount;
+    final left = _maxImages - _images.length;
     if (left <= 0) return;
-    final picked = await ImagePicker().pickMultiImage(limit: left > 1 ? left : null);
+    final picked = await ImagePicker().pickMultiImage(
+      limit: left > 1 ? left : null,
+    );
     if (picked.isEmpty) return;
     setState(() {
       _images.addAll(picked.take(left).map((x) => File(x.path)));
@@ -124,7 +86,7 @@ class _ProviderAddServiceScreenState extends State<ProviderAddServiceScreen> {
 
   void _submit({required bool draft}) {
     if (!_formKey.currentState!.validate()) return;
-    if (!draft && _imageCount == 0) {
+    if (!draft && _images.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('أضف صورة واحدة على الأقل قبل النشر')),
       );
@@ -142,31 +104,27 @@ class _ProviderAddServiceScreenState extends State<ProviderAddServiceScreen> {
       if (_offerController.text.trim().isNotEmpty)
         'offer_price': _offerController.text.trim(),
       'execution_duration': _durationController.text.trim(),
-      'service_type': 'service',
+      'service_type': _package ? 'package' : 'service',
       'currency': 'ILS',
-      'features': jsonEncode([
-        for (final f in features) f.controller.text.trim(),
-      ]),
-      'removable_features': jsonEncode([
-        for (final f in features.where((f) => f.removable))
-          f.controller.text.trim(),
-      ]),
+      if (_package)
+        'package_items': jsonEncode([
+          for (final (i, f) in features.indexed)
+            {'title': f.controller.text.trim(), 'sort_order': i},
+        ])
+      else ...{
+        'features': jsonEncode([
+          for (final f in features) f.controller.text.trim(),
+        ]),
+        'removable_features': jsonEncode([
+          for (final f in features.where((f) => f.removable))
+            f.controller.text.trim(),
+        ]),
+      },
       'save_as_draft': draft ? '1' : '0',
-      if (_removedImageIds.isNotEmpty)
-        'remove_image_ids': jsonEncode(_removedImageIds),
     };
 
     setState(() => _savingDraft = draft);
-    final cubit = context.read<ProviderServicesCubit>();
-    if (_editing) {
-      cubit.updateService(
-        int.parse(widget.service!['id'].toString()),
-        data,
-        _images,
-      );
-    } else {
-      cubit.addService(data, _images);
-    }
+    context.read<ProviderServicesCubit>().addService(data, _images);
   }
 
   @override
@@ -177,7 +135,7 @@ class _ProviderAddServiceScreenState extends State<ProviderAddServiceScreen> {
       backgroundColor: kProviderStepBackground,
       appBar: providerStepAppBar(
         context,
-        _editing ? 'تعديل الخدمة' : 'إضافة خدمة جديدة',
+        _package ? 'إضافةباقة جديدة' : 'إضافة خدمة جديدة',
       ),
       body: BlocConsumer<ProviderServicesCubit, ProviderServicesState>(
         listener: (context, state) {
@@ -187,7 +145,7 @@ class _ProviderAddServiceScreenState extends State<ProviderAddServiceScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  _savingDraft ? 'تم حفظ الخدمة كمسودة' : 'تم حفظ الخدمة ونشرها',
+                  _savingDraft ? 'تم حفظ $_noun كمسودة' : 'تم نشر $_noun',
                 ),
               ),
             );
@@ -209,9 +167,8 @@ class _ProviderAddServiceScreenState extends State<ProviderAddServiceScreen> {
                 children: [
                   Text(state.message),
                   TextButton(
-                    onPressed: () => context
-                        .read<ProviderServicesCubit>()
-                        .loadFormData(),
+                    onPressed: () =>
+                        context.read<ProviderServicesCubit>().loadFormData(),
                     child: const Text('إعادة المحاولة'),
                   ),
                 ],
@@ -232,20 +189,25 @@ class _ProviderAddServiceScreenState extends State<ProviderAddServiceScreen> {
                   _card(
                     padding: const EdgeInsets.fromLTRB(8, 16, 8, 16),
                     children: [
-                      _label('اسم الخدمة'),
+                      _label('اسم $_noun'),
                       TextFormField(
                         controller: _titleController,
-                        decoration: _input('مثال:مسكة عروس'),
-                        validator: (v) => (v ?? '').trim().isEmpty
-                            ? 'أدخل اسم الخدمة'
-                            : null,
+                        decoration: _input(
+                          _package ? 'مثال:باقة عروس' : 'مثال:مسكة عروس',
+                        ),
+                        validator: (v) =>
+                            (v ?? '').trim().isEmpty ? 'أدخل اسم $_noun' : null,
                       ),
-                      _label('فئة الخدمة'),
+                      _label('فئة $_noun'),
                       DropdownButtonFormField<String>(
                         initialValue: _categoryId,
                         isExpanded: true,
                         icon: Icon(Icons.keyboard_arrow_down, color: primary),
-                        decoration: _input('اختر الفئة'),
+                        decoration: _input(
+                          _package
+                              ? 'اختر الفئات التي تندرج تحت الباقة'
+                              : 'اختر الفئة',
+                        ),
                         items: [
                           for (final c in _categories)
                             DropdownMenuItem(
@@ -254,23 +216,27 @@ class _ProviderAddServiceScreenState extends State<ProviderAddServiceScreen> {
                             ),
                         ],
                         onChanged: (v) => setState(() => _categoryId = v),
-                        validator: (v) => v == null ? 'اختر فئة الخدمة' : null,
+                        validator: (v) => v == null ? 'اختر فئة $_noun' : null,
                       ),
-                      _label('مميزات  الخدمة'),
-                      for (final feature in _features) _featureField(feature, primary),
+                      _label(_package ? 'محتويات الباقة' : 'مميزات  الخدمة'),
+                      for (final feature in _features)
+                        _featureField(feature, primary),
                       Align(
                         alignment: AlignmentDirectional.centerStart,
                         child: TextButton.icon(
                           onPressed: () =>
                               setState(() => _features.add(_FeatureRow())),
                           icon: Icon(Icons.add_circle_outline, color: primary),
-                          label: const Text(
-                            'إضافة ميزة جديدة',
-                            style: TextStyle(color: Colors.black87, fontSize: 12),
+                          label: Text(
+                            _package ? 'إضافة عنصر جديد' : 'إضافة ميزة جديدة',
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ),
-                      _label('تفاصيل الخدمة'),
+                      _label('تفاصيل $_noun'),
                       TextFormField(
                         controller: _descriptionController,
                         minLines: 3,
@@ -397,7 +363,7 @@ class _ProviderAddServiceScreenState extends State<ProviderAddServiceScreen> {
                 Icon(Icons.image_outlined, color: primary),
                 const SizedBox(height: 8),
                 Text(
-                  'اضف صور الخدمة',
+                  'اضف صور $_noun',
                   style: TextStyle(
                     color: primary,
                     fontWeight: FontWeight.bold,
@@ -418,25 +384,10 @@ class _ProviderAddServiceScreenState extends State<ProviderAddServiceScreen> {
       Row(
         children: [
           _thumbBox(
-            onTap: _imageCount < _maxImages ? _pickImages : null,
+            onTap: _images.length < _maxImages ? _pickImages : null,
             border: const Color(0xFFDADADA),
             child: Icon(Icons.add, color: primary),
           ),
-          for (final image in _existingImages)
-            _thumbBox(
-              child: _removable(
-                Image.network(
-                  image['url']?.toString() ?? '',
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => const Icon(Icons.image_outlined),
-                ),
-                () => setState(() {
-                  _existingImages.remove(image);
-                  final id = int.tryParse(image['id'].toString());
-                  if (id != null) _removedImageIds.add(id);
-                }),
-              ),
-            ),
           for (var i = 0; i < _images.length; i++)
             _thumbBox(
               child: _removable(
@@ -444,7 +395,7 @@ class _ProviderAddServiceScreenState extends State<ProviderAddServiceScreen> {
                 () => setState(() => _images.removeAt(i)),
               ),
             ),
-          for (var i = _imageCount; i < _maxImages - 1; i++)
+          for (var i = _images.length; i < _maxImages - 1; i++)
             _thumbBox(
               fill: const Color(0xFFF5F5F5),
               child: const Icon(
@@ -509,34 +460,44 @@ class _ProviderAddServiceScreenState extends State<ProviderAddServiceScreen> {
       padding: const EdgeInsets.only(bottom: 8),
       child: TextFormField(
         controller: feature.controller,
-        decoration: _input('اضف ميزة').copyWith(
-          suffixIcon: PopupMenuButton<bool>(
-            tooltip: 'نوع الميزة',
-            initialValue: feature.removable,
-            color: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-            onSelected: (v) => setState(() => feature.removable = v),
-            itemBuilder: (_) => [
-              _typeItem(false, 'مشمولة', feature.removable == false),
-              _typeItem(true, 'قابلة للازالة', feature.removable == true),
-            ],
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    feature.removable ? 'قابلة للازالة' : 'مشمولة',
-                    style: const TextStyle(fontSize: 11, color: Colors.black54),
+        // Package contents are plain items; service features get a type menu.
+        decoration: _package
+            ? _input('اضف عنصر')
+            : _input('اضف ميزة').copyWith(
+                suffixIcon: PopupMenuButton<bool>(
+                  tooltip: 'نوع الميزة',
+                  initialValue: feature.removable,
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  Icon(Icons.keyboard_arrow_down, color: primary, size: 18),
-                ],
+                  onSelected: (v) => setState(() => feature.removable = v),
+                  itemBuilder: (_) => [
+                    _typeItem(false, 'مشمولة', feature.removable == false),
+                    _typeItem(true, 'قابلة للازالة', feature.removable == true),
+                  ],
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          feature.removable ? 'قابلة للازالة' : 'مشمولة',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.black54,
+                          ),
+                        ),
+                        Icon(
+                          Icons.keyboard_arrow_down,
+                          color: primary,
+                          size: 18,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ),
       ),
     );
   }

@@ -17,5 +17,16 @@ abstract class ProviderRepository {
   Future<void> deleteProviderService(int id);
   Future<void> toggleServiceVisibility(int id, bool isAvailable);
   Future<Map<String, dynamic>> getBookingDetails(int bookingId);
+  /// Provider bookings, optionally filtered by workflow status.
+  Future<List<dynamic>> getProviderBookings({String? status});
+  /// Accept (with the deposit) or reject a booking request.
+  Future<void> decideBooking(int bookingId, String decision, {double? depositAmount, String? note});
+  Future<void> completeBooking(int bookingId);
+  /// Raw bytes of a payment proof file.
+  Future<List<int>> getPaymentProof(int bookingId, int paymentId);
+  Future<void> updatePaymentInstructions(String instructions);
+  /// Blocked dates of a service for a month (YYYY-MM).
+  Future<Map<String, dynamic>> getServiceAvailability(int serviceId, String month);
+  Future<void> updateServiceAvailability(int serviceId, {List<String> block = const [], List<String> unblock = const []});
   Future<void> reviewPaymentProof(int bookingId, int paymentId, String decision, {String? reviewNote});
 }

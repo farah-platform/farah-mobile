@@ -27,9 +27,9 @@ import 'package:farah/view/screens/provider/provider_subscription_plans_screen.d
 import 'package:farah/view/screens/provider/provider_subscription_success_screen.dart';
 import 'package:farah/view/screens/provider/provider_verification_screen.dart';
 import 'package:farah/view/screens/provider/provider_router_screen.dart';
-import 'package:farah/view/screens/provider/services/provider_add_package_screen.dart';
 import 'package:farah/view/screens/provider/services/provider_add_service_screen.dart';
-import 'package:farah/view/screens/provider/services/provider_edit_package_screen.dart';
+import 'package:farah/view/screens/provider/services/provider_edit_service_screen.dart';
+import 'package:farah/cubits/provider_service_editor/provider_service_editor_cubit.dart';
 import 'package:farah/view/screens/service1/service_info_screen.dart';
 import 'package:farah/view/screens/user/change_password_screen.dart';
 import 'package:farah/view/screens/user/favorites_screen.dart';
@@ -45,8 +45,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../cubits/notification/notification_cubit.dart';
 import '../../data/repositories/notification_repository.dart';
 import '../../view/screens/notifications/notifications_screen.dart';
-import '../../cubits/provider_payment_review/provider_payment_review_cubit.dart';
-import '../../view/screens/provider/bookings/provider_payment_review_screen.dart';
+import '../../cubits/provider_orders/provider_order_details_cubit.dart';
+import '../../cubits/provider_orders/provider_orders_cubit.dart';
+import '../../view/screens/provider/orders/provider_order_details_screen.dart';
 
 // Dead route constants removed (screens not yet built):
 //   search, booking, orders, profile,
@@ -82,6 +83,7 @@ class AppRoutes {
   static const String providerAddService = '/provider/add-service';
   static const String notifications = '/notifications';
   static const String providerPaymentReview = '/provider/payment-review';
+  static const String providerOrderDetails = '/provider/order-details';
   static const String providerEditService = '/provider/edit-service';
   static const String providerAddPackage = '/provider/add-package';
   static const String providerEditPackage = '/provider/edit-package';
@@ -184,6 +186,7 @@ class AppRoutes {
         providers: [
           BlocProvider(create: (c) => ProviderDashboardCubit(c.read<ProviderRepository>())),
           BlocProvider(create: (c) => ProviderServicesCubit(c.read<ProviderRepository>())..loadServices()),
+          BlocProvider(create: (c) => ProviderOrdersCubit(c.read<ProviderRepository>())),
         ],
         child: const ProviderHomeScreen(),
       ),
@@ -223,43 +226,27 @@ class AppRoutes {
         pendingReview: ModalRoute.of(context)?.settings.arguments == true,
       ),
     ),
-    providerEditService: (context) {
-      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-      return _ProviderGuard(
-        child: BlocProvider(
-          create: (c) => ProviderServicesCubit(c.read<ProviderRepository>()),
-          child: ProviderAddServiceScreen(service: args),
-        ),
-      );
-    },
+    providerEditService: (context) => _editServiceRoute(context),
+    providerEditPackage: (context) => _editServiceRoute(context),
     providerAddPackage: (context) => _ProviderGuard(
       child: BlocProvider(
         create: (c) => ProviderServicesCubit(c.read<ProviderRepository>()),
-        child: const ProviderAddPackageScreen(),
+        child: const ProviderAddServiceScreen(isPackage: true),
       ),
     ),
-    providerEditPackage: (context) {
-      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-      return _ProviderGuard(
-        child: BlocProvider(
-          create: (c) => ProviderServicesCubit(c.read<ProviderRepository>()),
-          child: ProviderEditPackageScreen(packageData: args),
-        ),
-      );
-    },
     notifications: (context) => BlocProvider(
       create: (c) => NotificationCubit(c.read<NotificationRepository>()),
       child: const NotificationsScreen(),
     ),
-    providerPaymentReview: (context) {
-      final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-      return _ProviderGuard(
-        child: BlocProvider(
-          create: (c) => ProviderPaymentReviewCubit(c.read<ProviderRepository>()),
-          child: ProviderPaymentReviewScreen(bookingId: args['bookingId'], paymentId: args['paymentId']),
-        ),
-      );
-    },
+    providerOrderDetails: (context) => _orderDetailsRoute(
+      context,
+      ModalRoute.of(context)!.settings.arguments as int,
+    ),
+    // Older links pass {'bookingId': ..}; payment review lives in the order.
+    providerPaymentReview: (context) => _orderDetailsRoute(
+      context,
+      (ModalRoute.of(context)!.settings.arguments as Map)['bookingId'] as int,
+    ),
     providerAddService: (context) => _ProviderGuard(
       child: BlocProvider(
         create: (c) => ProviderServicesCubit(c.read<ProviderRepository>()),
@@ -267,6 +254,27 @@ class AppRoutes {
       ),
     ),
   };
+}
+
+Widget _orderDetailsRoute(BuildContext context, int bookingId) {
+  return _ProviderGuard(
+    child: BlocProvider(
+      create: (c) =>
+          ProviderOrderDetailsCubit(c.read<ProviderRepository>(), bookingId),
+      child: const ProviderOrderDetailsScreen(),
+    ),
+  );
+}
+
+/// Edit screen for a service or package from GET /provider/services.
+Widget _editServiceRoute(BuildContext context) {
+  final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+  return _ProviderGuard(
+    child: BlocProvider(
+      create: (c) => ProviderServiceEditorCubit(c.read<ProviderRepository>()),
+      child: ProviderEditServiceScreen(service: args),
+    ),
+  );
 }
 
 /// Redirects providers away from customer-only screens.
