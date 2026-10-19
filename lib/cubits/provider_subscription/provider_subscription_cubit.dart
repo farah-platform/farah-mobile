@@ -10,8 +10,16 @@ class ProviderSubscriptionPlansLoaded extends ProviderSubscriptionState {
   final List<dynamic> plans;
   ProviderSubscriptionPlansLoaded({required this.plans});
 }
+class ProviderSubscriptionBankLoaded extends ProviderSubscriptionState {
+  final Map<String, dynamic> bank;
+  ProviderSubscriptionBankLoaded(this.bank);
+}
 class ProviderSubscriptionActivating extends ProviderSubscriptionState {}
-class ProviderSubscriptionSuccess extends ProviderSubscriptionState {}
+class ProviderSubscriptionSuccess extends ProviderSubscriptionState {
+  /// True when a transfer proof was sent and waits for the admin.
+  final bool pendingReview;
+  ProviderSubscriptionSuccess({this.pendingReview = false});
+}
 class ProviderSubscriptionError extends ProviderSubscriptionState {
   final String message;
   ProviderSubscriptionError(this.message);
@@ -26,18 +34,34 @@ class ProviderSubscriptionCubit extends Cubit<ProviderSubscriptionState> {
     emit(ProviderSubscriptionLoading());
     try {
       final plans = await _providerRepository.getSubscriptionPlans();
+      if (isClosed) return;
       emit(ProviderSubscriptionPlansLoaded(plans: plans));
     } catch (e) {
+      if (isClosed) return;
       emit(ProviderSubscriptionError('فشل في جلب باقات الاشتراك'));
     }
   }
 
-  Future<void> activateSubscription({required String planSlug}) async {
+  Future<void> fetchBankDetails() async {
+    emit(ProviderSubscriptionLoading());
+    try {
+      final bank = await _providerRepository.getBankTransferDetails();
+      if (isClosed) return;
+      emit(ProviderSubscriptionBankLoaded(bank));
+    } catch (e) {
+      if (isClosed) return;
+      emit(ProviderSubscriptionError(_mapError(e, 'تعذّر تحميل بيانات التحويل')));
+    }
+  }
+
+  Future<void> activateSubscription({required String planSlug, dynamic proof}) async {
     emit(ProviderSubscriptionActivating());
     try {
-      await _providerRepository.activateSubscription(planSlug);
-      emit(ProviderSubscriptionSuccess());
+      final data = await _providerRepository.activateSubscription(planSlug, proof: proof);
+      if (isClosed) return;
+      emit(ProviderSubscriptionSuccess(pendingReview: data['status'] == 'submitted'));
     } catch (e) {
+      if (isClosed) return;
       emit(ProviderSubscriptionError(_mapError(e, 'حدث خطأ أثناء تفعيل الاشتراك')));
     }
   }

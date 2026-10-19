@@ -21,6 +21,7 @@ class ApiEndpoints {
   // Discovery (no auth required)
   static const String categories = '/categories';
   static const String cities = '/cities';
+  static const String settings = '/settings';
   static const String home = '/home';
   static const String services = '/services';
 

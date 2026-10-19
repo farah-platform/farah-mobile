@@ -53,8 +53,25 @@ class ApiProviderRepository implements ProviderRepository {
   }
 
   @override
-  Future<void> activateSubscription(String planSlug) async {
-    await dioClient.dio.post('/provider/subscription', data: {'plan': planSlug});
+  Future<Map<String, dynamic>> activateSubscription(String planSlug, {dynamic proof}) async {
+    final Object data = proof == null
+        ? {'plan': planSlug}
+        : FormData.fromMap({
+            'plan': planSlug,
+            'proof': await MultipartFile.fromFile(proof.path),
+          });
+    final res = await dioClient.dio.post('/provider/subscription', data: data);
+    final body = res.data;
+    return body is Map && body['data'] is Map
+        ? Map<String, dynamic>.from(body['data'])
+        : {};
+  }
+
+  @override
+  Future<Map<String, dynamic>> getBankTransferDetails() async {
+    final res = await dioClient.dio.get(ApiEndpoints.settings);
+    final bank = res.data['data']?['bank_transfer'];
+    return bank is Map ? Map<String, dynamic>.from(bank) : {};
   }
 
   @override

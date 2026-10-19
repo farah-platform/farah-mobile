@@ -208,17 +208,21 @@ class AppRoutes {
       ),
     ),
     providerActivateSubscription: (context) {
-      final args = ModalRoute.of(context)?.settings.arguments as String?;
+      final args = ModalRoute.of(context)?.settings.arguments;
       return _ProviderGuard(
         child: BlocProvider(
           create: (c) =>
               ProviderSubscriptionCubit(c.read<ProviderRepository>()),
-          child: ProviderActivateSubscriptionScreen(planId: args ?? ''),
+          child: ProviderActivateSubscriptionScreen(
+            plan: args is Map ? Map<String, dynamic>.from(args) : const {},
+          ),
         ),
       );
     },
-    providerSubscriptionSuccess: (_) => const _ProviderGuard(
-      child: ProviderSubscriptionSuccessScreen(),
+    providerSubscriptionSuccess: (context) => _ProviderGuard(
+      child: ProviderSubscriptionSuccessScreen(
+        pendingReview: ModalRoute.of(context)?.settings.arguments == true,
+      ),
     ),
     providerEditService: (context) {
       final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;

@@ -7,9 +7,17 @@ class ProviderVerificationInitial extends ProviderVerificationState {}
 class ProviderVerificationLoading extends ProviderVerificationState {}
 class ProviderVerificationLoaded extends ProviderVerificationState {
   final String status;
+  final String title;
   final String message;
   final String nextStep;
-  ProviderVerificationLoaded({required this.status, required this.message, this.nextStep = ''});
+  final String? decisionReason;
+  ProviderVerificationLoaded({
+    required this.status,
+    required this.message,
+    this.title = '',
+    this.nextStep = '',
+    this.decisionReason,
+  });
 }
 class ProviderVerificationError extends ProviderVerificationState {
   final String message;
@@ -30,8 +38,14 @@ class ProviderVerificationCubit extends Cubit<ProviderVerificationState> {
       final status = data['status'] ?? 'pending';
       final message = data['message'] ?? 'جاري التحقق من بياناتك. تستغرق مراجعة وتدقيق المستندات من قبل فريق المنصة مدة أقصاها 24 ساعة.';
       final nextStep = data['next_step'] ?? '';
-      
-      emit(ProviderVerificationLoaded(status: status, message: message, nextStep: nextStep));
+
+      emit(ProviderVerificationLoaded(
+        status: status,
+        title: data['title']?.toString() ?? '',
+        message: message,
+        nextStep: nextStep,
+        decisionReason: data['decision_reason']?.toString(),
+      ));
     } catch (e) {
       if (isClosed) return;
       emit(ProviderVerificationError('حدث خطأ أثناء جلب حالة التحقق'));

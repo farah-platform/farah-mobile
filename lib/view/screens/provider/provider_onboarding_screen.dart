@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/cubits/provider_onboarding/provider_onboarding_cubit.dart';
+import 'package:farah/view/widgets/provider/onboarding/provider_step_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -545,7 +546,7 @@ class _ProviderOnboardingScreenState extends State<ProviderOnboardingScreen> {
                         onTap: () => _pickImage(false),
                         borderRadius: BorderRadius.circular(12),
                         child: CustomPaint(
-                          painter: _DashedBorderPainter(
+                          painter: DashedBorderPainter(
                             color: primary.withValues(alpha: 0.6),
                           ),
                           child: SizedBox(
@@ -661,33 +662,4 @@ class _ProviderOnboardingScreenState extends State<ProviderOnboardingScreen> {
       ),
     );
   }
-}
-
-/// Dashed rounded border around the cover-image upload area.
-class _DashedBorderPainter extends CustomPainter {
-  final Color color;
-
-  _DashedBorderPainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-    final path = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(Offset.zero & size, const Radius.circular(12)),
-      );
-    for (final metric in path.computeMetrics()) {
-      var distance = 0.0;
-      while (distance < metric.length) {
-        canvas.drawPath(metric.extractPath(distance, distance + 6), paint);
-        distance += 10;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DashedBorderPainter old) => old.color != color;
 }
