@@ -22,6 +22,19 @@ class ProviderServicesCubit extends Cubit<ProviderServicesState> {
     }
   }
 
+  Future<void> loadFormData() async {
+    if (isClosed) return;
+    emit(ProviderServicesLoading());
+    try {
+      final categories = await _repository.getCategories();
+      if (isClosed) return;
+      emit(ProviderServicesFormReady(categories: categories));
+    } catch (e) {
+      if (isClosed) return;
+      emit(ProviderServicesError(message: _mapError(e, 'تعذّر تحميل الفئات')));
+    }
+  }
+
   Future<void> addService(
     Map<String, dynamic> data,
     List<dynamic> images,

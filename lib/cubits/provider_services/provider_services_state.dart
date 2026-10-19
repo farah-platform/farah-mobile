@@ -1,4 +1,4 @@
-﻿abstract class ProviderServicesState {}
+abstract class ProviderServicesState {}
 
 class ProviderServicesInitial extends ProviderServicesState {}
 
@@ -21,4 +21,10 @@ class ProviderServicesAddSuccess extends ProviderServicesState {}
 class ProviderServicesAddError extends ProviderServicesState {
   final String message;
   ProviderServicesAddError({required this.message});
+}
+
+/// Categories for the add-service form.
+class ProviderServicesFormReady extends ProviderServicesState {
+  final List<dynamic> categories;
+  ProviderServicesFormReady({required this.categories});
 }

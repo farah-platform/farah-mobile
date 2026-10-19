@@ -35,22 +35,22 @@ class _ProviderEditPackageScreenState extends State<ProviderEditPackageScreen> {
     super.initState();
     _titleController = TextEditingController(text: widget.packageData['title']);
     _descController = TextEditingController(text: widget.packageData['description']);
-    _basePriceController = TextEditingController(text: widget.packageData['price']?.toString());
-    
-    var isAvail = widget.packageData['is_available'];
-    _isAvailable = isAvail == true || isAvail == 1 || isAvail == '1';
-    
-    _executionDuration = widget.packageData['execution_duration'];
-    
-    _packageItems = [];
-    try {
-      if (widget.packageData['package_items'] != null) {
-        final List decoded = jsonDecode(widget.packageData['package_items']);
-        _packageItems = decoded.map((e) => e as Map<String, dynamic>).toList();
-      }
-    } catch (e) {
-      // Ignored
-    }
+    // Read the shape GET /provider/services returns.
+    final pricing = widget.packageData['pricing'] as Map?;
+    final price = pricing?['original_price'] ?? pricing?['price'] ?? widget.packageData['price'];
+    _basePriceController = TextEditingController(text: price?.toString());
+
+    _isAvailable = widget.packageData['is_published'] == true;
+
+    // The dropdown only accepts its own options; anything else would crash it.
+    const durations = ['خلال يومين من الطلب', 'خلال 5 ايام من الطلب', 'خلال اسبوع من الطلب'];
+    final duration = widget.packageData['execution_duration'];
+    _executionDuration = durations.contains(duration) ? duration : null;
+
+    final items = widget.packageData['package_items'];
+    _packageItems = items is List
+        ? items.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList()
+        : [];
   }
 
   Future<void> _pickImage() async {
@@ -81,7 +81,7 @@ class _ProviderEditPackageScreenState extends State<ProviderEditPackageScreen> {
       'currency': 'ILS',
       'service_type': 'package',
       'package_items': jsonEncode(_packageItems),
-      'execution_duration': _executionDuration ?? 'خلال يومين من الطلب',
+      'execution_duration': _executionDuration ?? widget.packageData['execution_duration'] ?? '',
       'is_available': _isAvailable ? '1' : '0',
     };
 

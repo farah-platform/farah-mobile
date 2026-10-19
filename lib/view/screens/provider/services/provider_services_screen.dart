@@ -1,10 +1,12 @@
+import 'package:farah/core/constants/app_routes.dart';
+import 'package:farah/cubits/provider_dashboard/provider_dashboard_cubit.dart';
+import 'package:farah/cubits/provider_services/provider_services_cubit.dart';
+import 'package:farah/cubits/provider_services/provider_services_state.dart';
+import 'package:farah/data/models/provider/provider_service_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../cubits/provider_services/provider_services_cubit.dart';
-import '../../../../cubits/auth/auth_cubit.dart';
-import '../../../../cubits/provider_services/provider_services_state.dart';
-import '../../../../core/constants/app_routes.dart';
 
+/// "خدماتي": the store header with real stats, then services and packages.
 class ProviderServicesScreen extends StatefulWidget {
   const ProviderServicesScreen({super.key});
 
@@ -13,336 +15,482 @@ class ProviderServicesScreen extends StatefulWidget {
 }
 
 class _ProviderServicesScreenState extends State<ProviderServicesScreen> {
-  
+  static const _coverHeight = 270.0;
+
   @override
   void initState() {
     super.initState();
     context.read<ProviderServicesCubit>().loadServices();
   }
 
+  Future<void> _edit(ProviderServiceModel service) async {
+    await Navigator.pushNamed(
+      context,
+      service.isPackage
+          ? AppRoutes.providerEditPackage
+          : AppRoutes.providerEditService,
+      arguments: service.raw,
+    );
+    if (mounted) context.read<ProviderServicesCubit>().loadServices();
+  }
+
+  Future<void> _activate(ProviderServiceModel service) async {
+    await context.read<ProviderServicesCubit>().toggleVisibility(
+      service.id,
+      true,
+    );
+    if (mounted) context.read<ProviderDashboardCubit>().loadDashboard();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
+    final dashboard = context.watch<ProviderDashboardCubit>().state;
+    final data = dashboard is ProviderDashboardLoaded
+        ? dashboard.data
+        : const <String, dynamic>{};
 
-    return Scaffold(
-      backgroundColor: Colors.grey.shade50,
-      appBar: AppBar(
-        title: const Text('خدماتي', style: TextStyle(color: Colors.black)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            builder: (ctx) => SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: 16),
-                  const Text('ماذا تريد أن تضيف؟', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                  const SizedBox(height: 16),
-                  ListTile(
-                    leading: CircleAvatar(backgroundColor: primary.withValues(alpha: 0.1), child: Icon(Icons.design_services, color: primary)),
-                    title: const Text('إضافة خدمة جديدة'),
-                    onTap: () async {
-                      Navigator.pop(ctx);
-                      await Navigator.pushNamed(context, AppRoutes.providerAddService);
-                      if (context.mounted) {
-                        context.read<ProviderServicesCubit>().loadServices();
-                      }
-                    },
-                  ),
-                  ListTile(
-                    leading: CircleAvatar(backgroundColor: primary.withValues(alpha: 0.1), child: Icon(Icons.card_giftcard, color: primary)),
-                    title: const Text('إضافة باقة جديدة'),
-                    onTap: () async {
-                      Navigator.pop(ctx);
-                      await Navigator.pushNamed(context, AppRoutes.providerAddPackage);
-                      if (context.mounted) {
-                        context.read<ProviderServicesCubit>().loadServices();
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-          );
-        },
-        backgroundColor: primary,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-      body: BlocBuilder<ProviderServicesCubit, ProviderServicesState>(
-        builder: (context, state) {
-          bool isLoading = state is ProviderServicesLoading;
-          List<dynamic> allServices = [];
-          if (state is ProviderServicesLoaded) {
-            allServices = state.services;
-          }
-          
-          final services = allServices.where((s) => s['service_type'] != 'package').toList();
-          final packages = allServices.where((s) => s['service_type'] == 'package').toList();
-          
-          return CustomScrollView(
-            slivers: [
-              _buildCoverAndProfile(theme, primary, context),
-              if (isLoading)
-                const SliverToBoxAdapter(child: Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator())))
-              else if (allServices.isEmpty)
-                const SliverToBoxAdapter(child: Center(child: Padding(padding: EdgeInsets.all(40), child: Text('لا يوجد خدمات حتى الآن.'))))
-              else ...[
-                if (services.isNotEmpty) ...[
-                  const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-                      child: Text('الخدمات', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _buildServiceCard(context, services[index], primary, isPackage: false),
-                        childCount: services.length,
-                      ),
-                    ),
-                  ),
-                ],
-                if (packages.isNotEmpty) ...[
-                  const SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
-                      child: Text('الباقات', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _buildServiceCard(context, packages[index], primary, isPackage: true),
-                        childCount: packages.length,
-                      ),
-                    ),
-                  ),
-                ],
-                const SliverToBoxAdapter(child: SizedBox(height: 80)),
-              ],
-            ],
-          );
+    return BlocConsumer<ProviderServicesCubit, ProviderServicesState>(
+      listener: (context, state) {
+        if (state is ProviderServicesError) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
         }
-      ),
+      },
+      builder: (context, state) {
+        final items = state is ProviderServicesLoaded
+            ? state.services
+                  .whereType<Map>()
+                  .map(
+                    (s) => ProviderServiceModel.fromJson(
+                      Map<String, dynamic>.from(s),
+                    ),
+                  )
+                  .toList()
+            : <ProviderServiceModel>[];
+        final services = items.where((s) => !s.isPackage).toList();
+        final packages = items.where((s) => s.isPackage).toList();
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            context.read<ProviderDashboardCubit>().loadDashboard();
+            await context.read<ProviderServicesCubit>().loadServices();
+          },
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              _header(context, data),
+              if (state is ProviderServicesLoading)
+                const Padding(
+                  padding: EdgeInsets.all(40),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (items.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(40),
+                  child: Center(
+                    child: Text(
+                      'لم تضف أي خدمة بعد',
+                      style: TextStyle(color: Colors.black54),
+                    ),
+                  ),
+                )
+              else ...[
+                if (services.isNotEmpty) ..._section('الخدمات', services),
+                if (packages.isNotEmpty) ..._section('الباقات', packages),
+              ],
+              const SizedBox(height: 24),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildCoverAndProfile(ThemeData theme, Color primary, BuildContext context) {
-    final authState = context.read<AuthCubit>().state;
-    final userName = authState is AuthSuccess ? authState.user.name : 'اسم المتجر';
-    final userRegion = authState is AuthSuccess ? authState.user.region : 'فلسطين';
+  List<Widget> _section(String title, List<ProviderServiceModel> items) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(28, 24, 28, 12),
+        child: Text(
+          title,
+          style: TextStyle(
+            color: primary,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+      ),
+      for (final item in items) _ServiceCard(
+        service: item,
+        onEdit: () => _edit(item),
+        onActivate: () => _activate(item),
+      ),
+    ];
+  }
 
-    return SliverToBoxAdapter(
-      child: SizedBox(
-        height: 280,
-        child: Stack(
-          alignment: Alignment.topCenter,
-          children: [
-            // Dynamic Cover Image Placeholder
-            Container(
-              height: 150,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                // In reality, you'd fetch cover image URL from provider profile
-              ),
-              child: Center(child: Icon(Icons.store, size: 50, color: Colors.grey.shade500)),
-            ),
-            
-            // Profile Card
-            Positioned(
-              top: 100,
-              left: 20,
-              right: 20,
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(16, 40, 16, 16),
+  Widget _header(BuildContext context, Map<String, dynamic> data) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final provider = (data['provider'] as Map?) ?? const {};
+    final stats = (data['store_stats'] as Map?) ?? const {};
+    final cover = provider['cover_image']?.toString();
+    final avatar = provider['avatar']?.toString();
+
+    return Stack(
+      children: [
+        SizedBox(
+          height: _coverHeight,
+          width: double.infinity,
+          child: cover != null && cover.isNotEmpty
+              ? Image.network(
+                  cover,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => _coverFallback(primary),
+                )
+              : _coverFallback(primary),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(28, _coverHeight - 95, 28, 0),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    )
-                  ]
+                      color: Color(0x22000000),
+                      blurRadius: 8,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      userName,
-                      style: TextStyle(
+                      provider['business_name']?.toString() ?? '',
+                      style: const TextStyle(
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      userRegion,
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
+                      (provider['category'] as Map?)?['name']?.toString() ??
+                          '',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.black54,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
+                    if (provider['is_bookable'] == true) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: primary.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.circle, size: 7, color: primary),
+                            const SizedBox(width: 6),
+                            Text(
+                              'متاح للحجز',
+                              style: TextStyle(
+                                color: primary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                    ],
+                    const SizedBox(height: 14),
+                    IntrinsicHeight(
                       child: Row(
-                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.circle, size: 8, color: primary),
-                          const SizedBox(width: 4),
-                          Text('متاح للحجز', style: TextStyle(color: primary, fontSize: 12, fontWeight: FontWeight.bold)),
+                          _stat(
+                            'الحجوزات المكتملة',
+                            '${stats['completed_bookings'] ?? 0}',
+                            primary,
+                          ),
+                          const VerticalDivider(color: Color(0xFFDDD5D8)),
+                          _stat(
+                            'سرعة الرد',
+                            _responseLabel(stats['avg_response_minutes']),
+                            primary,
+                          ),
+                          const VerticalDivider(color: Color(0xFFDDD5D8)),
+                          _stat(
+                            'نسبة الالتزام',
+                            stats['commitment_rate'] == null
+                                ? '—'
+                                : '${stats['commitment_rate']}%',
+                            primary,
+                          ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Stats
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildStatItem('105', 'حجوزات مكتملة'),
-                        _buildStatItem('خلال ساعة', 'سرعة الرد'),
-                        _buildStatItem('98%', 'نسبة الالتزام'),
-                      ],
                     ),
                   ],
                 ),
               ),
-            ),
-            
-            // Dynamic Avatar
-            Positioned(
-              top: 60,
-              child: Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  border: Border.all(color: Colors.white, width: 3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 5,
-                    )
-                  ]
-                ),
-                child: const CircleAvatar(
-                  backgroundColor: Colors.grey,
-                  child: Icon(Icons.person, color: Colors.white, size: 40),
+              PositionedDirectional(
+                top: -28,
+                end: 16,
+                child: CircleAvatar(
+                  radius: 29,
+                  backgroundColor: Colors.white,
+                  child: CircleAvatar(
+                    radius: 27,
+                    backgroundColor: primary.withValues(alpha: 0.15),
+                    backgroundImage: avatar != null && avatar.isNotEmpty
+                        ? NetworkImage(avatar)
+                        : null,
+                    child: avatar == null || avatar.isEmpty
+                        ? Icon(Icons.storefront_outlined, color: primary)
+                        : null,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _coverFallback(Color primary) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [primary, primary.withValues(alpha: 0.7)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
         ),
       ),
     );
   }
 
-  Widget _buildStatItem(String value, String label) {
-    return Column(
-      children: [
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        const SizedBox(height: 4),
-        Text(label, style: TextStyle(color: Colors.grey.shade600, fontSize: 10)),
-      ],
-    );
-  }
-
-  Widget _buildServiceCard(BuildContext context, dynamic item, Color primary, {required bool isPackage}) {
-    final title = item['title'] ?? 'بدون عنوان';
-    final price = item['price']?.toString() ?? '0';
-    final currency = item['currency'] ?? '₪';
-    final isActive = item['is_available'] == true || item['is_available'] == 1 || item['is_available'] == '1';
-    final duration = item['execution_duration'] ?? 'يبدأ من 1 أيام';
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isActive ? primary.withValues(alpha: 0.3) : Colors.grey.shade300, width: isActive ? 1.5 : 1),
-      ),
-      child: Row(
+  Widget _stat(String label, String value, Color primary) {
+    return Expanded(
+      child: Column(
         children: [
-          // Image
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: 80,
-              height: 80,
-              color: Colors.grey.shade200,
-              child: const Icon(Icons.image, color: Colors.grey), // Fallback image
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 11, color: Colors.black87),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              color: primary,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
             ),
           ),
-          const SizedBox(width: 12),
-          // Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                const SizedBox(height: 4),
-                Text(duration, style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                const SizedBox(height: 8),
-                Text('السعر $price $currency', style: TextStyle(fontWeight: FontWeight.bold, color: primary, fontSize: 12)),
-              ],
-            ),
-          ),
-          // Actions and status
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isActive ? Colors.green.withValues(alpha: 0.1) : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.circle, size: 8, color: isActive ? Colors.green : Colors.grey),
-                    const SizedBox(width: 4),
-                    Text(isActive ? 'مفعل' : 'غير مفعل', style: TextStyle(color: isActive ? Colors.green : Colors.grey, fontSize: 10, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              InkWell(
-                onTap: () async {
-                  if (isPackage) {
-                    await Navigator.pushNamed(context, AppRoutes.providerEditPackage, arguments: item);
-                  } else {
-                    await Navigator.pushNamed(context, AppRoutes.providerEditService, arguments: item);
-                  }
-                  if (context.mounted) {
-                    context.read<ProviderServicesCubit>().loadServices();
-                  }
-                },
-                child: const Icon(Icons.edit, size: 20, color: Colors.redAccent),
-              ),
-            ],
-          )
         ],
       ),
     );
   }
+
+  /// Average answer time from the API, in words.
+  static String _responseLabel(dynamic minutes) {
+    final value = (minutes as num?)?.toInt();
+    if (value == null) return '—';
+    if (value < 60) return 'خلال ${value < 1 ? 1 : value} دقيقة';
+    if (value < 24 * 60) return 'خلال ${(value / 60).ceil()} ساعة';
+    return 'خلال ${(value / (24 * 60)).ceil()} يوم';
+  }
+}
+
+class _ServiceCard extends StatelessWidget {
+  final ProviderServiceModel service;
+  final VoidCallback onEdit;
+  final VoidCallback onActivate;
+
+  const _ServiceCard({
+    required this.service,
+    required this.onEdit,
+    required this.onActivate,
+  });
+
+  static const _green = Color(0xFF43A047);
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final published = service.isPublished;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(28, 0, 28, 14),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAFAFA),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFEDEDED)),
+        boxShadow: const [
+          BoxShadow(color: Color(0x14000000), blurRadius: 4, offset: Offset(0, 2)),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              width: 80,
+              height: 80,
+              child: service.coverImage != null
+                  ? Image.network(
+                      service.coverImage!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => _imageFallback(),
+                    )
+                  : _imageFallback(),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        service.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    _statusChip(primary),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'السعر: ${service.priceLabel}',
+                  style: TextStyle(
+                    color: primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 10,
+                  ),
+                ),
+                const Divider(height: 16, color: Color(0xFFEDEDED)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        published
+                            ? (service.executionDuration ?? '')
+                            : 'يمكن تفعيلها لإظهارها في البحث',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                    if (published)
+                      IconButton(
+                        tooltip: 'تعديل',
+                        onPressed: onEdit,
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white,
+                        ),
+                        icon: Icon(Icons.edit, color: primary, size: 18),
+                      )
+                    else
+                      InkWell(
+                        onTap: onActivate,
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF8F0),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: _green.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.check_circle_outline,
+                                color: _green,
+                                size: 16,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'تفعيل',
+                                style: TextStyle(color: _green, fontSize: 11),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statusChip(Color primary) {
+    final published = service.isPublished;
+    final label = published ? 'نشط' : (service.isDraft ? 'مسودة' : 'موقوفة');
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: published ? const Color(0xFFEFF8F0) : const Color(0xFFF1F1F1),
+        borderRadius: BorderRadius.circular(20),
+        border: published
+            ? Border.all(color: _green.withValues(alpha: 0.3))
+            : null,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.circle,
+            size: 7,
+            color: published ? _green.withValues(alpha: 0.5) : primary,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: published ? _green.withValues(alpha: 0.7) : Colors.black54,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _imageFallback() => Container(
+    color: const Color(0xFFEFE7EA),
+    child: const Icon(Icons.image_outlined, color: Colors.black26),
+  );
 }
