@@ -30,7 +30,6 @@ import 'package:farah/view/screens/provider/provider_router_screen.dart';
 import 'package:farah/view/screens/provider/services/provider_add_package_screen.dart';
 import 'package:farah/view/screens/provider/services/provider_add_service_screen.dart';
 import 'package:farah/view/screens/provider/services/provider_edit_package_screen.dart';
-import 'package:farah/view/screens/provider/services/provider_edit_service_screen.dart';
 import 'package:farah/view/screens/service1/service_info_screen.dart';
 import 'package:farah/view/screens/user/change_password_screen.dart';
 import 'package:farah/view/screens/user/favorites_screen.dart';
@@ -229,7 +228,7 @@ class AppRoutes {
       return _ProviderGuard(
         child: BlocProvider(
           create: (c) => ProviderServicesCubit(c.read<ProviderRepository>()),
-          child: ProviderEditServiceScreen(serviceData: args),
+          child: ProviderAddServiceScreen(service: args),
         ),
       );
     },

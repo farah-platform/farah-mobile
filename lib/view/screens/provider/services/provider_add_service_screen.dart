@@ -1,259 +1,539 @@
 ﻿import 'dart:convert';
 import 'dart:io';
+
+import 'package:farah/cubits/provider_services/provider_services_cubit.dart';
+import 'package:farah/cubits/provider_services/provider_services_state.dart';
+import 'package:farah/view/widgets/provider/onboarding/provider_step_widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../cubits/provider_services/provider_services_cubit.dart';
-import '../../../../cubits/provider_services/provider_services_state.dart';
 
+/// "إضافة خدمة جديدة", also used to edit a service when [service] is given.
+/// Categories come from the API; services without booking periods are
+/// booked for the whole day.
 class ProviderAddServiceScreen extends StatefulWidget {
-  const ProviderAddServiceScreen({super.key});
+  /// A service from GET /provider/services to edit.
+  final Map<String, dynamic>? service;
+
+  const ProviderAddServiceScreen({super.key, this.service});
 
   @override
-  State<ProviderAddServiceScreen> createState() => _ProviderAddServiceScreenState();
+  State<ProviderAddServiceScreen> createState() =>
+      _ProviderAddServiceScreenState();
+}
+
+class _FeatureRow {
+  final controller = TextEditingController();
+  bool removable = false;
 }
 
 class _ProviderAddServiceScreenState extends State<ProviderAddServiceScreen> {
+  static const _maxImages = 5;
+  static const _fieldBorder = Color(0xFFDADADA);
+
   final _formKey = GlobalKey<FormState>();
-  
   final _titleController = TextEditingController();
-  final _descController = TextEditingController();
-  final _basePriceController = TextEditingController();
-  final _individualPriceController = TextEditingController(); // Maps to pricing_unit or just a feature
-  
+  final _descriptionController = TextEditingController();
+  final _priceController = TextEditingController();
+  final _offerController = TextEditingController();
+  final _durationController = TextEditingController();
+  final List<_FeatureRow> _features = [_FeatureRow()];
   final List<File> _images = [];
-  final ImagePicker _picker = ImagePicker();
+  // Images already on the server (edit mode) and the ones the provider removed.
+  final List<Map<String, dynamic>> _existingImages = [];
+  final List<int> _removedImageIds = [];
 
-  final List<String> _features = [];
-  final _featureController = TextEditingController();
+  List<dynamic> _categories = [];
+  String? _categoryId;
+  bool _savingDraft = false;
 
-  bool _isAvailable = true;
-  String? _executionDuration;
-  
-  // Dummy slots for UI
-  final List<Map<String, String>> _slots = [
-    {"label": "الفترة الصباحية", "start_time": "10:00", "end_time": "14:00"},
-    {"label": "الفترة المسائية", "start_time": "17:00", "end_time": "22:00"}
-  ];
+  bool get _editing => widget.service != null;
 
-  Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _images.add(File(pickedFile.path));
-      });
-    }
+  int get _imageCount => _existingImages.length + _images.length;
+
+  @override
+  void initState() {
+    super.initState();
+    final service = widget.service;
+    if (service != null) _fill(service);
+    context.read<ProviderServicesCubit>().loadFormData();
   }
 
-  void _addFeature() {
-    if (_featureController.text.isNotEmpty) {
-      setState(() {
-        _features.add(_featureController.text);
-        _featureController.clear();
-      });
+  void _fill(Map<String, dynamic> service) {
+    String text(dynamic v) => v == null ? '' : v.toString();
+    String amount(dynamic v) {
+      final n = num.tryParse(text(v));
+      if (n == null) return '';
+      return n == n.roundToDouble() ? n.toInt().toString() : n.toString();
     }
+
+    final pricing = (service['pricing'] as Map?) ?? const {};
+    final original = pricing['original_price'];
+    _titleController.text = text(service['title']);
+    _descriptionController.text = text(service['description']);
+    _priceController.text = amount(original ?? pricing['price']);
+    _offerController.text = original != null ? amount(pricing['price']) : '';
+    _durationController.text = text(service['execution_duration']);
+    _categoryId = (service['category'] as Map?)?['id']?.toString();
+    final items = (service['feature_items'] as List?) ?? const [];
+    if (items.isNotEmpty) {
+      _features
+        ..clear()
+        ..addAll(
+          items.whereType<Map>().map(
+            (f) => _FeatureRow()
+              ..controller.text = text(f['name'])
+              ..removable = f['removable'] == true,
+          ),
+        );
+    }
+    _existingImages.addAll(
+      ((service['images'] as List?) ?? const []).whereType<Map>().map(
+        (i) => Map<String, dynamic>.from(i),
+      ),
+    );
   }
 
-  void _submit() {
+  @override
+  void dispose() {
+    for (final c in [
+      _titleController,
+      _descriptionController,
+      _priceController,
+      _offerController,
+      _durationController,
+    ]) {
+      c.dispose();
+    }
+    for (final f in _features) {
+      f.controller.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _pickImages() async {
+    final left = _maxImages - _imageCount;
+    if (left <= 0) return;
+    final picked = await ImagePicker().pickMultiImage(limit: left > 1 ? left : null);
+    if (picked.isEmpty) return;
+    setState(() {
+      _images.addAll(picked.take(left).map((x) => File(x.path)));
+    });
+  }
+
+  void _submit({required bool draft}) {
     if (!_formKey.currentState!.validate()) return;
-    if (_images.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('الرجاء إضافة صورة واحدة على الأقل')));
+    if (!draft && _imageCount == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('أضف صورة واحدة على الأقل قبل النشر')),
+      );
       return;
     }
 
-    final data = {
-      'title': _titleController.text,
-      'description': _descController.text,
-      'price': _basePriceController.text,
-      'pricing_unit': _individualPriceController.text,
-      'currency': 'ILS',
+    final features = _features
+        .where((f) => f.controller.text.trim().isNotEmpty)
+        .toList();
+    final data = <String, dynamic>{
+      'title': _titleController.text.trim(),
+      'category_id': _categoryId,
+      'description': _descriptionController.text.trim(),
+      'price': _priceController.text.trim(),
+      if (_offerController.text.trim().isNotEmpty)
+        'offer_price': _offerController.text.trim(),
+      'execution_duration': _durationController.text.trim(),
       'service_type': 'service',
-      'features': jsonEncode(_features),
-      'booking_slots': jsonEncode(_slots),
-      'execution_duration': _executionDuration ?? 'خلال يومين من الطلب',
-      'is_available': _isAvailable,
+      'currency': 'ILS',
+      'features': jsonEncode([
+        for (final f in features) f.controller.text.trim(),
+      ]),
+      'removable_features': jsonEncode([
+        for (final f in features.where((f) => f.removable))
+          f.controller.text.trim(),
+      ]),
+      'save_as_draft': draft ? '1' : '0',
+      if (_removedImageIds.isNotEmpty)
+        'remove_image_ids': jsonEncode(_removedImageIds),
     };
 
-    context.read<ProviderServicesCubit>().addService(data, _images);
+    setState(() => _savingDraft = draft);
+    final cubit = context.read<ProviderServicesCubit>();
+    if (_editing) {
+      cubit.updateService(
+        int.parse(widget.service!['id'].toString()),
+        data,
+        _images,
+      );
+    } else {
+      cubit.addService(data, _images);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('إضافة خدمة', style: TextStyle(color: Colors.black)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-        actions: [
-          IconButton(icon: const Icon(Icons.delete_outline, color: Colors.redAccent), onPressed: () {}),
-        ],
+      backgroundColor: kProviderStepBackground,
+      appBar: providerStepAppBar(
+        context,
+        _editing ? 'تعديل الخدمة' : 'إضافة خدمة جديدة',
       ),
-      body: BlocListener<ProviderServicesCubit, ProviderServicesState>(
+      body: BlocConsumer<ProviderServicesCubit, ProviderServicesState>(
         listener: (context, state) {
-          if (state is ProviderServicesAddSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إضافة الخدمة بنجاح')));
-            Navigator.pop(context);
+          if (state is ProviderServicesFormReady) {
+            setState(() => _categories = state.categories);
+          } else if (state is ProviderServicesAddSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  _savingDraft ? 'تم حفظ الخدمة كمسودة' : 'تم حفظ الخدمة ونشرها',
+                ),
+              ),
+            );
+            Navigator.pop(context, true);
           } else if (state is ProviderServicesAddError) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message)));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('صور الخدمة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 100,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
+        builder: (context, state) {
+          if (state is ProviderServicesLoading && _categories.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (state is ProviderServicesError && _categories.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(state.message),
+                  TextButton(
+                    onPressed: () => context
+                        .read<ProviderServicesCubit>()
+                        .loadFormData(),
+                    child: const Text('إعادة المحاولة'),
+                  ),
+                ],
+              ),
+            );
+          }
+          final saving = state is ProviderServicesAdding;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(28, 4, 28, 24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _card(children: _imagesSection(primary)),
+                  const SizedBox(height: 16),
+                  _card(
+                    padding: const EdgeInsets.fromLTRB(8, 16, 8, 16),
                     children: [
-                      GestureDetector(
-                        onTap: _pickImage,
-                        child: Container(
-                          width: 100,
-                          height: 100,
-                          margin: const EdgeInsets.only(left: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.grey.shade300),
+                      _label('اسم الخدمة'),
+                      TextFormField(
+                        controller: _titleController,
+                        decoration: _input('مثال:مسكة عروس'),
+                        validator: (v) => (v ?? '').trim().isEmpty
+                            ? 'أدخل اسم الخدمة'
+                            : null,
+                      ),
+                      _label('فئة الخدمة'),
+                      DropdownButtonFormField<String>(
+                        initialValue: _categoryId,
+                        isExpanded: true,
+                        icon: Icon(Icons.keyboard_arrow_down, color: primary),
+                        decoration: _input('اختر الفئة'),
+                        items: [
+                          for (final c in _categories)
+                            DropdownMenuItem(
+                              value: c['id'].toString(),
+                              child: Text(c['name']?.toString() ?? ''),
+                            ),
+                        ],
+                        onChanged: (v) => setState(() => _categoryId = v),
+                        validator: (v) => v == null ? 'اختر فئة الخدمة' : null,
+                      ),
+                      _label('مميزات  الخدمة'),
+                      for (final feature in _features) _featureField(feature, primary),
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: TextButton.icon(
+                          onPressed: () =>
+                              setState(() => _features.add(_FeatureRow())),
+                          icon: Icon(Icons.add_circle_outline, color: primary),
+                          label: const Text(
+                            'إضافة ميزة جديدة',
+                            style: TextStyle(color: Colors.black87, fontSize: 12),
                           ),
-                          child: Icon(Icons.add_photo_alternate_outlined, color: Colors.grey.shade400, size: 32),
                         ),
                       ),
-                      ..._images.map((img) => Container(
-                        width: 100,
-                        height: 100,
-                        margin: const EdgeInsets.only(left: 8),
+                      _label('تفاصيل الخدمة'),
+                      TextFormField(
+                        controller: _descriptionController,
+                        minLines: 3,
+                        maxLines: 6,
+                        decoration: _input('اكتب وصف مختصر عن الخدمة'),
+                      ),
+                      _label('السعر'),
+                      TextFormField(
+                        controller: _priceController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: [_decimal],
+                        decoration: _input('ادخل السعر بالشيكل فقط'),
+                        validator: (v) {
+                          final price = double.tryParse((v ?? '').trim());
+                          return price == null || price <= 0
+                              ? 'أدخل سعر الخدمة'
+                              : null;
+                        },
+                      ),
+                      _label('سعر العرض', optional: true),
+                      TextFormField(
+                        controller: _offerController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: [_decimal],
+                        decoration: _input('ادخل سعر العرض بالشيكل فقط'),
+                        validator: (v) {
+                          if ((v ?? '').trim().isEmpty) return null;
+                          final offer = double.tryParse(v!.trim());
+                          final price = double.tryParse(
+                            _priceController.text.trim(),
+                          );
+                          if (offer == null || offer <= 0) {
+                            return 'أدخل سعر عرض صحيح';
+                          }
+                          return price != null && offer >= price
+                              ? 'سعر العرض يجب أن يكون أقل من السعر'
+                              : null;
+                        },
+                      ),
+                      _label('مدة التسليم', optional: true),
+                      TextFormField(
+                        controller: _durationController,
+                        decoration: _input('مثال:خلال 24 ساعة'),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
+                          color: const Color(0xFFF5F2F3),
                           borderRadius: BorderRadius.circular(8),
-                          image: DecorationImage(image: FileImage(img), fit: BoxFit.cover),
                         ),
-                        alignment: Alignment.topRight,
-                        child: GestureDetector(
-                          onTap: () => setState(() => _images.remove(img)),
-                          child: const Padding(
-                            padding: EdgeInsets.all(4.0),
-                            child: CircleAvatar(radius: 12, backgroundColor: Colors.white, child: Icon(Icons.close, size: 16, color: Colors.black)),
-                          ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.info_outline, color: primary, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'التنسيق حول الاستلام يتم مباشرة بينك وبين العميل',
+                                style: TextStyle(color: primary, fontSize: 10),
+                              ),
+                            ),
+                          ],
                         ),
-                      )),
+                      ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 24),
-                _buildTextField('اسم الخدمة', 'مثال: مسكة عروس', _titleController),
-                const SizedBox(height: 16),
-                _buildTextField('نبذة عن الخدمة', 'وصف الخدمة', _descController, maxLines: 3),
-                const SizedBox(height: 16),
-                _buildTextField('السعر الاساسي', 'شيكل', _basePriceController, isNumber: true),
-                const SizedBox(height: 16),
-                _buildTextField('سعر افرادي (اختياري)', 'شيكل', _individualPriceController, isNumber: true, isRequired: false),
-                const SizedBox(height: 24),
-                const Text('تفاصيل الخدمة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                const SizedBox(height: 8),
-                ..._features.map((f) => ListTile(
-                  title: Text(f, style: const TextStyle(fontSize: 14)),
-                  trailing: IconButton(icon: const Icon(Icons.close, size: 16), onPressed: () => setState(() => _features.remove(f))),
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                )),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _featureController,
-                        decoration: InputDecoration(
-                          hintText: 'إضافة مرفق',
-                          hintStyle: const TextStyle(fontSize: 12),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.add_circle, color: primary),
-                      onPressed: _addFeature,
-                    )
-                  ],
-                ),
-                const SizedBox(height: 24),
-                const Text('مدة التسليم', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                  const SizedBox(height: 24),
+                  ProviderPrimaryButton(
+                    label: 'نشر الان',
+                    loading: saving && !_savingDraft,
+                    onPressed: saving ? null : () => _submit(draft: false),
                   ),
-                  value: _executionDuration,
-                  items: const [
-                    DropdownMenuItem(value: 'خلال يومين من الطلب', child: Text('خلال يومين من الطلب')),
-                    DropdownMenuItem(value: 'خلال 5 ايام من الطلب', child: Text('خلال 5 ايام من الطلب')),
-                    DropdownMenuItem(value: 'خلال اسبوع من الطلب', child: Text('خلال اسبوع من الطلب')),
-                  ],
-                  onChanged: (val) => setState(() => _executionDuration = val),
-                ),
-                const SizedBox(height: 24),
-                const Text('الفترات المتاحة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 6),
+                  TextButton(
+                    onPressed: saving ? null : () => _submit(draft: true),
+                    child: saving && _savingDraft
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text(
+                            'حفظ كمسودة',
+                            style: TextStyle(color: Colors.black87),
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  static final _decimal = FilteringTextInputFormatter.allow(
+    RegExp(r'^\d*\.?\d{0,2}'),
+  );
+
+  List<Widget> _imagesSection(Color primary) {
+    return [
+      const Text(
+        'رفع الصور',
+        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+      ),
+      const SizedBox(height: 14),
+      InkWell(
+        onTap: _pickImages,
+        borderRadius: BorderRadius.circular(12),
+        child: CustomPaint(
+          painter: DashedBorderPainter(color: primary.withValues(alpha: 0.7)),
+          child: SizedBox(
+            height: 110,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.image_outlined, color: primary),
                 const SizedBox(height: 8),
-                ..._slots.map((s) => ListTile(
-                  title: Text(s['label']!, style: TextStyle(fontSize: 14, color: primary)),
-                  subtitle: Text('${s['start_time']} - ${s['end_time']}', style: const TextStyle(fontSize: 12)),
-                  dense: true,
-                  contentPadding: EdgeInsets.zero,
-                )),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('حالة النشر\nالخدمة جاهزة للعملاء ويمكن حجزها', style: TextStyle(fontSize: 12)),
-                    Switch(
-                      value: _isAvailable,
-                      activeColor: primary,
-                      onChanged: (val) => setState(() => _isAvailable = val),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                BlocBuilder<ProviderServicesCubit, ProviderServicesState>(
-                  builder: (context, state) {
-                    bool isLoading = state is ProviderServicesAdding;
-                    return SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primary,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        onPressed: isLoading ? null : _submit,
-                        child: isLoading 
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('حفظ الإضافة', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                      ),
-                    );
-                  }
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('إلغاء', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                Text(
+                  'اضف صور الخدمة',
+                  style: TextStyle(
+                    color: primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 4),
+                const Text(
+                  'يمكنك اضافة حتى 5صور',
+                  style: TextStyle(color: Colors.black54, fontSize: 11),
+                ),
               ],
+            ),
+          ),
+        ),
+      ),
+      const SizedBox(height: 12),
+      Row(
+        children: [
+          _thumbBox(
+            onTap: _imageCount < _maxImages ? _pickImages : null,
+            border: const Color(0xFFDADADA),
+            child: Icon(Icons.add, color: primary),
+          ),
+          for (final image in _existingImages)
+            _thumbBox(
+              child: _removable(
+                Image.network(
+                  image['url']?.toString() ?? '',
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const Icon(Icons.image_outlined),
+                ),
+                () => setState(() {
+                  _existingImages.remove(image);
+                  final id = int.tryParse(image['id'].toString());
+                  if (id != null) _removedImageIds.add(id);
+                }),
+              ),
+            ),
+          for (var i = 0; i < _images.length; i++)
+            _thumbBox(
+              child: _removable(
+                Image.file(_images[i], fit: BoxFit.cover),
+                () => setState(() => _images.removeAt(i)),
+              ),
+            ),
+          for (var i = _imageCount; i < _maxImages - 1; i++)
+            _thumbBox(
+              fill: const Color(0xFFF5F5F5),
+              child: const Icon(
+                Icons.image_outlined,
+                color: Colors.black26,
+                size: 20,
+              ),
+            ),
+        ],
+      ),
+    ];
+  }
+
+  Widget _removable(Widget image, VoidCallback onRemove) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ClipRRect(borderRadius: BorderRadius.circular(10), child: image),
+        PositionedDirectional(
+          top: 2,
+          end: 2,
+          child: GestureDetector(
+            onTap: onRemove,
+            child: const CircleAvatar(
+              radius: 9,
+              backgroundColor: Colors.black54,
+              child: Icon(Icons.close, size: 12, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _thumbBox({
+    required Widget child,
+    VoidCallback? onTap,
+    Color? border,
+    Color? fill,
+  }) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: 6),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: fill ?? Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: border != null ? Border.all(color: border) : null,
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  Widget _featureField(_FeatureRow feature, Color primary) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: TextFormField(
+        controller: feature.controller,
+        decoration: _input('اضف ميزة').copyWith(
+          suffixIcon: PopupMenuButton<bool>(
+            tooltip: 'نوع الميزة',
+            initialValue: feature.removable,
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            onSelected: (v) => setState(() => feature.removable = v),
+            itemBuilder: (_) => [
+              _typeItem(false, 'مشمولة', feature.removable == false),
+              _typeItem(true, 'قابلة للازالة', feature.removable == true),
+            ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    feature.removable ? 'قابلة للازالة' : 'مشمولة',
+                    style: const TextStyle(fontSize: 11, color: Colors.black54),
+                  ),
+                  Icon(Icons.keyboard_arrow_down, color: primary, size: 18),
+                ],
+              ),
             ),
           ),
         ),
@@ -261,28 +541,78 @@ class _ProviderAddServiceScreenState extends State<ProviderAddServiceScreen> {
     );
   }
 
-  Widget _buildTextField(String label, String hint, TextEditingController controller, {bool isNumber = false, int maxLines = 1, bool isRequired = true}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-          maxLines: maxLines,
-          validator: isRequired ? (val) => val == null || val.isEmpty ? 'مطلوب' : null : null,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey.shade300),
-            ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          ),
+  PopupMenuItem<bool> _typeItem(bool value, String label, bool selected) {
+    return PopupMenuItem(
+      value: value,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFFF5E4E6) : null,
+          borderRadius: BorderRadius.circular(20),
         ),
-      ],
+        child: Text(label, style: const TextStyle(fontSize: 13)),
+      ),
+    );
+  }
+
+  Widget _card({
+    required List<Widget> children,
+    EdgeInsets padding = const EdgeInsets.all(16),
+  }) {
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
+    );
+  }
+
+  Widget _label(String text, {bool optional = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 18, bottom: 10),
+      child: Text.rich(
+        TextSpan(
+          text: text,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+            color: Colors.black,
+          ),
+          children: [
+            if (optional)
+              const TextSpan(
+                text: '(اختياري)',
+                style: TextStyle(
+                  fontWeight: FontWeight.normal,
+                  color: Colors.black45,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  InputDecoration _input(String hint) {
+    OutlineInputBorder border(Color color) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: color),
+    );
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.black38, fontSize: 13),
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      enabledBorder: border(_fieldBorder),
+      border: border(_fieldBorder),
+      focusedBorder: border(Theme.of(context).colorScheme.primary),
     );
   }
 }
