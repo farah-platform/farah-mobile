@@ -21,28 +21,32 @@ class FarahBottomNavBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildItem(
-            icon: Icons.person_outline,
-            activeIcon: Icons.person,
-            label: 'حسابي',
-            index: 0,
-          ),
-          _buildItem(
-            icon: Icons.favorite_border,
-            activeIcon: Icons.favorite,
-            label: 'المفضلة',
-            index: 1,
-          ),
-          _buildItem(
-            icon: Icons.assignment_outlined,
-            activeIcon: Icons.assignment,
-            label: 'طلباتي',
-            index: 2,
-          ),
+          // 1. الرئيسية (أقصى اليمين)
           _buildItem(
             icon: Icons.home_outlined,
             activeIcon: Icons.home,
             label: 'الرئيسية',
+            index: 0,
+          ),
+          // 2. طلباتي
+          _buildItem(
+            icon: Icons.assignment_outlined,
+            activeIcon: Icons.assignment,
+            label: 'طلباتي',
+            index: 1,
+          ),
+          // 3. المفضلة
+          _buildItem(
+            icon: Icons.favorite_border,
+            activeIcon: Icons.favorite,
+            label: 'المفضلة',
+            index: 2,
+          ),
+          // 4. حسابي (أقصى اليسار)
+          _buildItem(
+            icon: Icons.person_outline,
+            activeIcon: Icons.person,
+            label: 'حسابي',
             index: 3,
           ),
         ],

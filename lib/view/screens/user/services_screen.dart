@@ -7,7 +7,6 @@ import 'package:farah/view/widgets/bottom_nav_bar.dart';
 import 'package:farah/view/widgets/common/custom_search_bar_widget.dart';
 import 'package:farah/view/widgets/services/service_card_widget.dart';
 import 'package:farah/view/widgets/services/services_filter_chips_widget.dart';
-import 'package:farah/view/widgets/services/service_card_widget.dart';
 
 class ServicesScreen extends StatefulWidget {
   final int? categoryId;
@@ -28,6 +27,9 @@ class ServicesScreen extends StatefulWidget {
 class _ServicesScreenState extends State<ServicesScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedSort = 'all';
+
+  // 1. إضافة متغير للتحكم بظهور شريط الفلاتر العلوي
+  bool _isFilterVisible = false;
 
   @override
   void initState() {
@@ -104,7 +106,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
         ),
         body: Column(
           children: [
-            // شريط البحث الموحد
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: CustomSearchBarWidget(
@@ -113,21 +114,26 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     ? 'ابحث ضمن ${widget.categoryName}...'
                     : 'ابحث ضمن الخدمات...',
                 onSubmitted: _search,
-                onFilterTap: () => _showFilterDialog(context),
+                // 2. ربط الفلتر بإظهار/إخفاء الجزء العلوي بدلاً من القائمة السفلية
+                onFilterTap: () {
+                  setState(() {
+                    _isFilterVisible = !_isFilterVisible;
+                  });
+                },
               ),
             ),
 
             const SizedBox(height: 12),
 
-            // أزرار الترتيب
-            ServicesFilterChipsWidget(
-              selectedSort: _selectedSort,
-              onSortChanged: _changeSort,
-            ),
+            // 3. عرض شريط الفلاتر فقط إذا كان _isFilterVisible يساوي true
+            if (_isFilterVisible)
+              ServicesFilterChipsWidget(
+                selectedSort: _selectedSort,
+                onSortChanged: _changeSort,
+              ),
 
-            const SizedBox(height: 12),
+            if (_isFilterVisible) const SizedBox(height: 12),
 
-            // قائمة الخدمات
             Expanded(
               child: BlocBuilder<ServiceCubit, ServiceState>(
                 builder: (context, state) {
@@ -157,19 +163,15 @@ class _ServicesScreenState extends State<ServicesScreen> {
                           return ServiceCardWidget(
                             service: service,
                             onTap: () {
-                              void _openServiceDetails(ServiceModel service) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        ServiceDetailsScreen(service: service),
-                                  ),
-                                );
-                              }
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      ServiceDetailsScreen(service: service),
+                                ),
+                              );
                             },
-                            onFavoriteTap: () {
-                              // المفضلة لاحقاً
-                            },
+                            onFavoriteTap: () {},
                           );
                         },
                       ),
@@ -255,64 +257,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
         ),
       ),
     );
-  }
-
-  void _showFilterDialog(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'ترتيب الخدمات',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: colors.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _buildFilterOption(context, 'الأقل سعرًا', 'price_low'),
-              _buildFilterOption(context, 'الأعلى سعرًا', 'price_high'),
-              _buildFilterOption(context, 'الأعلى تقييمًا', 'rating'),
-              _buildFilterOption(context, 'الأقرب لموقعك', 'nearest'),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildFilterOption(BuildContext context, String title, String value) {
-    return ListTile(
-      onTap: () {
-        Navigator.pop(context);
-        _changeSort(value);
-      },
-      title: Text(title),
-      trailing: Radio<String>(
-        value: value,
-        groupValue: _selectedSort,
-        onChanged: (value) {
-          if (value == null) return;
-          Navigator.pop(context);
-          _changeSort(value);
-        },
-      ),
-    );
-  }
-
-  void _openServiceDetails(ServiceModel service) {
-    // سنربطها بشاشة تفاصيل الخدمة
   }
 
   void _handleBottomNavigation(int index) {

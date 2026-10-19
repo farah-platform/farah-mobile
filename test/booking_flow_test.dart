@@ -6,6 +6,7 @@ import 'package:farah/cubits/booking/booking_cubit.dart';
 import 'package:farah/data/datasources/local/cache_datasource.dart';
 import 'package:farah/data/models/booking_model.dart';
 import 'package:farah/data/models/booking_options_model.dart';
+import 'package:farah/data/models/home/myBooking_model.dart' as my;
 import 'package:farah/data/models/home/booking_request_model.dart';
 import 'package:farah/data/models/home/payment_request_model.dart';
 import 'package:farah/data/models/service_model.dart';
@@ -324,5 +325,20 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  test('My Bookings reads the API shape and in-progress statuses', () {
+    final b = my.MybookingModel.fromJson(_apiBooking());
+    expect(b.title, 'api service');
+    expect(b.price, 900);
+    expect(b.date, '2026-11-20');
+    expect(b.status, my.BookingStatus.pending);
+    for (final s in ['payment_awaiting', 'review_under_proof']) {
+      expect(
+        my.MybookingModel.fromJson({'status': s}).status,
+        my.BookingStatus.pending,
+      );
+    }
+    expect(my.MybookingModel.fromJson({}).date, isEmpty);
   });
 }

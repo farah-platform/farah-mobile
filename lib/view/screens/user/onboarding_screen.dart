@@ -1,4 +1,3 @@
-import 'package:farah/view/screens/auth/sginup.dart';
 import 'package:flutter/material.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -49,13 +48,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _onSkipPressed() {
-    // مؤقت للتجربة، هيتشال لما ينربط الـ Cubit
     Navigator.pushReplacementNamed(context, '/signup');
   }
 
   void _onNextPressed() {
     if (currentPage == items.length - 1) {
-      // مؤقت للتجربة، هيتشال لما ينربط الـ Cubit
       Navigator.pushReplacementNamed(context, '/signup');
     } else {
       _pageController.nextPage(
@@ -78,7 +75,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Padding(
               padding: const EdgeInsets.only(top: 8, right: 20, left: 20),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
                     onPressed: _onSkipPressed,

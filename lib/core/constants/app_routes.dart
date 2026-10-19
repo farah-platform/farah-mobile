@@ -99,15 +99,15 @@ class AppRoutes {
     final goLogin = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Ø³Ø¬Ù‘Ù„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ù„Ù„Ù…ØªØ§Ø¨Ø¹Ø©'),
+        title: const Text('سجّل الدخول للمتابعة'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Ø¥Ù„ØºØ§Ø¡'),
+            child: const Text('إلغاء'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„'),
+            child: const Text('تسجيل الدخول'),
           ),
         ],
       ),
@@ -127,8 +127,8 @@ class AppRoutes {
     newPassword: (_) => const NewPasswordScreen(),
     terms: (_) => const TermsAndConditionsScreen(),
     serviceInfo: (_) => const ServiceInfoScreen(),
-    // Customer + guest routes â€” providers are redirected to providerHome.
-    home: (_) => const _CustomerGuard(child: UserHomeScreen()),
+    // Customer + guest routes — providers are redirected to providerHome.
+    home: (_) => const _CustomerGuard(child: HomeScreen()),
     settings: (_) => const _CustomerGuard(child: SettingsScreen()),
     profileEdit: (ctx) => _CustomerGuard(
       child: BlocProvider(
@@ -147,20 +147,20 @@ class AppRoutes {
     serviceDetail: (context) {
       final args = ModalRoute.of(context)?.settings.arguments;
       final ServiceModel? service = args is ServiceModel ? args : null;
-      final int? serviceId = args is int ? args : (service != null ? int.tryParse(service.id.toString()) : null);
-      
+      final int? serviceId = args is int
+          ? args
+          : (service != null ? int.tryParse(service.id.toString()) : null);
+
       return _CustomerGuard(
         child: BlocProvider(
           create: (c) => ServiceDetailCubit(c.read<ServiceRepository>()),
-          child: ServiceDetailsScreen(
-            serviceId: serviceId,
-            service: service,
-          ),
+          child: ServiceDetailsScreen(serviceId: serviceId, service: service),
         ),
       );
     },
     services: (context) {
-      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      final args =
+          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
       return _CustomerGuard(
         child: BlocProvider(
           create: (c) => ServiceCubit(c.read<ServiceRepository>()),
@@ -173,7 +173,7 @@ class AppRoutes {
       );
     },
     
-    // Provider-only routes â€” customers/guests are redirected to home.
+    // Provider-only routes — customers/guests are redirected to home.
     providerRouter: (context) => _ProviderGuard(
       child: BlocProvider(
         create: (c) => ProviderVerificationCubit(c.read<ProviderRepository>()),
@@ -211,7 +211,8 @@ class AppRoutes {
       final args = ModalRoute.of(context)?.settings.arguments as String?;
       return _ProviderGuard(
         child: BlocProvider(
-          create: (c) => ProviderSubscriptionCubit(c.read<ProviderRepository>()),
+          create: (c) =>
+              ProviderSubscriptionCubit(c.read<ProviderRepository>()),
           child: ProviderActivateSubscriptionScreen(planId: args ?? ''),
         ),
       );
@@ -318,6 +319,3 @@ class _ProviderGuard extends StatelessWidget {
     );
   }
 }
-
-
-

@@ -1,6 +1,6 @@
 # Farah API Contract — Authentication Endpoints
 
-**Base URL:** `https://farah-backend-1.onrender.com/api`  
+**Base URL:** `https://farah-production.up.railway.app/api`  
 **Auth scheme:** Laravel Sanctum — `Authorization: Bearer <token>`  
 **Probed:** 2026-08-23
 

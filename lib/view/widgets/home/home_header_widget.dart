@@ -66,6 +66,7 @@ class HomeHeaderWidget extends StatelessWidget {
                   style: theme.textTheme.titleSmall?.copyWith(
                     color: colors.primary,
                     fontWeight: FontWeight.w700,
+                    fontSize: 14,
                   ),
                 ),
                 const SizedBox(height: 2),
