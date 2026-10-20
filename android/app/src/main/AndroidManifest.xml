@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- فرح: إذن الإنترنت لنسخة الـ APK (release). كان موجود بس بنسخة التطوير (debug)،
+         فالـ APK ما كان يقدر يتصل بالسيرفر وكل الطلبات تفشل بـ "حدث خطأ". -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="فرح"
         android:name="${applicationName}"
@@ -40,6 +43,15 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- فرح: لفتح واتساب/المتصفح والبريد من "تواصل معنا" على Android 11+. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="mailto"/>
         </intent>
     </queries>
 </manifest>
