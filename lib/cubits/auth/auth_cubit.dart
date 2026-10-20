@@ -163,6 +163,14 @@ class AuthCubit extends Cubit<AuthState> {
     if (e is Exception && e.toString().contains('تم إلغاء')) {
       return 'تم إلغاء تسجيل الدخول';
     }
+    // فرح: رسالة السيرفر (مثل "هذا البريد الإلكتروني مستخدم بالفعل") بدل "حدث خطأ".
+    if (e is Exception) {
+      final message = e.toString().replaceFirst('Exception: ', '').trim();
+      // Only Arabic server messages; never show raw English exceptions.
+      if (RegExp(r'[\u0600-\u06FF]').hasMatch(message)) {
+        return message;
+      }
+    }
     return 'حدث خطأ، يرجى المحاولة مجدداً';
   }
 

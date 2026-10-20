@@ -64,6 +64,8 @@ class ApiAuthRepository implements AuthRepository {
     } on DioException catch (e) {
       print('🛑 [LOGIN STATUS]: ${e.response?.statusCode}');
       print('🛑 [LOGIN ERROR RESPONSE]: ${e.response?.data}');
+      // فرح: بدون رد من السيرفر (انقطاع نت/مهلة) نرجّع الخطأ كما هو ليظهر "تحقق من اتصالك بالإنترنت".
+      if (e.response == null) rethrow;
 
       final serverMsg =
           e.response?.data?['message'] ??
@@ -111,6 +113,8 @@ class ApiAuthRepository implements AuthRepository {
     } on DioException catch (e) {
       print('🛑 [REGISTER STATUS]: ${e.response?.statusCode}');
       print('🛑 [REGISTER ERROR RESPONSE]: ${e.response?.data}');
+      // فرح: بدون رد من السيرفر (انقطاع نت/مهلة) نرجّع الخطأ كما هو ليظهر "تحقق من اتصالك بالإنترنت".
+      if (e.response == null) rethrow;
 
       final serverMsg =
           e.response?.data?['message'] ??
