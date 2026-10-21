@@ -24,7 +24,12 @@ class _ProviderSettingsScreenState extends State<ProviderSettingsScreen> {
     if (cubit.state.notificationsEnabled == null) cubit.load();
   }
 
-  void _open(String route) => Navigator.pushNamed(context, route);
+  // فرح: بعد حفظ بيانات المتجر أو الملف الشخصي نعيد تحميل اللوحة حتى تظهر الصورة والاسم الجديدين.
+  Future<void> _open(String route) async {
+    final dashboard = context.read<ProviderDashboardCubit>();
+    final saved = await Navigator.pushNamed(context, route);
+    if (saved == true && mounted) dashboard.loadDashboard(refresh: true);
+  }
 
   void _logout() {
     final auth = context.read<AuthCubit>();

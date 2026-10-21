@@ -89,11 +89,17 @@ class _FakeProviderRepo implements ProviderRepository {
     {'id': 8, 'name': 'api other category'},
   ];
 
+  int dashboardLoads = 0;
+  String businessName = 'api store';
+
   @override
-  Future<Map<String, dynamic>> getDashboardData() async => {
-    'provider': {'business_name': 'api store', 'payout_account': {}},
-    'subscription': {'is_active': true},
-  };
+  Future<Map<String, dynamic>> getDashboardData() async {
+    dashboardLoads++;
+    return {
+      'provider': {'business_name': businessName, 'payout_account': {}},
+      'subscription': {'is_active': true},
+    };
+  }
 
   @override
   Future<void> updateStoreProfile(
@@ -383,5 +389,58 @@ void main() {
     await tester.tap(find.text('حذف الحساب'));
     await tester.pumpAndSettle();
     expect(find.text('route /provider/delete-account'), findsOneWidget);
+  });
+
+  // فرح: بعد حفظ بيانات المتجر ترجع الإعدادات بالاسم/الصورة الجديدة بدون إعادة فتح التطبيق.
+  testWidgets('settings reload the store after saving store data', (
+    tester,
+  ) async {
+    final repo = _FakeProviderRepo();
+    tester.view.physicalSize = const Size(412, 884);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Directionality(
+          textDirection: TextDirection.rtl,
+          child: MultiBlocProvider(
+            providers: [
+              BlocProvider(
+                create: (_) => ProviderDashboardCubit(repo)..loadDashboard(),
+              ),
+              BlocProvider(create: (_) => ProviderSettingsCubit(repo)),
+            ],
+            child: const Scaffold(body: ProviderSettingsScreen()),
+          ),
+        ),
+        // Stands in for a settings screen that saved and popped with true.
+        onGenerateRoute: (settings) => MaterialPageRoute(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('saved'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('api store'), findsOneWidget);
+
+    repo.businessName = 'api renamed store';
+    await tester.scrollUntilVisible(
+      find.text('بيانات المتجر'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('بيانات المتجر'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('saved'));
+    await tester.pumpAndSettle();
+
+    expect(repo.dashboardLoads, 2);
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 2000));
+    await tester.pumpAndSettle();
+    expect(find.text('api renamed store'), findsOneWidget);
   });
 }
