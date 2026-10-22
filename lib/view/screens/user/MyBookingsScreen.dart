@@ -183,7 +183,6 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                                 ),
                               ),
                               const Spacer(), // لدفع الزر للأسفل
-                              // زر استكشاف الخدمات
                               Padding(
                                 padding: const EdgeInsets.only(
                                   bottom: 24.0,
@@ -192,7 +191,7 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                                 ),
                                 child: SizedBox(
                                   width: double.infinity,
-                                  height: 48,
+                                  height: 48,     
                                   child: ElevatedButton(
                                     onPressed: () {
                                       Navigator.pushNamedAndRemoveUntil(

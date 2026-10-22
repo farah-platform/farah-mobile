@@ -1,4 +1,5 @@
 import 'package:farah/data/models/home/booking_request_model.dart';
+import 'package:farah/view/screens/user/payment_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -32,16 +33,25 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
   static const Color _lightMaroonBg = Color(0xFFF9EEF1);
   static const Color _cardBorderColor = Color(0xFFE8E8E8);
 
+  // دالة مساعدة لتنسيق الأرقام (إزالة الفواصل إذا كان الرقم صحيحاً)
+  String _formatPrice(double price) {
+    return price == price.roundToDouble()
+        ? price.toInt().toString()
+        : price.toStringAsFixed(2);
+  }
+
   @override
   Widget build(BuildContext context) {
-    // السعر من الفترة المختارة (API). العربون يحدده مقدّم الخدمة عند قبول الطلب.
+    // حساب المبالغ بناءً على نسبة 30%
     final double totalPrice = widget.slot.price;
-    const depositPending = 'يُحدَّد عند قبول الطلب';
+    final double depositPrice = totalPrice * 0.30; // العربون 30%
+    final double remainingPrice = totalPrice - depositPrice; // المتبقي
 
     final formattedArabicDate = DateFormat(
       'd MMMM yyyy',
       'ar',
     ).format(widget.selectedDateTime);
+
     final apiFormattedDate = DateFormat(
       'yyyy-MM-dd',
     ).format(widget.selectedDateTime);
@@ -69,11 +79,12 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                CrossAxisAlignment.start, // لمحاذاة العناوين لليمين
             children: [
               const SizedBox(height: 12),
 
-              // 1. بطاقة معلومات الخدمة والتاريخ
+              // 1. بطاقة معلومات الخدمة والتاريخ (تم عكس الترتيب لتكون الصورة يميناً)
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -83,41 +94,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Spacer(),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          widget.service.title,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              formattedArabicDate,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: _primaryMaroon,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            const Icon(
-                              Icons.calendar_today_outlined,
-                              size: 15,
-                              color: _primaryMaroon,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 14),
+                    // الصورة أولاً لتظهر على اليمين
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child:
@@ -133,6 +110,42 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                             )
                           : _buildPlaceholderImage(),
                     ),
+                    const SizedBox(width: 14),
+                    // النصوص ثانياً لتظهر على يسار الصورة
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.service.title,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.calendar_today_outlined,
+                                size: 15,
+                                color: _primaryMaroon,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                formattedArabicDate,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: _primaryMaroon,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -140,20 +153,17 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
               const SizedBox(height: 28),
 
               // 2. عنوان تفاصيل الدفع
-              const Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  'تفاصيل الدفع',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: _primaryMaroon,
-                  ),
+              const Text(
+                'تفاصيل الدفع',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: _primaryMaroon,
                 ),
               ),
               const SizedBox(height: 10),
 
-              // 3. جدول تفاصيل المبالغ (العربون والمتبقي)
+              // 3. جدول تفاصيل المبالغ (تم عكس الترتيب ليكون السعر يساراً والكلمة يميناً)
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 18,
@@ -170,18 +180,18 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          depositPending,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const Text(
                           'العربون',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
                             color: _primaryMaroon,
+                          ),
+                        ),
+                        Text(
+                          '${_formatPrice(depositPrice)} ${widget.currency}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.black87,
                           ),
                         ),
                       ],
@@ -191,18 +201,18 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          depositPending,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const Text(
                           'أثناء استلام الخدمة',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
                             color: _primaryMaroon,
+                          ),
+                        ),
+                        Text(
+                          '${_formatPrice(remainingPrice)} ${widget.currency}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.black87,
                           ),
                         ),
                       ],
@@ -213,20 +223,23 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
 
               const SizedBox(height: 12),
 
-              // 4. شريط التنبيه: العربون مطلوب لتأكيد الحجز
+              // 4. شريط التنبيه (تم عكس الترتيب لتكون الأيقونة يميناً)
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: _lightMaroonBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: const [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 18,
+                      color: _primaryMaroon,
+                    ),
+                    SizedBox(width: 8),
                     Text(
                       'العربون مطلوب لتأكيد الحجز',
                       style: TextStyle(
@@ -235,32 +248,18 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    SizedBox(width: 8),
-                    Icon(
-                      Icons.info_outline_rounded,
-                      size: 18,
-                      color: _primaryMaroon,
-                    ),
                   ],
                 ),
               ),
 
               const SizedBox(height: 24),
 
-              // 5. السعر الإجمالي
+              // 5. السعر الإجمالي (تم عكس الترتيب ليكون السعر يساراً والكلمة يميناً)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      '${totalPrice == totalPrice.roundToDouble() ? totalPrice.toInt() : totalPrice} ${widget.currency}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
-                    ),
                     const Text(
                       'السعر الاجمالي',
                       style: TextStyle(
@@ -269,93 +268,70 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                         color: _primaryMaroon,
                       ),
                     ),
+                    Text(
+                      '${_formatPrice(totalPrice)} ${widget.currency}',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
                   ],
                 ),
               ),
 
               const Spacer(),
 
-              // 6. زر الانتقال لصفحة الدفع مع الاستماع لـ Cubit
-              BlocConsumer<BookingCubit, BookingState>(
-                listener: (context, state) {
-                  if (state is BookingCreated) {
-                    // The provider accepts first; transfer details arrive
-                    // with that acceptance (status payment_awaiting).
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'تم إرسال طلب الحجز إلى مقدّم الخدمة، وستصلك تعليمات الدفع بعد قبوله.',
-                        ),
-                      ),
-                    );
-                    Navigator.pop(context);
-                  } else if (state is BookingError) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(state.message),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                },
-                builder: (context, state) {
-                  final isLoading = state is BookingLoading;
-
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 20),
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _primaryMaroon,
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor: _primaryMaroon.withOpacity(
-                          0.6,
-                        ),
-                        disabledForegroundColor: Colors.white70,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      onPressed: isLoading
-                          ? null
-                          : () {
-                              // بناء كائن الطلب المطابق لمفاتيح السيرفر
-                              final request = BookingRequestModel(
-                                serviceId: widget.service.id,
-                                bookingDate: apiFormattedDate,
-                                bookingTime: widget.slot.startTime,
-                                bookingSlot: widget.slot.label,
-                                notes: widget.notes,
-                              );
-
-                              context.read<BookingCubit>().createBooking(
-                                request,
-                              );
-                            },
-                      child: isLoading
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2.2,
-                              ),
-                            )
-                          : const Text(
-                              'إرسال طلب الحجز',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
+              // 6. زر الانتقال لصفحة الدفع
+              // 6. زر الانتقال لصفحة الدفع
+              Container(
+                margin: const EdgeInsets.only(bottom: 20),
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primaryMaroon,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                  );
-                },
+                  ),
+                  onPressed: () {
+                    // 1. تجهيز بيانات الطلب التي سنرسلها لشاشة الدفع
+                    final request = BookingRequestModel(
+                      serviceId: widget.service.id,
+                      bookingDate: apiFormattedDate,
+                      bookingTime: widget.slot.startTime,
+                      bookingSlot: widget.slot.label,
+                      notes: widget.notes,
+                    );
+
+                    // 2. كود الانتقال الفعلي
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PaymentScreen(
+                          service: widget.service,
+                          depositAmount:
+                              depositPrice, // استخدمنا الاسم الموجود في ملفك
+                          bookingRequest:
+                              request, // مررنا الطلب لإنشائه بعد نجاح الدفع
+                        ),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'الانتقال لصفحة الدفع',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ),
-            ],
+            ], // نهاية قائمة الـ children
           ),
         ),
       ),

@@ -125,7 +125,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
             const SizedBox(height: 12),
 
-            // 3. عرض شريط الفلاتر فقط إذا كان _isFilterVisible يساوي true
             if (_isFilterVisible)
               ServicesFilterChipsWidget(
                 selectedSort: _selectedSort,
