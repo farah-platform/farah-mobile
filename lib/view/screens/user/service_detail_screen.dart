@@ -199,6 +199,7 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
           },
           onWhatsAppTap: () {},
           onShareTap: () {},
+          serviceTitle: '',
         ),
       ),
     );

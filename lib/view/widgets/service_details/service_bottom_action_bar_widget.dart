@@ -1,16 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ServiceBottomActionBarWidget extends StatelessWidget {
   final VoidCallback onBookNowTap;
-  final VoidCallback onWhatsAppTap;
-  final VoidCallback onShareTap;
+  final String serviceTitle; // اسم الخدمة ليظهر في رسالة الواتساب والمشاركة
+  final String? providerPhone; // رقم هاتف المزود (اختياري)
 
   const ServiceBottomActionBarWidget({
     super.key,
     required this.onBookNowTap,
-    required this.onWhatsAppTap,
-    required this.onShareTap,
+    required this.serviceTitle,
+    this.providerPhone,
+    required Null Function() onWhatsAppTap,
+    required Null Function() onShareTap,
   });
+
+  // دالة فتح الواتساب
+  Future<void> _openWhatsApp(BuildContext context) async {
+    // إذا لم تقومي بتمرير رقم، سيستخدم هذا الرقم الافتراضي
+    final String phone = providerPhone ?? "970599000000";
+    final String message = "مرحباً، أود الاستفسار عن خدمة ( $serviceTitle )";
+
+    final Uri whatsappUrl = Uri.parse(
+      "https://wa.me/$phone?text=${Uri.encodeComponent(message)}",
+    );
+
+    if (await canLaunchUrl(whatsappUrl)) {
+      await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تعذر فتح تطبيق الواتساب، تأكد من تثبيته.'),
+          ),
+        );
+      }
+    }
+  }
+
+  // دالة المشاركة
+  void _shareService() {
+    final String shareText =
+        "شاهد خدمة ( $serviceTitle ) الرائعة على منصة فرح!\n\nحمل التطبيق الآن واكتشف المزيد.";
+    Share.share(shareText);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,21 +69,21 @@ class ServiceBottomActionBarWidget extends StatelessWidget {
           children: [
             // زر المشاركة
             _buildIconButton(
-              onTap: onShareTap,
+              onTap: _shareService,
               icon: Icons.share_outlined,
               colors: colors,
             ),
             const SizedBox(width: 8),
 
-            // زر الواتساب / المحادثة
+            // زر الواتساب
             _buildIconButton(
-              onTap: onWhatsAppTap,
+              onTap: () => _openWhatsApp(context),
               icon: Icons.chat_bubble_outline_rounded,
               colors: colors,
             ),
             const SizedBox(width: 10),
 
-            // زر المواصلة للحجز العريض
+            // زر المواصلة للحجز
             Expanded(
               child: SizedBox(
                 height: 44,

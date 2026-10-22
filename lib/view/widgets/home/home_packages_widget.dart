@@ -1,8 +1,9 @@
+import 'package:farah/cubits/service_detail/service_detail_cubit.dart';
 import 'package:farah/data/models/home/package_model.dart';
+import 'package:farah/data/repositories/service_repository.dart';
 import 'package:farah/view/screens/user/service_detail_screen.dart';
 import 'package:flutter/material.dart';
-// TODO: تأكدي من استيراد مسار شاشة تفاصيل الخدمة هنا، مثال:
-// import 'package:farah/view/screens/user/service_detail_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomePackagesWidget extends StatelessWidget {
   final List<PackageModel> packages;
@@ -36,15 +37,15 @@ class HomePackagesWidget extends StatelessWidget {
         itemBuilder: (context, index) {
           final package = packages[index];
 
-          // تم التغليف بـ GestureDetector لجعل البطاقة قابلة للضغط
           return GestureDetector(
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ServiceDetailsScreen(
-                    // مرري هنا المتغيرات التي تطلبها شاشة التفاصيل (مثل الـ ID أو كائن الباقة كاملاً)
-                    serviceId: package.id,
+                  builder: (context) => BlocProvider(
+                    create: (context) =>
+                        ServiceDetailCubit(context.read<ServiceRepository>()),
+                    child: ServiceDetailsScreen(serviceId: package.id),
                   ),
                 ),
               );

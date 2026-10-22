@@ -32,7 +32,6 @@ class _ServiceDetailHeaderWidgetState extends State<ServiceDetailHeaderWidget> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // معرض الصور
           if (widget.images.isNotEmpty)
             PageView.builder(
               itemCount: widget.images.length,
@@ -64,7 +63,6 @@ class _ServiceDetailHeaderWidgetState extends State<ServiceDetailHeaderWidget> {
               ),
             ),
 
-          // تدرج ظلي خفيف لأزرار التحكم
           Positioned(
             top: 0,
             left: 0,

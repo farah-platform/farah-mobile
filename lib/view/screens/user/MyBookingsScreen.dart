@@ -191,7 +191,7 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
                                 ),
                                 child: SizedBox(
                                   width: double.infinity,
-                                  height: 48,     
+                                  height: 48,
                                   child: ElevatedButton(
                                     onPressed: () {
                                       Navigator.pushNamedAndRemoveUntil(
@@ -291,35 +291,23 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildStatusBadge(booking.status),
-              const SizedBox(height: 12),
-              const Text(
-                'السعر',
-                style: TextStyle(
-                  fontFamily: 'Tajawal',
-                  fontSize: 11,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '${booking.price.toInt()}ILS',
-                style: const TextStyle(
-                  fontFamily: 'Tajawal',
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF7B2146),
-                ),
-              ),
-            ],
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: (booking.imageUrl != null && booking.imageUrl!.isNotEmpty)
+                ? Image.network(
+                    booking.imageUrl!,
+                    width: 75,
+                    height: 75,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => _buildPlaceholder(),
+                  )
+                : _buildPlaceholder(),
           ),
-          const Spacer(),
+
+          const SizedBox(width: 12),
 
           Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start, // لمحاذاة النص لليمين
             children: [
               Text(
                 booking.title,
@@ -350,19 +338,33 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
               ),
             ],
           ),
-          const SizedBox(width: 12),
 
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: (booking.imageUrl != null && booking.imageUrl!.isNotEmpty)
-                ? Image.network(
-                    booking.imageUrl!,
-                    width: 75,
-                    height: 75,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => _buildPlaceholder(),
-                  )
-                : _buildPlaceholder(),
+          const Spacer(),
+
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              _buildStatusBadge(booking.status),
+              const SizedBox(height: 12),
+              const Text(
+                'السعر',
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 11,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${booking.price.toInt()}ILS',
+                style: const TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF7B2146),
+                ),
+              ),
+            ],
           ),
         ],
       ),
