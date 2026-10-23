@@ -29,8 +29,8 @@ class NotificationCubit extends Cubit<NotificationState> {
           .map((n) => n.id == id ? n.copyWith(isRead: true) : n)
           .toList();
       emit(NotificationsLoaded(updated));
-    } catch (e) {
-      emit(NotificationError(_mapError(e)));
+    } catch (_) {
+      // فرح: فشل تعليم إشعار كمقروء ما لازم يخفي القائمة كلها ويطلع شاشة خطأ.
     }
   }
 
