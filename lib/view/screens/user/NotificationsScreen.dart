@@ -1,7 +1,9 @@
+import 'package:farah/core/utils/notification_time.dart';
 import 'package:farah/cubits/notification/notification_cubit.dart';
+import 'package:farah/data/models/notification_model.dart';
 import 'package:farah/view/screens/user/MyBookingsScreen.dart';
 import 'package:farah/view/screens/user/favorites_screen.dart';
-import 'package:farah/view/screens/user/profile_edit_screen.dart';
+import 'package:farah/view/screens/user/settings_screen.dart';
 import 'package:farah/view/widgets/bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -99,31 +101,27 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             return const SizedBox.shrink();
           },
         ),
+        // فرح: نفس ترتيب أزرار الرئيسية (0 الرئيسية، 1 طلباتي، 2 المفضلة، 3 حسابي).
+        // كانت الأزرار متلخبطة: "الرئيسية" تفتح تعديل الملف الشخصي.
         bottomNavigationBar: FarahBottomNavBar(
-          currentIndex: 3,
+          currentIndex: 0,
           onTap: (index) {
-            if (index == 3) {
+            if (index == 0) {
               Navigator.pop(context); // العودة للرئيسية
-            } else if (index == 2) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const MyBookingScreen(),
-                ),
-              );
             } else if (index == 1) {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const FavoritesScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const MyBookingScreen()),
               );
-            } else if (index == 0) {
+            } else if (index == 2) {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const ProfileEditScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const FavoritesScreen()),
+              );
+            } else if (index == 3) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
               );
             }
           },
@@ -184,25 +182,51 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Widget _buildNotificationsList(List notifications) {
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      itemCount: notifications.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final notification = notifications[index];
+  Widget _buildNotificationsList(List<NotificationModel> notifications) {
+    return RefreshIndicator(
+      color: const Color(0xFF7B2146),
+      onRefresh: () => context.read<NotificationCubit>().loadNotifications(),
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        itemCount: notifications.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final notification = notifications[index];
 
-        return _buildNotificationCard(
-          title: notification.title ?? 'إشعار جديد',
-          time: notification.createdAt ?? 'الآن',
-          isUnread: notification.isRead == false,
-        );
-      },
+          // فرح: createdAt تاريخ (DateTime) مش نص، فكان يطيّح الشاشة أول ما يوصل إشعار.
+          return InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => _open(notification),
+            child: _buildNotificationCard(
+              title: notification.title.isEmpty
+                  ? 'إشعار جديد'
+                  : notification.title,
+              body: notification.body,
+              time: notificationTimeLabel(notification.createdAt),
+              isUnread: !notification.isRead,
+            ),
+          );
+        },
+      ),
     );
+  }
+
+  // فرح: الضغط يعلّم الإشعار كمقروء، وإشعارات الحجز تفتح "حجوزاتي".
+  void _open(NotificationModel notification) {
+    if (!notification.isRead) {
+      context.read<NotificationCubit>().markAsRead(notification.id);
+    }
+    if (notification.resourceType == 'booking') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const MyBookingScreen()),
+      );
+    }
   }
 
   Widget _buildNotificationCard({
     required String title,
+    required String body,
     required String time,
     required bool isUnread,
   }) {
@@ -213,13 +237,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isUnread
-              ? const Color(0xFF7B2146).withOpacity(0.35)
+              ? const Color(0xFF7B2146).withValues(alpha: 0.35)
               : const Color(0xFFF0E4E6),
           width: isUnread ? 1.2 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -251,6 +275,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     color: Color(0xFF1F1F1F),
                   ),
                 ),
+                if (body.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    body,
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 12,
+                      height: 1.4,
+                      color: Color(0xFF555555),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 6),
                 Text(
                   time,
