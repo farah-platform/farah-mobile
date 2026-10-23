@@ -1,5 +1,4 @@
 import 'package:farah/data/models/home/booking_request_model.dart';
-import 'package:farah/view/screens/user/payment_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -42,10 +41,10 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // حساب المبالغ بناءً على نسبة 30%
+    // فرح: السعر من الفترة المختارة (API). العربون يحدده مقدّم الخدمة عند قبول الطلب،
+    // فما في نسبة ثابتة (كانت 30%) محسوبة بالتطبيق.
     final double totalPrice = widget.slot.price;
-    final double depositPrice = totalPrice * 0.30; // العربون 30%
-    final double remainingPrice = totalPrice - depositPrice; // المتبقي
+    const depositPending = 'يُحدَّد عند قبول الطلب';
 
     final formattedArabicDate = DateFormat(
       'd MMMM yyyy',
@@ -187,12 +186,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                             color: _primaryMaroon,
                           ),
                         ),
-                        Text(
-                          '${_formatPrice(depositPrice)} ${widget.currency}',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.black87,
-                          ),
+                        const Text(
+                          depositPending,
+                          style: TextStyle(fontSize: 13, color: Colors.black87),
                         ),
                       ],
                     ),
@@ -208,12 +204,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                             color: _primaryMaroon,
                           ),
                         ),
-                        Text(
-                          '${_formatPrice(remainingPrice)} ${widget.currency}',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.black87,
-                          ),
+                        const Text(
+                          depositPending,
+                          style: TextStyle(fontSize: 13, color: Colors.black87),
                         ),
                       ],
                     ),
@@ -282,54 +275,86 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
 
               const Spacer(),
 
-              // 6. زر الانتقال لصفحة الدفع
-              // 6. زر الانتقال لصفحة الدفع
-              Container(
-                margin: const EdgeInsets.only(bottom: 20),
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _primaryMaroon,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  onPressed: () {
-                    // 1. تجهيز بيانات الطلب التي سنرسلها لشاشة الدفع
-                    final request = BookingRequestModel(
-                      serviceId: widget.service.id,
-                      bookingDate: apiFormattedDate,
-                      bookingTime: widget.slot.startTime,
-                      bookingSlot: widget.slot.label,
-                      notes: widget.notes,
-                    );
-
-                    // 2. كود الانتقال الفعلي
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PaymentScreen(
-                          service: widget.service,
-                          depositAmount:
-                              depositPrice, // استخدمنا الاسم الموجود في ملفك
-                          bookingRequest:
-                              request, // مررنا الطلب لإنشائه بعد نجاح الدفع
+              // 6. فرح: إرسال طلب الحجز للمزود. الدفع بعد قبوله (من "حجوزاتي")، لأن السيرفر
+              // ما بيقبل إشعار دفع إلا لحجز بحالة "بانتظار الدفع" وبنفس العربون اللي حدده المزود.
+              BlocConsumer<BookingCubit, BookingState>(
+                listener: (context, state) {
+                  if (state is BookingCreated) {
+                    // The provider accepts first; transfer details arrive
+                    // with that acceptance (status payment_awaiting).
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'تم إرسال طلب الحجز إلى مقدّم الخدمة، وستصلك تعليمات الدفع بعد قبوله.',
                         ),
                       ),
                     );
-                  },
-                  child: const Text(
-                    'الانتقال لصفحة الدفع',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                    Navigator.pop(context);
+                  } else if (state is BookingError) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(state.message),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                builder: (context, state) {
+                  final isLoading = state is BookingLoading;
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _primaryMaroon,
+                        foregroundColor: Colors.white,
+                        disabledBackgroundColor: _primaryMaroon.withValues(
+                          alpha: 0.6,
+                        ),
+                        disabledForegroundColor: Colors.white70,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      onPressed: isLoading
+                          ? null
+                          : () {
+                              // بناء كائن الطلب المطابق لمفاتيح السيرفر
+                              final request = BookingRequestModel(
+                                serviceId: widget.service.id,
+                                bookingDate: apiFormattedDate,
+                                bookingTime: widget.slot.startTime,
+                                bookingSlot: widget.slot.label,
+                                notes: widget.notes,
+                              );
+
+                              context.read<BookingCubit>().createBooking(
+                                request,
+                              );
+                            },
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2.2,
+                              ),
+                            )
+                          : const Text(
+                              'إرسال طلب الحجز',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ], // نهاية قائمة الـ children
           ),

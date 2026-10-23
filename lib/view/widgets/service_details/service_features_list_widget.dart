@@ -2,8 +2,13 @@ import 'package:flutter/material.dart';
 
 class ServiceFeaturesListWidget extends StatefulWidget {
   final List<String> features;
+  final List<String> removableFeatures;
 
-  const ServiceFeaturesListWidget({super.key, required this.features});
+  const ServiceFeaturesListWidget({
+    super.key,
+    required this.features,
+    this.removableFeatures = const [],
+  });
 
   @override
   State<ServiceFeaturesListWidget> createState() =>
@@ -55,8 +60,9 @@ class _ServiceFeaturesListWidgetState extends State<ServiceFeaturesListWidget> {
               final feature = widget.features[index];
               final status = _featureStatuses[feature] ?? 'مشمولة';
 
-              // أول ميزة أو الكراسي تعتبر خدمة ثابتة لا تعدل
-              final isMandatory = index == 0 || feature.contains('كراسي');
+              // فرح: المزود هو اللي بيحدد شو قابل للإزالة (removable_features)، مش التطبيق.
+              // TODO: API الحجز ما فيه حقل للمزايا المُزالة بعد، فالاختيار يظهر للعميل فقط.
+              final isMandatory = !widget.removableFeatures.contains(feature);
 
               return Container(
                 padding: const EdgeInsets.symmetric(

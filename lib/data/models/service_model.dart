@@ -7,6 +7,8 @@ class ServiceModel {
   final String description;
 
   final List<String> features;
+  // فرح: المزايا اللي سمح المزود بإزالتها (removable_features من السيرفر). الباقي مشمول دائماً.
+  final List<String> removableFeatures;
 
   final int capacity;
   final double area;
@@ -38,6 +40,7 @@ class ServiceModel {
     required this.title,
     required this.description,
     required this.features,
+    this.removableFeatures = const [],
     required this.capacity,
     required this.area,
     required this.areaUnit,
@@ -65,6 +68,7 @@ class ServiceModel {
       description: json['description'] ?? '',
 
       features: List<String>.from(json['features'] ?? []),
+      removableFeatures: List<String>.from(json['removable_features'] ?? []),
 
       capacity: json['capacity'] ?? 0,
 

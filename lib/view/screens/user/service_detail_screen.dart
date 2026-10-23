@@ -179,7 +179,10 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                         currency: service.currency,
                       ),
                       const SizedBox(height: 18),
-                      ServiceFeaturesListWidget(features: service.features),
+                      ServiceFeaturesListWidget(
+                        features: service.features,
+                        removableFeatures: service.removableFeatures,
+                      ),
                       const SizedBox(height: 18),
                       ServiceReviewsWidget(
                         reviews: service.reviews,
@@ -199,7 +202,9 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
           },
           onWhatsAppTap: () {},
           onShareTap: () {},
-          serviceTitle: '',
+          // فرح: اسم الخدمة ورقم المزود الحقيقيين من السيرفر (الرقم يظهر للمستخدم المسجّل فقط).
+          serviceTitle: service.title,
+          providerPhone: service.provider?.phone,
         ),
       ),
     );

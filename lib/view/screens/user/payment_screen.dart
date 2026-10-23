@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:farah/data/models/home/booking_request_model.dart';
 import 'package:farah/data/models/home/payment_request_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,16 +13,17 @@ enum PaymentMethod { bankOfPalestine, palPay, jawwalPay }
 class PaymentScreen extends StatefulWidget {
   final ServiceModel service;
   final double depositAmount;
-  final BookingRequestModel bookingRequest;
-  final String? bookingId;
+  // فرح: الدفع يكون لحجز موجود قبله المزود (حالة "بانتظار الدفع")، فرقم الحجز مطلوب.
+  final String bookingId;
+
+  // Transfer details set by the provider; null until the booking is accepted.
   final String? paymentInstructions;
 
   const PaymentScreen({
     super.key,
     required this.service,
     required this.depositAmount,
-    required this.bookingRequest,
-    this.bookingId,
+    required this.bookingId,
     this.paymentInstructions,
   });
 
@@ -65,7 +65,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final String providerDisplayName =
         widget.service.provider?.name.isNotEmpty == true
         ? widget.service.provider!.name
-        : 'متجر لافندر';
+        : ''; // فرح: بدون اسم وهمي من التصميم.
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -320,6 +320,17 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       ),
                     ),
                     onPressed: () {
+                      // فرح: ما في إرسال قبل ما يقبل المزود ويرسل تعليمات التحويل.
+                      if (!_hasInstructions) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'لا يمكن إرسال إشعار التحويل قبل قبول مقدّم الخدمة لطلبك.',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
                       if (_receiptImage == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -337,7 +348,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       }
 
                       final request = PaymentRequestModel(
-                        bookingId: widget.bookingId ?? '',
+                        bookingId: widget.bookingId,
                         paymentMethod: methodKey,
                         amount: widget.depositAmount,
                         receiptImage: _receiptImage!,
@@ -433,6 +444,11 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
+  bool get _hasInstructions =>
+      widget.paymentInstructions?.trim().isNotEmpty == true;
+
+  // فرح: بيانات التحويل الحقيقية من المزود (payment_instructions من السيرفر)،
+  // بدل أرقام الحسابات الوهمية اللي كانت من التصميم.
   Widget _buildDynamicPaymentDetails() {
     return Container(
       width: double.infinity,
@@ -442,20 +458,26 @@ class _PaymentScreenState extends State<PaymentScreen> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _cardBorder),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (_selectedMethod == PaymentMethod.bankOfPalestine) ...[
-            _buildInfoBox('رقم الحساب', '1654987'),
-            const SizedBox(height: 16),
-            _buildInfoBox('الايبان', 'PS00PALS00000000001234567'),
-          ] else if (_selectedMethod == PaymentMethod.palPay) ...[
-            _buildInfoBox('رقم محفظة بال باي', '0590000000'),
-          ] else if (_selectedMethod == PaymentMethod.jawwalPay) ...[
-            _buildInfoBox('رقم محفظة جوال باي', '0592467931'),
-          ],
-        ],
-      ),
+      child: _hasInstructions
+          ? _buildInfoBox('تعليمات التحويل', widget.paymentInstructions!.trim())
+          : const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'تعليمات التحويل',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                    color: _maroon,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'ستظهر تفاصيل التحويل هنا بعد قبول مقدّم الخدمة لطلبك.',
+                  style: TextStyle(fontSize: 14, color: Colors.black54),
+                ),
+              ],
+            ),
     );
   }
 

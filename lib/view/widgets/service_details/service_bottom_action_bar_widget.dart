@@ -18,17 +18,27 @@ class ServiceBottomActionBarWidget extends StatelessWidget {
 
   // دالة فتح الواتساب
   Future<void> _openWhatsApp(BuildContext context) async {
-    // إذا لم تقومي بتمرير رقم، سيستخدم هذا الرقم الافتراضي
-    final String phone = providerPhone ?? "970599000000";
+    // فرح: بدون رقم وهمي. إذا ما في رقم للمزود (أو المستخدم مش مسجّل) نوضّح ذلك.
+    final String phone = _whatsAppNumber(providerPhone);
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('رقم مقدّم الخدمة غير متاح حالياً، سجّل دخولك أولاً.'),
+        ),
+      );
+      return;
+    }
     final String message = "مرحباً، أود الاستفسار عن خدمة ( $serviceTitle )";
 
     final Uri whatsappUrl = Uri.parse(
       "https://wa.me/$phone?text=${Uri.encodeComponent(message)}",
     );
 
-    if (await canLaunchUrl(whatsappUrl)) {
-      await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
-    } else {
+    final opened = await launchUrl(
+      whatsappUrl,
+      mode: LaunchMode.externalApplication,
+    ).catchError((_) => false);
+    if (!opened) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -37,6 +47,15 @@ class ServiceBottomActionBarWidget extends StatelessWidget {
         );
       }
     }
+  }
+
+  /// Digits only, with Palestine's 970 instead of a leading 0 (wa.me format).
+  static String _whatsAppNumber(String? raw) {
+    final digits = (raw ?? '').replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.isEmpty) return '';
+    if (digits.startsWith('00')) return digits.substring(2);
+    if (digits.startsWith('0')) return '970${digits.substring(1)}';
+    return digits;
   }
 
   // دالة المشاركة
