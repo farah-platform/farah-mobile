@@ -17,6 +17,9 @@ final class AuthPasswordResetSent extends AuthState {}
 
 final class AuthPasswordUpdated extends AuthState {}
 
+// فرح: رمز نسيت كلمة المرور صحيح، ننتقل لشاشة كلمة المرور الجديدة.
+final class AuthResetCodeVerified extends AuthState {}
+
 final class AuthError extends AuthState {
   final String message;
   AuthError(this.message);

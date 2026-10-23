@@ -1,4 +1,4 @@
-﻿import 'package:dio/dio.dart';
+import 'package:dio/dio.dart';
 import 'package:farah/data/models/user_model.dart';
 import 'package:farah/data/repositories/auth_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -77,6 +77,22 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<void> verifyResetCode({
+    required String email,
+    required String code,
+  }) async {
+    if (isClosed) return;
+    emit(AuthLoading());
+    try {
+      await _repo.verifyResetCode(email: email, code: code);
+      if (isClosed) return;
+      emit(AuthResetCodeVerified());
+    } catch (e) {
+      if (isClosed) return;
+      emit(AuthError(_mapError(e)));
+    }
+  }
+
   Future<void> updatePassword({
     required String newPassword,
     required String token,
@@ -130,14 +146,26 @@ class AuthCubit extends Cubit<AuthState> {
 
   String _mapError(Object e) {
     if (e is DioException) {
-      final title = e.response?.data?['title'] as String?;
-      if (title != null && title.isNotEmpty) return title;
+      final data = e.response?.data;
+      // فرح: رسالة السيرفر العربية (title أو message)، مثل: رمز التحقق غير صحيح أو منتهي.
+      final serverMessage = data is Map
+          ? (data['title'] ?? data['message'])?.toString()
+          : null;
+      if (serverMessage != null &&
+          RegExp(r'[\u0600-\u06FF]').hasMatch(serverMessage)) {
+        return serverMessage;
+      }
       switch (e.response?.statusCode) {
-        case 401: return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
-        case 403: return 'الحساب غير مفعّل، يرجى التواصل مع الدعم';
-        case 404: return 'البريد الإلكتروني غير مسجل';
-        case 409: return 'البريد الإلكتروني مستخدم بالفعل';
-        case 422: return 'البيانات المدخلة غير صحيحة';
+        case 401:
+          return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+        case 403:
+          return 'الحساب غير مفعّل، يرجى التواصل مع الدعم';
+        case 404:
+          return 'البريد الإلكتروني غير مسجل';
+        case 409:
+          return 'البريد الإلكتروني مستخدم بالفعل';
+        case 422:
+          return 'البيانات المدخلة غير صحيحة';
       }
       if (e.type == DioExceptionType.connectionTimeout ||
           e.type == DioExceptionType.receiveTimeout) {
@@ -151,13 +179,20 @@ class AuthCubit extends Cubit<AuthState> {
       switch (e.code) {
         case 'invalid-credential':
         case 'wrong-password':
-        case 'user-not-found': return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
-        case 'email-already-in-use': return 'البريد الإلكتروني مستخدم بالفعل';
-        case 'weak-password': return 'كلمة المرور ضعيفة جداً، يجب أن تكون 6 أحرف على الأقل';
-        case 'invalid-email': return 'صيغة البريد الإلكتروني غير صحيحة';
-        case 'too-many-requests': return 'تم تجاوز عدد المحاولات، يرجى المحاولة لاحقاً';
-        case 'requires-recent-login': return 'يرجى إعادة تسجيل الدخول لتغيير كلمة المرور';
-        case 'network-request-failed': return 'تحقق من اتصالك بالإنترنت';
+        case 'user-not-found':
+          return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+        case 'email-already-in-use':
+          return 'البريد الإلكتروني مستخدم بالفعل';
+        case 'weak-password':
+          return 'كلمة المرور ضعيفة جداً، يجب أن تكون 6 أحرف على الأقل';
+        case 'invalid-email':
+          return 'صيغة البريد الإلكتروني غير صحيحة';
+        case 'too-many-requests':
+          return 'تم تجاوز عدد المحاولات، يرجى المحاولة لاحقاً';
+        case 'requires-recent-login':
+          return 'يرجى إعادة تسجيل الدخول لتغيير كلمة المرور';
+        case 'network-request-failed':
+          return 'تحقق من اتصالك بالإنترنت';
       }
     }
     if (e is Exception && e.toString().contains('تم إلغاء')) {
@@ -179,16 +214,10 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthGuest());
   }
 
-  Future<void> deleteAccount() async {
+  // فرح: الحذف نفسه في DeleteAccountCubit حتى ما تتغير حالة الدخول (تحميل/خطأ) قبل ما ينجح.
+  /// Called once the server deleted the account and the session was cleared.
+  void accountDeleted() {
     if (isClosed) return;
-    emit(AuthLoading());
-    try {
-      await _repo.deleteAccount();
-      if (isClosed) return;
-      emit(AuthAccountDeleted());
-    } catch (e) {
-      if (isClosed) return;
-      emit(AuthError(_mapError(e)));
-    }
+    emit(AuthAccountDeleted());
   }
 }

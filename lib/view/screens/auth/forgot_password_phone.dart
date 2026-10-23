@@ -1,4 +1,3 @@
-import 'package:farah/view/screens/auth/verify_code.dart';
 import 'package:flutter/material.dart';
 
 class ForgotPasswordPhoneScreen extends StatefulWidget {
@@ -160,12 +159,12 @@ class _ForgotPasswordPhoneScreenState extends State<ForgotPasswordPhoneScreen> {
               const SizedBox(height: 30),
 
               ElevatedButton(
+                // فرح: TODO: ما في API لإرسال رمز SMS بعد؛ الاستعادة متاحة عبر الإيميل فقط.
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const VerifyCodeScreen(),
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('هذه الميزة غير متاحة حالياً'),
                       ),
                     );
                   }

@@ -173,6 +173,17 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> verifyResetCode({
+    required String email,
+    required String code,
+  }) async {
+    await _dio.post(
+      ApiEndpoints.verifyResetCode,
+      data: {'email': email.trim(), 'token': code},
+    );
+  }
+
+  @override
   Future<void> updatePassword({
     required String newPassword,
     required String token,
@@ -182,7 +193,7 @@ class ApiAuthRepository implements AuthRepository {
       ApiEndpoints.resetPassword,
       data: {
         'token': token,
-        'email': email,
+        'email': email.trim(),
         'password': newPassword,
         'password_confirmation': newPassword,
       },
@@ -231,10 +242,13 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> deleteAccount() async {
+  Future<void> deleteAccount({required String currentPassword}) async {
     final token = await _cache.getToken();
     if (token == null) throw Exception('No session token');
-    await _dio.delete(ApiEndpoints.deleteAccount);
+    await _dio.delete(
+      ApiEndpoints.deleteAccount,
+      data: {'current_password': currentPassword},
+    );
     await logout();
   }
 

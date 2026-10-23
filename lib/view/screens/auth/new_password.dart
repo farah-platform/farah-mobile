@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class NewPasswordScreen extends StatefulWidget {
-  const NewPasswordScreen({super.key});
+  // فرح: الإيميل والرمز من شاشة رمز التحقق (كانوا يُرسلون فاضيين).
+  final String email;
+  final String code;
+
+  const NewPasswordScreen({super.key, required this.email, required this.code});
 
   @override
   State<NewPasswordScreen> createState() => _NewPasswordScreenState();
@@ -29,8 +33,8 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
     if (_formKey.currentState!.validate()) {
       context.read<AuthCubit>().updatePassword(
         newPassword: passwordController.text,
-        token: '',
-        email: '',
+        token: widget.code,
+        email: widget.email,
       );
     }
   }
@@ -42,10 +46,11 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
 
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
+        if (ModalRoute.of(context)?.isCurrent == false) return;
         if (state is AuthError) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message)));
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(state.message)));
         } else if (state is AuthPasswordUpdated) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('تم تحديث كلمة المرور بنجاح')),

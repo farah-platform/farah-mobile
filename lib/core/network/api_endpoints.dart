@@ -11,6 +11,8 @@ class ApiEndpoints {
   static const String resendVerification = '/resend-verification-email';
   static const String forgotPassword = '/forgot-password';
   static const String resetPassword = '/reset-password';
+  // فرح: التحقق من رمز نسيت كلمة المرور (4 أرقام بالإيميل).
+  static const String verifyResetCode = '/verify-reset-code';
   static const String changePassword = '/change-password';
 
   // Profile / account
