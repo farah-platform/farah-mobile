@@ -17,7 +17,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   void initState() {
     super.initState();
-    // تحميل الإشعارات من الـ Cubit
     context.read<NotificationCubit>().loadNotifications();
   }
 
@@ -89,7 +88,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               );
             }
 
-            // تم تعديل الاسم هنا ليطابق الـ State الخاص بكِ
             if (state is NotificationsLoaded) {
               if (state.notifications.isEmpty) {
                 return _buildEmptyState();
@@ -134,7 +132,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  // واجهة الحالة الفارغة
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
@@ -187,56 +184,23 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  // قائمة عرض الإشعارات
   Widget _buildNotificationsList(List notifications) {
-    return SingleChildScrollView(
+    return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'اليوم',
-            style: TextStyle(
-              fontFamily: 'Tajawal',
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1F1F1F),
-            ),
-          ),
-          const SizedBox(height: 10),
-          _buildNotificationCard(
-            title: 'كيف كانت تجربتك؟ شاركنا تقييمك',
-            time: 'منذ ساعة',
-            isUnread: true,
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'سابقا',
-            style: TextStyle(
-              fontFamily: 'Tajawal',
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1F1F1F),
-            ),
-          ),
-          const SizedBox(height: 10),
-          _buildNotificationCard(
-            title: 'تم تأكيد إشعار الدفع',
-            time: 'منذ يومين',
-            isUnread: false,
-          ),
-          const SizedBox(height: 12),
-          _buildNotificationCard(
-            title: 'تم قبول طلب حجزك لباقة عروس من متجر لافندر',
-            time: 'منذ 3أيام',
-            isUnread: false,
-          ),
-        ],
-      ),
+      itemCount: notifications.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final notification = notifications[index];
+
+        return _buildNotificationCard(
+          title: notification.title ?? 'إشعار جديد',
+          time: notification.createdAt ?? 'الآن',
+          isUnread: notification.isRead == false,
+        );
+      },
     );
   }
 
-  // تصميم بطاقة الإشعار
   Widget _buildNotificationCard({
     required String title,
     required String time,

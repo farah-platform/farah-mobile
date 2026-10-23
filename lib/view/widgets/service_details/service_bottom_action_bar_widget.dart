@@ -1,16 +1,69 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ServiceBottomActionBarWidget extends StatelessWidget {
   final VoidCallback onBookNowTap;
-  final VoidCallback onWhatsAppTap;
-  final VoidCallback onShareTap;
+  final String serviceTitle; // اسم الخدمة ليظهر في رسالة الواتساب والمشاركة
+  final String? providerPhone; // رقم هاتف المزود (اختياري)
 
   const ServiceBottomActionBarWidget({
     super.key,
     required this.onBookNowTap,
-    required this.onWhatsAppTap,
-    required this.onShareTap,
+    required this.serviceTitle,
+    this.providerPhone,
+    required Null Function() onWhatsAppTap,
+    required Null Function() onShareTap,
   });
+
+  // دالة فتح الواتساب
+  Future<void> _openWhatsApp(BuildContext context) async {
+    // فرح: بدون رقم وهمي. إذا ما في رقم للمزود (أو المستخدم مش مسجّل) نوضّح ذلك.
+    final String phone = _whatsAppNumber(providerPhone);
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('رقم مقدّم الخدمة غير متاح حالياً، سجّل دخولك أولاً.'),
+        ),
+      );
+      return;
+    }
+    final String message = "مرحباً، أود الاستفسار عن خدمة ( $serviceTitle )";
+
+    final Uri whatsappUrl = Uri.parse(
+      "https://wa.me/$phone?text=${Uri.encodeComponent(message)}",
+    );
+
+    final opened = await launchUrl(
+      whatsappUrl,
+      mode: LaunchMode.externalApplication,
+    ).catchError((_) => false);
+    if (!opened) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تعذر فتح تطبيق الواتساب، تأكد من تثبيته.'),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Digits only, with Palestine's 970 instead of a leading 0 (wa.me format).
+  static String _whatsAppNumber(String? raw) {
+    final digits = (raw ?? '').replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.isEmpty) return '';
+    if (digits.startsWith('00')) return digits.substring(2);
+    if (digits.startsWith('0')) return '970${digits.substring(1)}';
+    return digits;
+  }
+
+  // دالة المشاركة
+  void _shareService() {
+    final String shareText =
+        "شاهد خدمة ( $serviceTitle ) الرائعة على منصة فرح!\n\nحمل التطبيق الآن واكتشف المزيد.";
+    Share.share(shareText);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,21 +88,21 @@ class ServiceBottomActionBarWidget extends StatelessWidget {
           children: [
             // زر المشاركة
             _buildIconButton(
-              onTap: onShareTap,
+              onTap: _shareService,
               icon: Icons.share_outlined,
               colors: colors,
             ),
             const SizedBox(width: 8),
 
-            // زر الواتساب / المحادثة
+            // زر الواتساب
             _buildIconButton(
-              onTap: onWhatsAppTap,
+              onTap: () => _openWhatsApp(context),
               icon: Icons.chat_bubble_outline_rounded,
               colors: colors,
             ),
             const SizedBox(width: 10),
 
-            // زر المواصلة للحجز العريض
+            // زر المواصلة للحجز
             Expanded(
               child: SizedBox(
                 height: 44,

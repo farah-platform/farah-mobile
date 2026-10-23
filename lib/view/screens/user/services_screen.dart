@@ -114,7 +114,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                     ? 'ابحث ضمن ${widget.categoryName}...'
                     : 'ابحث ضمن الخدمات...',
                 onSubmitted: _search,
-                // 2. ربط الفلتر بإظهار/إخفاء الجزء العلوي بدلاً من القائمة السفلية
+
                 onFilterTap: () {
                   setState(() {
                     _isFilterVisible = !_isFilterVisible;
@@ -125,7 +125,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
             const SizedBox(height: 12),
 
-            // 3. عرض شريط الفلاتر فقط إذا كان _isFilterVisible يساوي true
             if (_isFilterVisible)
               ServicesFilterChipsWidget(
                 selectedSort: _selectedSort,

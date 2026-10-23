@@ -17,7 +17,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     super.initState();
     context.read<FavoritesCubit>().load();
   }
-
+ 
   Future<void> _confirmRemoveAll() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -220,6 +220,7 @@ class _FavoriteItemCard extends StatelessWidget {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                  
                 children: [
                   Text(
                     item.title,

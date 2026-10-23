@@ -1,5 +1,9 @@
+import 'package:farah/cubits/service_detail/service_detail_cubit.dart';
 import 'package:farah/data/models/home/popular_service_model.dart';
+import 'package:farah/data/repositories/service_repository.dart';
+import 'package:farah/view/screens/user/service_detail_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomeMostPopularWidget extends StatelessWidget {
   final List<PopularServiceModel> popularServices;
@@ -24,7 +28,7 @@ class HomeMostPopularWidget extends StatelessWidget {
     }
 
     return SizedBox(
-      height: 230,
+      height: 210,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
@@ -33,108 +37,122 @@ class HomeMostPopularWidget extends StatelessWidget {
         itemBuilder: (context, index) {
           final service = popularServices[index];
 
-          return Container(
-            width: 235,
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              color: colors.surface,
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: colors.outline.withOpacity(.12)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  height: 143,
-                  width: double.infinity,
-                  child: service.image != null && service.image!.isNotEmpty
-                      ? Image.network(
-                          service.image!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => Container(
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BlocProvider(
+                    create: (context) =>
+                        ServiceDetailCubit(context.read<ServiceRepository>()),
+                    child: ServiceDetailsScreen(serviceId: service.id),
+                  ),
+                ),
+              );
+            },
+            child: Container(
+              width: 345,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(color: colors.outline.withOpacity(.12)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 143,
+                    width: double.infinity,
+                    child: service.image != null && service.image!.isNotEmpty
+                        ? Image.network(
+                            service.image!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Container(
+                              color: colors.primary.withOpacity(.08),
+                              child: Icon(
+                                Icons.image_outlined,
+                                color: colors.primary,
+                              ),
+                            ),
+                          )
+                        : Container(
                             color: colors.primary.withOpacity(.08),
                             child: Icon(
                               Icons.image_outlined,
                               color: colors.primary,
                             ),
                           ),
-                        )
-                      : Container(
-                          color: colors.primary.withOpacity(.08),
-                          child: Icon(
-                            Icons.image_outlined,
-                            color: colors.primary,
-                          ),
-                        ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          service.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        if (service.provider != null)
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            service.provider!.name,
+                            service.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              fontSize: 7.5,
-                              color: colors.onSurface.withOpacity(.5),
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                        const Spacer(),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.star_rounded,
-                              color: colors.secondary,
-                              size: 14,
-                            ),
-                            const SizedBox(width: 2),
+                          const SizedBox(height: 2),
+                          if (service.provider != null)
                             Text(
-                              service.ratingAvg.toStringAsFixed(1),
+                              service.provider!.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.labelSmall?.copyWith(
-                                fontSize: 8,
+                                fontSize: 7.5,
+                                color: colors.onSurface.withOpacity(.5),
                               ),
                             ),
-                            const SizedBox(width: 3),
-                            Text(
-                              '(${service.reviewsCount})',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                fontSize: 7,
-                                color: colors.onSurface.withOpacity(.4),
+                          const Spacer(),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.star_rounded,
+                                color: colors.secondary,
+                                size: 14,
                               ),
-                            ),
-                            const Spacer(),
-                            Text(
-                              '${service.price.toStringAsFixed(0)} ${service.currency}',
-                              style: theme.textTheme.labelMedium?.copyWith(
-                                color: colors.primary,
-                                fontSize: 8,
-                                fontWeight: FontWeight.w700,
+                              const SizedBox(width: 2),
+                              Text(
+                                service.ratingAvg.toStringAsFixed(1),
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  fontSize: 8,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                              const SizedBox(width: 3),
+                              Text(
+                                '(${service.reviewsCount})',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  fontSize: 7,
+                                  color: colors.onSurface.withOpacity(.4),
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                '${service.price.toStringAsFixed(0)} ${service.currency}',
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: colors.primary,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -142,4 +160,3 @@ class HomeMostPopularWidget extends StatelessWidget {
     );
   }
 }
-
