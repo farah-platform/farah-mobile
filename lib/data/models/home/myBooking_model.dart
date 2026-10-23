@@ -7,6 +7,12 @@ class MybookingModel {
   final String date;
   final double price;
   final BookingStatus status;
+  // فرح: حقول الدفع من GET /bookings، لفتح شاشة الدفع للحجز "بانتظار الدفع".
+  final String rawStatus;
+  final dynamic serviceId;
+  final double deposit;
+  final String currency;
+  final String? paymentInstructions;
 
   MybookingModel({
     required this.id,
@@ -15,7 +21,15 @@ class MybookingModel {
     required this.date,
     required this.price,
     required this.status,
+    this.rawStatus = '',
+    this.serviceId,
+    this.deposit = 0,
+    this.currency = 'ILS',
+    this.paymentInstructions,
   });
+
+  /// The provider accepted and set the deposit; the customer can pay now.
+  bool get awaitingPayment => rawStatus == 'payment_awaiting';
 
   // Shape of GET /bookings (BookingController::bookingData): the title and
   // image sit under `service`, the price under `pricing`.
@@ -34,6 +48,11 @@ class MybookingModel {
       date: (json['date'] ?? json['booking_date'])?.toString() ?? '',
       price: price != null ? double.tryParse(price.toString()) ?? 0.0 : 0.0,
       status: _parseStatus(json['status']?.toString()),
+      rawStatus: json['status']?.toString() ?? '',
+      serviceId: service['id'],
+      deposit: double.tryParse(pricing['deposit']?.toString() ?? '') ?? 0,
+      currency: pricing['currency']?.toString() ?? 'ILS',
+      paymentInstructions: json['payment_instructions']?.toString(),
     );
   }
 
