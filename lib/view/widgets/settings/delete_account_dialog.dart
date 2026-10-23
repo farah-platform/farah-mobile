@@ -1,6 +1,7 @@
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/cubits/auth/auth_cubit.dart';
+import 'package:farah/cubits/delete_account/delete_account_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -12,23 +13,29 @@ class DeleteAccountDialog extends StatefulWidget {
 }
 
 class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
-  String? _errorMessage;
+  // فرح: كلمة المرور الحالية مطلوبة من السيرفر لحذف الحساب.
+  final _password = TextEditingController();
+
+  @override
+  void dispose() {
+    _password.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<AuthCubit, AuthState>(
+    return BlocConsumer<DeleteAccountCubit, DeleteAccountState>(
       listener: (context, state) {
-        if (state is AuthAccountDeleted) {
-          Navigator.of(context, rootNavigator: true).pop();
-          Navigator.of(
-            context,
-          ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
-        } else if (state is AuthError) {
-          setState(() => _errorMessage = state.message);
+        if (state.deleted) {
+          final auth = context.read<AuthCubit>();
+          final navigator = Navigator.of(context, rootNavigator: true);
+          navigator.pop();
+          navigator.pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
+          auth.accountDeleted();
         }
       },
       builder: (context, state) {
-        final isLoading = state is AuthLoading;
+        final isLoading = state.loading;
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -55,14 +62,20 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
                   style: TextStyle(fontSize: 14, color: Colors.black87),
                   textAlign: TextAlign.center,
                 ),
-                if (_errorMessage != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    _errorMessage!,
-                    style: const TextStyle(color: Colors.red, fontSize: 13),
-                    textAlign: TextAlign.center,
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _password,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: 'كلمة المرور الحالية',
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    errorText: state.error,
+                    errorMaxLines: 3,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                ],
+                ),
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
@@ -76,10 +89,9 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
                     ),
                     onPressed: isLoading
                         ? null
-                        : () {
-                            setState(() => _errorMessage = null);
-                            context.read<AuthCubit>().deleteAccount();
-                          },
+                        : () => context.read<DeleteAccountCubit>().delete(
+                            _password.text,
+                          ),
                     child: isLoading
                         ? const SizedBox(
                             height: 20,

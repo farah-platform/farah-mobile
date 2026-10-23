@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:farah/cubits/change_password/change_password_cubit.dart';
+import 'package:farah/cubits/delete_account/delete_account_cubit.dart';
 import 'package:farah/cubits/profile_edit/profile_edit_cubit.dart';
 import 'package:farah/cubits/provider_dashboard/provider_dashboard_cubit.dart';
 import 'package:farah/cubits/provider_settings/provider_help_center_cubit.dart';
@@ -164,6 +165,18 @@ class _FakeAuthRepo implements AuthRepository {
   }
 
   @override
+  Future<void> deleteAccount({required String currentPassword}) async {
+    if (wrongCurrent) {
+      final request = RequestOptions(path: '/account');
+      throw DioException(
+        requestOptions: request,
+        response: Response(requestOptions: request, statusCode: 403),
+      );
+    }
+    calls.add('delete:$currentPassword');
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -318,11 +331,32 @@ void main() {
     expect(repo.calls, ['old-password>new-password']);
   });
 
-  testWidgets('delete account screen matches the design', (tester) async {
-    await _pump(tester, const ProviderDeleteAccountScreen());
+  // فرح: الحذف يرسل كلمة المرور، ويوضح الخطأ بدون ما يطلع المزود من التطبيق.
+  testWidgets('delete account needs the password and shows server errors', (
+    tester,
+  ) async {
+    final repo = _FakeAuthRepo();
+    await _pump(
+      tester,
+      BlocProvider(
+        create: (_) => DeleteAccountCubit(repo),
+        child: const ProviderDeleteAccountScreen(),
+      ),
+    );
     expect(find.text('هل أنت متأكد ؟'), findsOneWidget);
-    expect(find.text('تأكيد الحذف'), findsOneWidget);
     expect(find.text('إلغاء'), findsOneWidget);
+
+    await tester.tap(find.text('تأكيد الحذف'));
+    await tester.pumpAndSettle();
+    expect(find.text('أدخل كلمة المرور الحالية'), findsOneWidget);
+    expect(repo.calls, isEmpty);
+
+    repo.wrongCurrent = true;
+    await tester.enterText(find.byType(TextField), 'bad-password');
+    await tester.tap(find.text('تأكيد الحذف'));
+    await tester.pumpAndSettle();
+    expect(find.text('كلمة المرور غير صحيحة'), findsOneWidget);
+    expect(find.text('هل أنت متأكد ؟'), findsOneWidget);
   });
 
   testWidgets('help center lists API questions and filters them', (

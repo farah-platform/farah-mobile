@@ -1,6 +1,8 @@
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/cubits/auth/auth_cubit.dart';
+import 'package:farah/cubits/delete_account/delete_account_cubit.dart';
+import 'package:farah/data/repositories/auth_repository.dart';
 import 'package:farah/cubits/settings/settings_cubit.dart';
 import 'package:farah/view/widgets/common/skeleton_box.dart';
 import 'package:farah/view/widgets/settings/delete_account_dialog.dart';
@@ -32,8 +34,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => BlocProvider.value(
-        value: context.read<AuthCubit>(),
+      builder: (_) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: context.read<AuthCubit>()),
+          BlocProvider(
+            create: (_) => DeleteAccountCubit(context.read<AuthRepository>()),
+          ),
+        ],
         child: const DeleteAccountDialog(),
       ),
     );

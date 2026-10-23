@@ -15,11 +15,9 @@ import 'package:farah/data/repositories/service_repository.dart';
 import 'package:farah/view/screens/auth/forgot_password.dart';
 import 'package:farah/view/screens/auth/forgot_password_phone.dart';
 import 'package:farah/view/screens/auth/login.dart';
-import 'package:farah/view/screens/auth/new_password.dart';
 import 'package:farah/view/screens/auth/sginup.dart';
 import 'package:farah/view/screens/auth/splash.dart';
 import 'package:farah/view/screens/auth/terms_and_conditions.dart';
-import 'package:farah/view/screens/auth/verify_code.dart';
 import 'package:farah/view/screens/provider/provider_activate_subscription_screen.dart';
 import 'package:farah/view/screens/provider/provider_home_screen.dart';
 import 'package:farah/view/screens/provider/provider_onboarding_screen.dart';
@@ -58,6 +56,7 @@ import '../../view/screens/provider/settings/provider_help_center_screen.dart';
 import '../../view/screens/provider/settings/provider_current_subscription_screen.dart';
 import '../../view/screens/provider/settings/provider_delete_account_screen.dart';
 import '../../cubits/provider_settings/provider_help_center_cubit.dart';
+import '../../cubits/delete_account/delete_account_cubit.dart';
 import '../../cubits/provider_subscription/provider_current_subscription_cubit.dart';
 import '../../view/screens/provider/settings/provider_payout_account_screen.dart';
 import '../../view/screens/provider/settings/provider_reviews_screen.dart';
@@ -76,8 +75,6 @@ class AppRoutes {
   static const String signup = '/signup';
   static const String forgotPassword = '/forgot-password';
   static const String forgotPasswordPhone = '/forgot-password/phone';
-  static const String verifyCode = '/verify-code';
-  static const String newPassword = '/new-password';
   static const String terms = '/terms';
   static const String serviceInfo = '/service-info';
   static const String home = '/home';
@@ -152,8 +149,6 @@ class AppRoutes {
     signup: (_) => const SignUpScreen(),
     forgotPassword: (_) => const ForgotPasswordScreen(),
     forgotPasswordPhone: (_) => const ForgotPasswordPhoneScreen(),
-    verifyCode: (_) => const VerifyCodeScreen(),
-    newPassword: (_) => const NewPasswordScreen(),
     terms: (_) => const TermsAndConditionsScreen(),
     serviceInfo: (_) => const ServiceInfoScreen(),
     // Customer + guest routes — providers are redirected to providerHome.
@@ -321,8 +316,13 @@ class AppRoutes {
         child: const ProviderCurrentSubscriptionScreen(),
       ),
     ),
-    providerDeleteAccount: (_) =>
-        const _ProviderGuard(child: ProviderDeleteAccountScreen()),
+    // فرح: حذف الحساب بكيوبت خاص (يرسل كلمة المرور) بدل AuthCubit.
+    providerDeleteAccount: (context) => _ProviderGuard(
+      child: BlocProvider(
+        create: (c) => DeleteAccountCubit(c.read<AuthRepository>()),
+        child: const ProviderDeleteAccountScreen(),
+      ),
+    ),
     providerStoreProfile: (context) => _ProviderGuard(
       child: BlocProvider(
         create: (c) => ProviderStoreSettingsCubit(c.read<ProviderRepository>()),

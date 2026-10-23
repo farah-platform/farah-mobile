@@ -1,3 +1,4 @@
+import 'package:farah/view/screens/auth/verify_code.dart';
 import 'package:farah/cubits/auth/auth_cubit.dart';
 import 'package:farah/view/screens/auth/forgot_password_phone.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +23,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   void _onConfirmPressed() {
     if (_formKey.currentState!.validate()) {
-      context.read<AuthCubit>().sendPasswordReset(email: emailController.text);
+      context.read<AuthCubit>().sendPasswordReset(
+        email: emailController.text.trim(),
+      );
     }
   }
 
@@ -33,17 +36,24 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
+        // فرح: بس الشاشة الظاهرة ترد على حالة الدخول (حتى ما تتكرر الرسائل).
+        if (ModalRoute.of(context)?.isCurrent == false) return;
         if (state is AuthError) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(state.message)));
         } else if (state is AuthPasswordResetSent) {
+          // فرح: السيرفر بعت رمز من 4 أرقام، ننتقل لشاشة رمز التحقق بنفس الإيميل.
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك'),
+            const SnackBar(content: Text('أرسلنا رمز التحقق إلى بريدك')),
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  VerifyCodeScreen(email: emailController.text.trim()),
             ),
           );
-          Navigator.pop(context);
         }
       },
       child: Scaffold(

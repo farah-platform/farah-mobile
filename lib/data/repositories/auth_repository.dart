@@ -23,9 +23,12 @@ abstract class AuthRepository {
 
   Future<void> sendPasswordReset({required String email});
 
+  // فرح: السيرفر يبعت رمز من 4 أرقام بالإيميل؛ نتحقق منه قبل شاشة كلمة المرور الجديدة.
+  Future<void> verifyResetCode({required String email, required String code});
+
   /// Change password via the email-reset flow.
   ///
-  /// [token] and [email] come from the reset-link deep link.
+  /// [token] is the 4-digit code from the email.
   Future<void> updatePassword({
     required String newPassword,
     required String token,
@@ -39,7 +42,8 @@ abstract class AuthRepository {
     required String newPassword,
   });
 
-  Future<void> deleteAccount();
+  // فرح: السيرفر ما بيحذف الحساب بدون كلمة المرور الحالية (DELETE /account).
+  Future<void> deleteAccount({required String currentPassword});
 
   /// Returns the currently signed-in user, or null if no session exists.
   Future<UserModel?> checkSession();
