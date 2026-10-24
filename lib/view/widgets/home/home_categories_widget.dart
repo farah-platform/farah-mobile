@@ -101,12 +101,17 @@ class HomeCategoriesWidget extends StatelessWidget {
   IconData _serviceIcon(int index) {
     const icons = [
       Icons.church_outlined,
-      Icons.local_florist_outlined,
-      Icons.face_retouching_natural_outlined,
       Icons.camera_alt_outlined,
+      Icons.face_retouching_natural_outlined,
+      Icons.dry_cleaning_outlined,
+      Icons.man_outlined,
+      Icons.local_florist_outlined,
       Icons.storefront_outlined,
+      Icons.directions_car_outlined,
+      Icons.car_rental_outlined,
       Icons.music_note_outlined,
       Icons.restaurant_outlined,
+      Icons.card_giftcard_outlined,
     ];
 
     return icons[index % icons.length];
