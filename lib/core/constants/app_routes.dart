@@ -28,7 +28,6 @@ import 'package:farah/view/screens/provider/provider_router_screen.dart';
 import 'package:farah/view/screens/provider/services/provider_add_service_screen.dart';
 import 'package:farah/view/screens/provider/services/provider_edit_service_screen.dart';
 import 'package:farah/cubits/provider_service_editor/provider_service_editor_cubit.dart';
-import 'package:farah/view/screens/service1/service_info_screen.dart';
 import 'package:farah/view/screens/user/change_password_screen.dart';
 import 'package:farah/view/screens/user/favorites_screen.dart';
 import 'package:farah/view/screens/user/help_center_screen.dart';
@@ -55,7 +54,8 @@ import '../../view/screens/provider/settings/provider_change_password_screen.dar
 import '../../view/screens/provider/settings/provider_help_center_screen.dart';
 import '../../view/screens/provider/settings/provider_current_subscription_screen.dart';
 import '../../view/screens/provider/settings/provider_delete_account_screen.dart';
-import '../../cubits/provider_settings/provider_help_center_cubit.dart';
+import '../../cubits/help_center/help_center_cubit.dart';
+import '../../data/repositories/support_repository.dart';
 import '../../cubits/delete_account/delete_account_cubit.dart';
 import '../../cubits/provider_subscription/provider_current_subscription_cubit.dart';
 import '../../view/screens/provider/settings/provider_payout_account_screen.dart';
@@ -76,7 +76,6 @@ class AppRoutes {
   static const String forgotPassword = '/forgot-password';
   static const String forgotPasswordPhone = '/forgot-password/phone';
   static const String terms = '/terms';
-  static const String serviceInfo = '/service-info';
   static const String home = '/home';
   static const String providerRouter = '/provider/router';
   static const String providerHome = '/provider/home';
@@ -150,7 +149,6 @@ class AppRoutes {
     forgotPassword: (_) => const ForgotPasswordScreen(),
     forgotPasswordPhone: (_) => const ForgotPasswordPhoneScreen(),
     terms: (_) => const TermsAndConditionsScreen(),
-    serviceInfo: (_) => const ServiceInfoScreen(),
     // Customer + guest routes — providers are redirected to providerHome.
     home: (_) => const _CustomerGuard(child: HomeScreen()),
     settings: (_) => const _CustomerGuard(child: SettingsScreen()),
@@ -166,7 +164,14 @@ class AppRoutes {
         child: const ChangePasswordScreen(),
       ),
     ),
-    helpCenter: (_) => const _CustomerGuard(child: HelpCenterScreen()),
+    // فرح: مركز مساعدة العميل بأسئلة العميل من السيرفر.
+    helpCenter: (context) => _CustomerGuard(
+      child: BlocProvider(
+        create: (c) =>
+            HelpCenterCubit(c.read<SupportRepository>(), audience: 'customer'),
+        child: const HelpCenterScreen(),
+      ),
+    ),
     favorites: (_) => const _CustomerGuard(child: FavoritesScreen()),
     serviceDetail: (context) {
       final args = ModalRoute.of(context)?.settings.arguments;
@@ -305,7 +310,8 @@ class AppRoutes {
     ),
     providerHelpCenter: (context) => _ProviderGuard(
       child: BlocProvider(
-        create: (c) => ProviderHelpCenterCubit(c.read<ProviderRepository>()),
+        create: (c) =>
+            HelpCenterCubit(c.read<SupportRepository>(), audience: 'provider'),
         child: const ProviderHelpCenterScreen(),
       ),
     ),

@@ -2,7 +2,6 @@ import 'package:farah/view/screens/user/service_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farah/cubits/service/service_cubit.dart';
-import 'package:farah/data/models/service_model.dart';
 import 'package:farah/view/widgets/bottom_nav_bar.dart';
 import 'package:farah/view/widgets/common/custom_search_bar_widget.dart';
 import 'package:farah/view/widgets/services/service_card_widget.dart';

@@ -11,11 +11,6 @@ final class UserProfileLoaded extends ProfileState {
   UserProfileLoaded(this.user);
 }
 
-final class ProviderProfileLoaded extends ProfileState {
-  final ServiceProviderModel provider;
-  ProviderProfileLoaded(this.provider);
-}
-
 final class ProfileUpdated extends ProfileState {}
 
 final class ProfileError extends ProfileState {

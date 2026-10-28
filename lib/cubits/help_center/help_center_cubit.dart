@@ -1,8 +1,8 @@
 import 'package:farah/cubits/provider_orders/provider_order_errors.dart';
-import 'package:farah/data/repositories/provider_repository.dart';
+import 'package:farah/data/repositories/support_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-class ProviderHelpCenterState {
+class HelpCenterState {
   /// `[{id, question, answer}]` managed by the admin.
   final List<Map<String, dynamic>> faqs;
   final String? supportPhone;
@@ -10,7 +10,7 @@ class ProviderHelpCenterState {
   final bool loading;
   final String? error;
 
-  const ProviderHelpCenterState({
+  const HelpCenterState({
     this.faqs = const [],
     this.supportPhone,
     this.supportEmail,
@@ -19,18 +19,22 @@ class ProviderHelpCenterState {
   });
 }
 
-// فرح: "مركز المساعدة" للمزود: الأسئلة من السيرفر، و"تواصل معنا" من بيانات الدعم في إعدادات الأدمن.
-class ProviderHelpCenterCubit extends Cubit<ProviderHelpCenterState> {
-  final ProviderRepository _repository;
+// فرح: "مركز المساعدة" للعميل والمزود: الأسئلة من السيرفر حسب نوع الحساب (audience)،
+// و"تواصل معنا" من بيانات الدعم في إعدادات الأدمن.
+class HelpCenterCubit extends Cubit<HelpCenterState> {
+  final SupportRepository _repository;
 
-  ProviderHelpCenterCubit(this._repository)
-    : super(const ProviderHelpCenterState());
+  /// `customer` or `provider`.
+  final String audience;
+
+  HelpCenterCubit(this._repository, {required this.audience})
+    : super(const HelpCenterState());
 
   Future<void> load() async {
-    emit(const ProviderHelpCenterState());
+    emit(const HelpCenterState());
     try {
       final results = await Future.wait([
-        _repository.getFaqs(),
+        _repository.getFaqs(audience: audience),
         _repository.getSupportContacts(),
       ]);
       if (isClosed) return;
@@ -41,12 +45,9 @@ class ProviderHelpCenterCubit extends Cubit<ProviderHelpCenterState> {
       }
 
       emit(
-        ProviderHelpCenterState(
+        HelpCenterState(
           loading: false,
-          faqs: [
-            for (final faq in results[0] as List<dynamic>)
-              if (faq is Map) Map<String, dynamic>.from(faq),
-          ],
+          faqs: results[0] as List<Map<String, dynamic>>,
           supportPhone: clean(contacts['support_phone']),
           supportEmail: clean(contacts['support_email']),
         ),
@@ -54,7 +55,7 @@ class ProviderHelpCenterCubit extends Cubit<ProviderHelpCenterState> {
     } catch (e) {
       if (isClosed) return;
       emit(
-        ProviderHelpCenterState(
+        HelpCenterState(
           loading: false,
           error: providerOrderError(e, 'تعذّر تحميل الأسئلة الشائعة'),
         ),

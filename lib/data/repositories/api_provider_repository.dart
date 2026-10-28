@@ -262,18 +262,4 @@ class ApiProviderRepository implements ProviderRepository {
   Future<void> cancelSubscription() async {
     await dioClient.dio.post('/provider/subscription/cancel');
   }
-
-  @override
-  Future<List<dynamic>> getFaqs() async {
-    final res = await dioClient.dio.get('/faqs', queryParameters: {'audience': 'provider'});
-    final data = res.data['data'];
-    return data is List ? data : [];
-  }
-
-  @override
-  Future<Map<String, dynamic>> getSupportContacts() async {
-    final res = await dioClient.dio.get(ApiEndpoints.settings);
-    final data = res.data['data'];
-    return data is Map ? Map<String, dynamic>.from(data) : {};
-  }
 }

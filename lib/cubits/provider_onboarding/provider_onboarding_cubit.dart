@@ -63,10 +63,11 @@ class ProviderOnboardingCubit extends Cubit<ProviderOnboardingState> {
         'description': description,
         'city_id': cityId,
         'address': address,
-        // TODO: the API has no earnings-account field yet; it ignores this value.
+        // فرح: حساب استلام الأرباح، يحفظه السيرفر كرقم الحساب في "حساب استلام الارباح".
         'profit_account': profitAccount,
-        // TODO: the API expects commercial_register as a file, not a number,
-        // so the typed number is not sent until the two sides agree.
+        // فرح: رقم السجل التجاري المكتوب (اختياري)، غير ملف السجل.
+        if (commercialRegister != null && commercialRegister.trim().isNotEmpty)
+          'commercial_register_number': commercialRegister.trim(),
       }, idProof, coverImage);
       
       if (isClosed) return;

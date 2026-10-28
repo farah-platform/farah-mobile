@@ -22,12 +22,6 @@ class _ForgotPasswordPhoneScreenState extends State<ForgotPasswordPhoneScreen> {
     super.dispose();
   }
 
-  void _onSubmitPressed() {
-    if (_formKey.currentState!.validate()) {
-      Navigator.pushNamed(context, '/verify-code');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
