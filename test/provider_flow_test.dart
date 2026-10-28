@@ -114,6 +114,8 @@ void main() {
     final fields = Map.fromEntries(form.fields);
     expect(fields['address'], 'street');
     expect(fields.containsKey('commercial_register'), isFalse);
+    // فرح: الرقم المكتوب ينبعت كـ commercial_register_number.
+    expect(fields['commercial_register_number'], '999');
     expect(
       form.files.map((f) => f.key),
       containsAll(['identity_document', 'cover_image']),

@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:farah/core/network/dio_client.dart';
 import 'package:farah/data/models/service_model.dart';
-import 'package:farah/data/models/service_provider_model.dart';
 import 'package:farah/data/repositories/service_repository.dart';
 
 class ApiServiceRepository implements ServiceRepository {
@@ -51,27 +50,5 @@ class ApiServiceRepository implements ServiceRepository {
     final data = res.data as Map<String, dynamic>;
 
     return ServiceModel.fromJson(data['data'] as Map<String, dynamic>);
-  }
-
-  // TODO: /providers/{id} and /providers/{id}/services are not in the API.
-  @override
-  Future<ServiceProviderModel> fetchProviderProfile(String providerId) async {
-    final res = await _dio.get('/providers/$providerId');
-
-    final data = res.data as Map<String, dynamic>;
-
-    return ServiceProviderModel.fromMap(data['data'] as Map<String, dynamic>);
-  }
-
-  @override
-  Future<List<ServiceModel>> fetchProviderServices(String providerId) async {
-    final res = await _dio.get('/providers/$providerId/services');
-
-    final data = res.data as Map<String, dynamic>;
-
-    return (data['data'] as List?)
-            ?.map((e) => ServiceModel.fromJson(e as Map<String, dynamic>))
-            .toList() ??
-        [];
   }
 }

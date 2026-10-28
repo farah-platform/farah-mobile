@@ -1,7 +1,11 @@
 import 'package:farah/core/constants/app_colors.dart';
-import 'package:farah/core/constants/faq_data.dart';
+import 'package:farah/core/utils/support_contact.dart';
+import 'package:farah/cubits/help_center/help_center_cubit.dart';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+// فرح: مركز مساعدة العميل: الأسئلة من السيرفر (audience=customer) و"تواصل معنا"
+// من بيانات الدعم في لوحة الأدمن، بدل الأسئلة الثابتة ورقم الواتساب المكتوب بالكود.
 
 class HelpCenterScreen extends StatefulWidget {
   const HelpCenterScreen({super.key});
@@ -13,18 +17,18 @@ class HelpCenterScreen extends StatefulWidget {
 class _HelpCenterScreenState extends State<HelpCenterScreen> {
   String _query = '';
 
-  List<Map<String, String>> get _filtered {
-    if (_query.trim().isEmpty) return FaqData.items;
-    return FaqData.items
-        .where(
-          (item) => item['q']!.contains(_query) || item['a']!.contains(_query),
-        )
-        .toList();
+  @override
+  void initState() {
+    super.initState();
+    context.read<HelpCenterCubit>().load();
   }
 
-  Future<void> _openWhatsApp() async {
-    final uri = Uri.parse('https://wa.me/970592467931');
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  List<Map<String, dynamic>> _filtered(List<Map<String, dynamic>> faqs) {
+    final query = _query.trim();
+    if (query.isEmpty) return faqs;
+    return faqs
+        .where((f) => '${f['question']} ${f['answer']}'.contains(query))
+        .toList();
   }
 
   @override
@@ -61,66 +65,104 @@ class _HelpCenterScreenState extends State<HelpCenterScreen> {
             ),
           ),
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 12),
-                  child: Text(
-                    'الأسئلة الشائعة',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: _filtered.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.all(24),
-                          child: Center(
-                            child: Text(
-                              'لا توجد نتائج',
-                              style: TextStyle(color: AppColors.textGrey),
-                            ),
-                          ),
-                        )
-                      : Column(
-                          children: List.generate(
-                            _filtered.length,
-                            (i) => _FaqTile(
-                              question: _filtered[i]['q']!,
-                              answer: _filtered[i]['a']!,
-                            ),
-                          ),
+            child: BlocBuilder<HelpCenterCubit, HelpCenterState>(
+              builder: (context, state) {
+                final faqs = _filtered(state.faqs);
+                return ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        'الأسئلة الشائعة',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: AppColors.primary,
                         ),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: _openWhatsApp,
-                    icon: const Icon(Icons.chat_outlined),
-                    label: const Text(
-                      'تواصل معنا',
-                      style: TextStyle(fontWeight: FontWeight.w600),
+                    Material(
+                      // فرح: Material حتى يظهر أثر الضغط على الأسئلة القابلة للفتح.
+                      color: Colors.white,
+                      clipBehavior: Clip.antiAlias,
+                      borderRadius: BorderRadius.circular(12),
+                      child: state.loading
+                          ? const Padding(
+                              padding: EdgeInsets.all(24),
+                              child: Center(child: CircularProgressIndicator()),
+                            )
+                          : state.error != null
+                          ? Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    state.error!,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  TextButton.icon(
+                                    onPressed: () =>
+                                        context.read<HelpCenterCubit>().load(),
+                                    icon: const Icon(Icons.refresh),
+                                    label: const Text('إعادة المحاولة'),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : faqs.isEmpty
+                          ? Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Center(
+                                child: Text(
+                                  _query.trim().isEmpty
+                                      ? 'لا توجد أسئلة شائعة حالياً'
+                                      : 'لا توجد نتائج',
+                                  style: const TextStyle(
+                                    color: AppColors.textGrey,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Column(
+                              children: [
+                                for (final faq in faqs)
+                                  _FaqTile(
+                                    question: faq['question']?.toString() ?? '',
+                                    answer: faq['answer']?.toString() ?? '',
+                                  ),
+                              ],
+                            ),
                     ),
-                  ),
-                ),
-              ],
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: state.loading
+                            ? null
+                            : () => openSupportContact(
+                                context,
+                                phone: state.supportPhone,
+                                email: state.supportEmail,
+                              ),
+                        icon: const Icon(Icons.chat_outlined),
+                        label: const Text(
+                          'تواصل معنا',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ],

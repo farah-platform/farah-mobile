@@ -5,7 +5,8 @@ import 'package:farah/cubits/change_password/change_password_cubit.dart';
 import 'package:farah/cubits/delete_account/delete_account_cubit.dart';
 import 'package:farah/cubits/profile_edit/profile_edit_cubit.dart';
 import 'package:farah/cubits/provider_dashboard/provider_dashboard_cubit.dart';
-import 'package:farah/cubits/provider_settings/provider_help_center_cubit.dart';
+import 'package:farah/cubits/help_center/help_center_cubit.dart';
+import 'package:farah/data/repositories/support_repository.dart';
 import 'package:farah/cubits/provider_settings/provider_settings_cubit.dart';
 import 'package:farah/cubits/provider_settings/provider_store_settings_cubit.dart';
 import 'package:farah/cubits/provider_subscription/provider_current_subscription_cubit.dart';
@@ -46,7 +47,6 @@ class _FakeProviderRepo implements ProviderRepository {
       ],
     },
   };
-  Map<String, dynamic> contacts = {};
   Map<String, dynamic>? savedProfile;
 
   @override
@@ -57,15 +57,6 @@ class _FakeProviderRepo implements ProviderRepository {
     calls.add('cancel');
     subscription = {...subscription!, 'status': 'canceled', 'is_active': false};
   }
-
-  @override
-  Future<List<dynamic>> getFaqs() async => [
-    {'id': 1, 'question': 'api question one', 'answer': 'api answer one'},
-    {'id': 2, 'question': 'api question two', 'answer': 'api answer two'},
-  ];
-
-  @override
-  Future<Map<String, dynamic>> getSupportContacts() async => contacts;
 
   @override
   Future<Map<String, dynamic>> getOnboardingData() async => {
@@ -113,6 +104,26 @@ class _FakeProviderRepo implements ProviderRepository {
 
   @override
   Future<bool> getNotificationsEnabled() async => true;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeSupportRepo implements SupportRepository {
+  final List<String> audiences = [];
+  Map<String, dynamic> contacts = {};
+
+  @override
+  Future<List<Map<String, dynamic>>> getFaqs({required String audience}) async {
+    audiences.add(audience);
+    return [
+      {'id': 1, 'question': 'api question one', 'answer': 'api answer one'},
+      {'id': 2, 'question': 'api question two', 'answer': 'api answer two'},
+    ];
+  }
+
+  @override
+  Future<Map<String, dynamic>> getSupportContacts() async => contacts;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -362,11 +373,11 @@ void main() {
   testWidgets('help center lists API questions and filters them', (
     tester,
   ) async {
-    final repo = _FakeProviderRepo();
+    final repo = _FakeSupportRepo();
     await _pump(
       tester,
       BlocProvider(
-        create: (_) => ProviderHelpCenterCubit(repo),
+        create: (_) => HelpCenterCubit(repo, audience: 'provider'),
         child: const ProviderHelpCenterScreen(),
       ),
     );
@@ -387,6 +398,7 @@ void main() {
     await tester.tap(find.text('تواصل معنا'));
     await tester.pump();
     expect(find.text('هذه الميزة غير متاحة حالياً'), findsOneWidget);
+    expect(repo.audiences, ['provider']);
   });
 
   testWidgets('settings open the current subscription and delete screens', (

@@ -30,6 +30,8 @@ import 'package:farah/data/repositories/payment_repository.dart';
 import 'package:farah/data/repositories/profile_repository.dart';
 import 'package:farah/data/repositories/provider_repository.dart';
 import 'package:farah/data/repositories/service_repository.dart';
+import 'package:farah/data/repositories/api_support_repository.dart';
+import 'package:farah/data/repositories/support_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -55,6 +57,8 @@ Future<void> main() async {
   final PaymentRepository paymentRepository = ApiPaymentRepository(dioClient: dioClient);
   final FavoritesRepository favoritesRepository = ApiFavoritesRepository(dioClient: dioClient);
   final MyBookingRepository myBookingRepository = ApiMyBookingRepository(dioClient: dioClient);
+  // فرح: الأسئلة الشائعة وبيانات الدعم وتفضيل الإشعارات (للعميل والمزود).
+  final SupportRepository supportRepository = ApiSupportRepository(dioClient: dioClient);
 
   runApp(
     FarhaApp(
@@ -68,6 +72,7 @@ Future<void> main() async {
       paymentRepository: paymentRepository,
       favoritesRepository: favoritesRepository,
       myBookingRepository: myBookingRepository,
+      supportRepository: supportRepository,
     ),
   );
 }
@@ -83,6 +88,7 @@ class FarhaApp extends StatelessWidget {
   final PaymentRepository paymentRepository;
   final FavoritesRepository favoritesRepository;
   final MyBookingRepository myBookingRepository;
+  final SupportRepository supportRepository;
 
   const FarhaApp({
     super.key,
@@ -96,6 +102,7 @@ class FarhaApp extends StatelessWidget {
     required this.paymentRepository,
     required this.favoritesRepository,
     required this.myBookingRepository,
+    required this.supportRepository,
   });
 
   @override
@@ -117,6 +124,7 @@ class FarhaApp extends StatelessWidget {
         RepositoryProvider<MyBookingRepository>.value(
           value: myBookingRepository,
         ),
+        RepositoryProvider<SupportRepository>.value(value: supportRepository),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -125,7 +133,9 @@ class FarhaApp extends StatelessWidget {
           BlocProvider(create: (_) => BookingCubit(bookingRepository)),
           BlocProvider(create: (_) => MybookingCubit(myBookingRepository)),
           BlocProvider(create: (_) => ProfileCubit(profileRepository)),
-          BlocProvider(create: (_) => SettingsCubit(profileRepository)),
+          BlocProvider(
+            create: (_) => SettingsCubit(profileRepository, supportRepository),
+          ),
           BlocProvider(create: (_) => ServiceCubit(serviceRepository)),
           BlocProvider(create: (_) => NotificationCubit(notificationRepository)),
           BlocProvider(create: (_) => PaymentCubit(paymentRepository)),
