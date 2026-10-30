@@ -20,10 +20,10 @@ class HomeSearchBarWidget extends StatelessWidget {
       height: 45,
       child: TextField(
         controller: controller,
-        readOnly: false, // تم تفعيل الكتابة
+        readOnly: false,
         onChanged: onChanged,
         onSubmitted: onSubmitted,
-        textInputAction: TextInputAction.search, // إظهار زر "بحث" في الكيبورد
+        textInputAction: TextInputAction.search,
         textAlign: TextAlign.right,
         textDirection: TextDirection.rtl,
         style: Theme.of(context).textTheme.bodyMedium,

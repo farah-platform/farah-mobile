@@ -310,7 +310,6 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
 
               const SizedBox(width: 12),
 
-              // فرح: Expanded حتى ما يطلع اسم الخدمة الطويل برا الشاشة.
               Expanded(
                 child: Column(
                   crossAxisAlignment:
@@ -378,7 +377,7 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
               ),
             ],
           ),
-          // فرح: الحجز اللي قبله المزود (بانتظار الدفع) يفتح شاشة الدفع بالعربون وتعليمات التحويل من السيرفر.
+
           if (booking.awaitingPayment) ...[
             const SizedBox(height: 12),
             SizedBox(
@@ -431,7 +430,7 @@ class _MyBookingScreenState extends State<MyBookingScreen> {
         ),
       ),
     );
-    // Reload so the booking moves to "قيد المراجعة" after the proof is sent.
+
     if (mounted) cubit.loadBookings();
   }
 
