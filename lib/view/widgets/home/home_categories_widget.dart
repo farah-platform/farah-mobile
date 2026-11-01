@@ -1,4 +1,3 @@
-import 'package:farah/data/models/home/category_model.dart';
 import 'package:farah/view/screens/user/services_screen.dart';
 import 'package:farah/view/widgets/home/section_header_widget.dart';
 import 'package:flutter/material.dart';

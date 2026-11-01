@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:farah/data/models/service_provider_model.dart';
 import 'package:farah/data/models/user_model.dart';
 import 'package:farah/data/repositories/profile_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -51,42 +50,8 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
   }
 
-  Future<void> loadProviderProfile() async {
-    emit(ProfileLoading());
-    try {
-      final provider = await _repo.fetchProviderProfile();
-      emit(ProviderProfileLoaded(provider));
-    } catch (e) {
-      emit(ProfileError(_mapError(e)));
-    }
-  }
-
-  Future<void> updateProviderProfile({
-    String? name,
-    String? phone,
-    String? region,
-    String? description,
-    List<String>? categories,
-  }) async {
-    emit(ProfileLoading());
-    try {
-      final provider = await _repo.updateProviderProfile(
-        name: name,
-        phone: phone,
-        region: region,
-        description: description,
-        categories: categories,
-      );
-      emit(ProviderProfileLoaded(provider));
-    } catch (e) {
-      emit(ProfileError(_mapError(e)));
-    }
-  }
-
   String _mapError(Object e) {
     if (e is DioException) {
-      // /provider/profile does not exist in the API yet.
-      if (e.response?.statusCode == 404) return 'هذه الميزة غير متاحة حالياً';
       final data = e.response?.data;
       if (data is Map) {
         final message = (data['title'] ?? data['message'])?.toString();

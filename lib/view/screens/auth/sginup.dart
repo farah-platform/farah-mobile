@@ -3,7 +3,6 @@ import 'package:farah/cubits/auth/auth_cubit.dart';
 import 'package:farah/data/models/auth/city_model.dart';
 import 'package:farah/data/repositories/auth_repository.dart';
 import 'package:farah/view/screens/auth/login.dart';
-import 'package:farah/view/screens/auth/terms_and_conditions.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

@@ -76,7 +76,6 @@ class _BookingBottomSheetWidgetState extends State<BookingBottomSheetWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final daysInMonth = DateUtils.getDaysInMonth(
       _currentMonth.year,
       _currentMonth.month,

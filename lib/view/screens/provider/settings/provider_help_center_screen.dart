@@ -1,8 +1,8 @@
-import 'package:farah/cubits/provider_settings/provider_help_center_cubit.dart';
+import 'package:farah/core/utils/support_contact.dart';
+import 'package:farah/cubits/help_center/help_center_cubit.dart';
 import 'package:farah/view/widgets/provider/onboarding/provider_step_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 // فرح: "مركز المساعدة" للمزود: بحث، أسئلة شائعة من السيرفر (يديرها الأدمن من لوحة التحكم ← الأسئلة الشائعة)،
 // و"تواصل معنا" يستخدم هاتف/بريد الدعم من إعدادات المنصة. إذا لم يعبّئها الأدمن تظهر رسالة "غير متاحة".
@@ -20,32 +20,7 @@ class _ProviderHelpCenterScreenState extends State<ProviderHelpCenterScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<ProviderHelpCenterCubit>().load();
-  }
-
-  Future<void> _contact(ProviderHelpCenterState state) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final phone = state.supportPhone?.replaceAll(RegExp(r'[^0-9+]'), '');
-    final uri = phone != null && phone.isNotEmpty
-        ? Uri.parse('https://wa.me/${phone.replaceAll('+', '')}')
-        : state.supportEmail != null
-        ? Uri(scheme: 'mailto', path: state.supportEmail)
-        : null;
-    if (uri == null) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('هذه الميزة غير متاحة حالياً')),
-      );
-      return;
-    }
-    final opened = await launchUrl(
-      uri,
-      mode: LaunchMode.externalApplication,
-    ).catchError((_) => false);
-    if (!opened) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('تعذّر فتح وسيلة التواصل')),
-      );
-    }
+    context.read<HelpCenterCubit>().load();
   }
 
   @override
@@ -54,7 +29,7 @@ class _ProviderHelpCenterScreenState extends State<ProviderHelpCenterScreen> {
     return Scaffold(
       backgroundColor: kProviderStepBackground,
       appBar: providerStepAppBar(context, 'مركز المساعدة'),
-      body: BlocBuilder<ProviderHelpCenterCubit, ProviderHelpCenterState>(
+      body: BlocBuilder<HelpCenterCubit, HelpCenterState>(
         builder: (context, state) {
           final query = _query.trim();
           final faqs = query.isEmpty
@@ -117,7 +92,7 @@ class _ProviderHelpCenterScreenState extends State<ProviderHelpCenterScreen> {
                           Text(state.error!, textAlign: TextAlign.center),
                           TextButton.icon(
                             onPressed: () =>
-                                context.read<ProviderHelpCenterCubit>().load(),
+                                context.read<HelpCenterCubit>().load(),
                             icon: const Icon(Icons.refresh),
                             label: const Text('إعادة المحاولة'),
                           ),
@@ -146,7 +121,13 @@ class _ProviderHelpCenterScreenState extends State<ProviderHelpCenterScreen> {
                   child: SizedBox(
                     height: 52,
                     child: ElevatedButton.icon(
-                      onPressed: state.loading ? null : () => _contact(state),
+                      onPressed: state.loading
+                          ? null
+                          : () => openSupportContact(
+                              context,
+                              phone: state.supportPhone,
+                              email: state.supportEmail,
+                            ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primary,
                         foregroundColor: Colors.white,
