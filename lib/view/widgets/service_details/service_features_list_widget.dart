@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 class ServiceFeaturesListWidget extends StatefulWidget {
   final List<String> features;
   final List<String> removableFeatures;
+  // فرح: يبلّغ صفحة الخدمة بالمزايا اللي شالها العميل حتى تنبعت مع الحجز.
+  final ValueChanged<List<String>>? onRemovedChanged;
 
   const ServiceFeaturesListWidget({
     super.key,
     required this.features,
     this.removableFeatures = const [],
+    this.onRemovedChanged,
   });
 
   @override
@@ -61,7 +64,6 @@ class _ServiceFeaturesListWidgetState extends State<ServiceFeaturesListWidget> {
               final status = _featureStatuses[feature] ?? 'مشمولة';
 
               // فرح: المزود هو اللي بيحدد شو قابل للإزالة (removable_features)، مش التطبيق.
-              // TODO: API الحجز ما فيه حقل للمزايا المُزالة بعد، فالاختيار يظهر للعميل فقط.
               final isMandatory = !widget.removableFeatures.contains(feature);
 
               return Container(
@@ -78,10 +80,10 @@ class _ServiceFeaturesListWidgetState extends State<ServiceFeaturesListWidget> {
                   children: [
                     // 1. الأيقونة (أول شيء على اليمين)
                     Icon(
-                      status == 'قابلة للإزالة'
+                      status == 'مُزالة'
                           ? Icons.remove_circle_outline_rounded
                           : Icons.check_circle_rounded,
-                      color: status == 'قابلة للإزالة'
+                      color: status == 'مُزالة'
                           ? colors.outline.withOpacity(0.4)
                           : colors.primary,
                       size: 18,
@@ -96,10 +98,10 @@ class _ServiceFeaturesListWidgetState extends State<ServiceFeaturesListWidget> {
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontSize: 10.5,
                           fontWeight: FontWeight.w600,
-                          color: status == 'قابلة للإزالة'
+                          color: status == 'مُزالة'
                               ? colors.onSurface.withOpacity(0.4)
                               : colors.onSurface,
-                          decoration: status == 'قابلة للإزالة'
+                          decoration: status == 'مُزالة'
                               ? TextDecoration.lineThrough
                               : TextDecoration.none,
                         ),
@@ -155,6 +157,14 @@ class _ServiceFeaturesListWidgetState extends State<ServiceFeaturesListWidget> {
     );
   }
 
+  void _setStatus(String feature, String status) {
+    setState(() => _featureStatuses[feature] = status);
+    widget.onRemovedChanged?.call([
+      for (final f in widget.features)
+        if (_featureStatuses[f] == 'مُزالة') f,
+    ]);
+  }
+
   void _showOptionsDialog(BuildContext context, String feature) {
     final colors = Theme.of(context).colorScheme;
 
@@ -184,7 +194,7 @@ class _ServiceFeaturesListWidgetState extends State<ServiceFeaturesListWidget> {
                     leading: Icon(Icons.check_rounded, color: colors.primary),
                     title: const Text('مشمولة'),
                     onTap: () {
-                      setState(() => _featureStatuses[feature] = 'مشمولة');
+                      _setStatus(feature, 'مشمولة');
                       Navigator.pop(sheetContext);
                     },
                   ),
@@ -193,11 +203,9 @@ class _ServiceFeaturesListWidgetState extends State<ServiceFeaturesListWidget> {
                       Icons.close_rounded,
                       color: Colors.redAccent,
                     ),
-                    title: const Text('قابلة للإزالة'),
+                    title: const Text('إزالة من الحجز'),
                     onTap: () {
-                      setState(
-                        () => _featureStatuses[feature] = 'قابلة للإزالة',
-                      );
+                      _setStatus(feature, 'مُزالة');
                       Navigator.pop(sheetContext);
                     },
                   ),

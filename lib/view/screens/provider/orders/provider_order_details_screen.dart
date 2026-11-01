@@ -223,6 +223,12 @@ class _ProviderOrderDetailsScreenState
         ),
         if ((b['notes']?.toString() ?? '').isNotEmpty)
           _row('ملاحظات العميل', b['notes'].toString()),
+        // فرح: المزايا اللي شالها العميل من الخدمة عند الحجز.
+        if ((b['removed_features'] as List?)?.isNotEmpty == true)
+          _row(
+            'مزايا أزالها العميل',
+            (b['removed_features'] as List).join('، '),
+          ),
         if ((b['provider_note']?.toString() ?? '').isNotEmpty)
           _row('ملاحظتك', b['provider_note'].toString()),
       ],

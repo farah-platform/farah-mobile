@@ -4,6 +4,8 @@ class BookingRequestModel {
   final String bookingTime;
   final String? bookingSlot;
   final String? notes;
+  // فرح: المزايا اللي شالها العميل (من removable_features تبع الخدمة).
+  final List<String> removedFeatures;
 
   BookingRequestModel({
     required this.serviceId,
@@ -11,6 +13,7 @@ class BookingRequestModel {
     required this.bookingTime,
     this.bookingSlot,
     this.notes,
+    this.removedFeatures = const [],
   });
 
   Map<String, dynamic> toJson() {
@@ -21,6 +24,7 @@ class BookingRequestModel {
       if (bookingSlot != null && bookingSlot!.isNotEmpty)
         'booking_slot': bookingSlot,
       if (notes != null && notes!.trim().isNotEmpty) 'notes': notes!.trim(),
+      if (removedFeatures.isNotEmpty) 'removed_features': removedFeatures,
     };
   }
 
@@ -31,6 +35,7 @@ class BookingRequestModel {
       bookingTime: json['booking_time'] ?? '',
       bookingSlot: json['booking_slot'],
       notes: json['notes'],
+      removedFeatures: List<String>.from(json['removed_features'] ?? const []),
     );
   }
 }

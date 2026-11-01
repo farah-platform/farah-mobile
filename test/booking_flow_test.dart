@@ -142,6 +142,7 @@ void main() {
           bookingTime: '17:00',
           bookingSlot: 'api evening',
           notes: 'note',
+          removedFeatures: ['api flowers'],
         ),
       );
 
@@ -153,6 +154,8 @@ void main() {
         'booking_time': '17:00',
         'booking_slot': 'api evening',
         'notes': 'note',
+        // فرح: المزايا المُزالة تنبعت مع الطلب.
+        'removed_features': ['api flowers'],
       });
       expect(booking.id, '9');
     });
@@ -293,6 +296,7 @@ void main() {
                       slot: slot,
                       currency: 'ILS',
                       notes: 'note',
+                      removedFeatures: const ['api flowers'],
                     ),
                   ),
                 ),
@@ -309,6 +313,7 @@ void main() {
     expect(find.text('900 ILS'), findsOneWidget);
     expect(find.text('يُحدَّد عند قبول الطلب'), findsNWidgets(2));
     expect(find.textContaining('800'), findsNothing);
+    expect(find.text('مزايا أزلتها من الحجز: api flowers'), findsOneWidget);
 
     await tester.tap(find.text('إرسال طلب الحجز'));
     await tester.pumpAndSettle();
@@ -317,6 +322,7 @@ void main() {
     expect(repo.created!.bookingTime, '17:00');
     expect(repo.created!.bookingSlot, 'api evening');
     expect(repo.created!.notes, 'note');
+    expect(repo.created!.removedFeatures, ['api flowers']);
     // Back on the previous page, not on a payment screen.
     expect(find.text('open'), findsOneWidget);
     expect(
