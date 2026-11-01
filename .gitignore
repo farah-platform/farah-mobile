@@ -41,7 +41,8 @@ mobile/ios/Flutter/Generated.xcconfig
 mobile/ios/Flutter/flutter_export_environment.sh
 
 # ---------- Backend: PHP / Laravel ----------
-vendor/
+# فرح: /vendor/ (جذر المشروع فقط). كانت vendor/ تتجاهل أي مجلد بهالاسم، فما انرفع lib/cubits/vendor/.
+/vendor/
 storage/*.key
 storage/framework/cache/*
 storage/framework/sessions/*

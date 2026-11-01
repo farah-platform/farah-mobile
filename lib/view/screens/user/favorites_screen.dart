@@ -1,6 +1,10 @@
 import 'package:farah/core/constants/app_colors.dart';
 import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/cubits/favorites/favorites_cubit.dart';
+import 'package:farah/view/screens/user/MyBookingsScreen.dart';
+import 'package:farah/view/screens/user/home_screen.dart';
+import 'package:farah/view/screens/user/settings_screen.dart';
+import 'package:farah/view/widgets/bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -17,7 +21,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     super.initState();
     context.read<FavoritesCubit>().load();
   }
- 
+
   Future<void> _confirmRemoveAll() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -100,6 +104,29 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             );
           }
           return const SizedBox.shrink();
+        },
+      ),
+      bottomNavigationBar: FarahBottomNavBar(
+        currentIndex: 2,
+        onTap: (index) {
+          if (index == 2) return;
+
+          if (index == 0) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const HomeScreen()),
+            );
+          } else if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MyBookingScreen()),
+            );
+          } else if (index == 3) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SettingsScreen()),
+            );
+          }
         },
       ),
     );
@@ -220,7 +247,7 @@ class _FavoriteItemCard extends StatelessWidget {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                  
+
                 children: [
                   Text(
                     item.title,

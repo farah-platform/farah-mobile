@@ -1,4 +1,7 @@
+import 'package:farah/view/screens/user/MyBookingsScreen.dart';
+import 'package:farah/view/screens/user/favorites_screen.dart';
 import 'package:farah/view/screens/user/service_detail_screen.dart';
+import 'package:farah/view/screens/user/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farah/cubits/service/service_cubit.dart';
@@ -183,9 +186,33 @@ class _ServicesScreenState extends State<ServicesScreen> {
           ],
         ),
         bottomNavigationBar: FarahBottomNavBar(
-          currentIndex: 3,
+          currentIndex: 0,
           onTap: (index) {
-            _handleBottomNavigation(index);
+            if (index == 0) return;
+
+            if (index == 1) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MyBookingScreen(),
+                ),
+              );
+            } else if (index == 2) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const FavoritesScreen(),
+                ),
+              );
+            } else if (index == 3) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const SettingsScreen(), // أو ProfileScreen
+                ),
+              );
+            }
           },
         ),
       ),
@@ -255,22 +282,5 @@ class _ServicesScreenState extends State<ServicesScreen> {
         ),
       ),
     );
-  }
-
-  void _handleBottomNavigation(int index) {
-    switch (index) {
-      case 0:
-        // حسابي
-        break;
-      case 1:
-        // المفضلة
-        break;
-      case 2:
-        // طلباتي
-        break;
-      case 3:
-        Navigator.pop(context);
-        break;
-    }
   }
 }
