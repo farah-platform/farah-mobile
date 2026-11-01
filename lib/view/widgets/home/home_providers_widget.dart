@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:farah/cubits/vendor/vendor_details_cubit.dart';
 import 'package:farah/data/models/home/provider_model.dart';
 import 'package:farah/data/repositories/service_repository.dart';
@@ -54,7 +53,8 @@ class HomeProvidersWidget extends StatelessWidget {
                             >(), // <-- يقرأ الـ Repository الحقيقي من المشروع
                       ),
                       child: VendorDetailsScreen(
-                        vendorId: provider.id,
+                        // فرح: صفحة المزود تُطلب برقم حساب المزود (user_id)، مش رقم البطاقة.
+                        vendorId: provider.userId,
                         initialVendorName: provider.name,
                         initialVendorSpecialty: provider.specialty,
                         initialVendorAvatar: provider.avatar,

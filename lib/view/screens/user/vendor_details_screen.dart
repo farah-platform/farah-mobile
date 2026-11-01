@@ -3,13 +3,11 @@ import 'package:farah/view/screens/user/service_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farah/data/models/service_model.dart';
-import 'package:farah/data/repositories/api_service_repository.dart';
 import 'package:farah/cubits/service_detail/service_detail_cubit.dart';
 import 'package:farah/view/widgets/bottom_nav_bar.dart';
 import 'package:farah/view/screens/user/MyBookingsScreen.dart';
 import 'package:farah/view/screens/user/favorites_screen.dart';
-import 'package:farah/view/screens/user/profile_edit_screen.dart';
-// تأكدي أن مسار استيراد الكيوبت هنا يطابق مشروعك:
+import 'package:farah/view/screens/user/settings_screen.dart';
 import 'package:farah/cubits/vendor/vendor_details_cubit.dart';
 
 class VendorDetailsScreen extends StatefulWidget {
@@ -36,7 +34,7 @@ class _VendorDetailsScreenState extends State<VendorDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    // تمرير البيانات المبدئية للكيوبت ليعتمد عليها بدلاً من السيرفر الناقص
+    // فرح: البيانات من GET /providers/{id}؛ الاسم المبدئي للعنوان أثناء التحميل فقط.
     context.read<VendorDetailsCubit>().loadVendorDetails(
       providerId: widget.vendorId.toString(),
       vendorName: widget.initialVendorName ?? 'تفاصيل المزود',
@@ -139,25 +137,26 @@ class _VendorDetailsScreenState extends State<VendorDetailsScreen> {
             return const SizedBox.shrink();
           },
         ),
+        // فرح: نفس ترتيب أزرار الرئيسية (0 الرئيسية، 1 طلباتي، 2 المفضلة، 3 حسابي).
         bottomNavigationBar: FarahBottomNavBar(
-          currentIndex: 3,
+          currentIndex: 0,
           onTap: (index) {
-            if (index == 3) {
+            if (index == 0) {
               Navigator.pop(context);
-            } else if (index == 2) {
+            } else if (index == 1) {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (_) => const MyBookingScreen()),
               );
-            } else if (index == 1) {
+            } else if (index == 2) {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (_) => const FavoritesScreen()),
               );
-            } else if (index == 0) {
+            } else if (index == 3) {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (_) => const ProfileEditScreen()),
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
               );
             }
           },
@@ -376,25 +375,33 @@ class _VendorDetailsScreenState extends State<VendorDetailsScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    RichText(
-                      text: TextSpan(
-                        style: const TextStyle(fontFamily: 'Tajawal'),
-                        children: [
-                          const TextSpan(
-                            text: 'تبدأ من ',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                          TextSpan(
-                            text: '${service.price} ${service.currency}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF7B2146),
+                    // فرح: Flexible حتى ما يطلع السعر برا البطاقة بالشاشات الضيقة.
+                    Flexible(
+                      child: RichText(
+                        text: TextSpan(
+                          style: const TextStyle(fontFamily: 'Tajawal'),
+                          children: [
+                            const TextSpan(
+                              text: 'تبدأ من ',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
                             ),
-                          ),
-                        ],
+                            TextSpan(
+                              text:
+                                  '${service.price == service.price.roundToDouble() ? service.price.toInt() : service.price} ${service.currency}',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF7B2146),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
+                    const SizedBox(width: 8),
                     OutlinedButton(
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(

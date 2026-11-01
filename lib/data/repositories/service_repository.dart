@@ -1,3 +1,4 @@
+import 'package:farah/data/models/vendor/public_provider_model.dart';
 import 'package:farah/data/models/service_model.dart';
 
 abstract class ServiceRepository {
@@ -14,4 +15,7 @@ abstract class ServiceRepository {
   });
 
   Future<ServiceModel> fetchServiceById(String id);
+
+  // فرح: صفحة المزود العامة (GET /providers/{id})، id = رقم حساب المزود.
+  Future<PublicProviderModel> fetchPublicProvider(int providerId);
 }

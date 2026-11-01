@@ -1,6 +1,5 @@
 import 'package:farah/view/screens/user/MyBookingsScreen.dart';
 import 'package:farah/view/screens/user/favorites_screen.dart';
-import 'package:farah/view/screens/user/home_screen.dart';
 import 'package:farah/view/screens/user/service_detail_screen.dart';
 import 'package:farah/view/screens/user/settings_screen.dart';
 import 'package:flutter/material.dart';
@@ -283,22 +282,5 @@ class _ServicesScreenState extends State<ServicesScreen> {
         ),
       ),
     );
-  }
-
-  void _handleBottomNavigation(int index) {
-    switch (index) {
-      case 0:
-        // حسابي
-        break;
-      case 1:
-        // المفضلة
-        break;
-      case 2:
-        // طلباتي
-        break;
-      case 3:
-        Navigator.pop(context);
-        break;
-    }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:farah/core/network/dio_client.dart';
 import 'package:farah/data/models/service_model.dart';
+import 'package:farah/data/models/vendor/public_provider_model.dart';
 import 'package:farah/data/repositories/service_repository.dart';
 
 class ApiServiceRepository implements ServiceRepository {
@@ -50,5 +51,13 @@ class ApiServiceRepository implements ServiceRepository {
     final data = res.data as Map<String, dynamic>;
 
     return ServiceModel.fromJson(data['data'] as Map<String, dynamic>);
+  }
+
+  @override
+  Future<PublicProviderModel> fetchPublicProvider(int providerId) async {
+    final res = await _dio.get('/providers/$providerId');
+    return PublicProviderModel.fromJson(
+      Map<String, dynamic>.from(res.data['data'] as Map),
+    );
   }
 }
