@@ -12,6 +12,7 @@ class BookingConfirmationScreen extends StatefulWidget {
   final BookingOptionSlotModel slot;
   final String currency;
   final String? notes;
+  final List<String> removedFeatures;
 
   const BookingConfirmationScreen({
     super.key,
@@ -20,6 +21,7 @@ class BookingConfirmationScreen extends StatefulWidget {
     required this.slot,
     required this.currency,
     this.notes,
+    this.removedFeatures = const [],
   });
 
   @override
@@ -245,6 +247,15 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                 ),
               ),
 
+              // فرح: المزايا اللي شالها العميل، توصل للمزود مع الطلب.
+              if (widget.removedFeatures.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'مزايا أزلتها من الحجز: ${widget.removedFeatures.join('، ')}',
+                  style: const TextStyle(fontSize: 13, color: Colors.black87),
+                ),
+              ],
+
               const SizedBox(height: 24),
 
               // 5. السعر الإجمالي (تم عكس الترتيب ليكون السعر يساراً والكلمة يميناً)
@@ -329,6 +340,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen> {
                                 bookingTime: widget.slot.startTime,
                                 bookingSlot: widget.slot.label,
                                 notes: widget.notes,
+                                removedFeatures: widget.removedFeatures,
                               );
 
                               context.read<BookingCubit>().createBooking(

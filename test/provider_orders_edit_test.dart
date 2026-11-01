@@ -23,6 +23,7 @@ Map<String, dynamic> _booking(String status, {String? date}) => {
   'date': date ?? '2026-12-10',
   'time': '00:00',
   'slot': 'api slot',
+  'removed_features': ['api flowers'],
   'customer': {
     'name': 'api customer',
     'phone': status == 'provider_pending' ? null : 'api phone',
@@ -400,6 +401,9 @@ void main() {
     await _pump(tester, details(repo));
 
     expect(find.text('يظهر رقم العميل بعد قبول الطلب.'), findsOneWidget);
+    // فرح: المزايا اللي شالها العميل ظاهرة للمزود.
+    expect(find.text('مزايا أزالها العميل'), findsOneWidget);
+    expect(find.text('api flowers'), findsOneWidget);
     await tester.tap(find.text('قبول الطلب'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField).last, 'api instructions text');

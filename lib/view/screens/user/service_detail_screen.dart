@@ -22,6 +22,9 @@ class ServiceDetailsScreen extends StatefulWidget {
 }
 
 class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
+  // فرح: المزايا اللي اختار العميل إزالتها، تنبعت مع طلب الحجز.
+  List<String> _removedFeatures = const [];
+
   // Set after a tap; until then the value comes from the API's service data.
   bool? _isFavorited;
 
@@ -182,6 +185,8 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
                       ServiceFeaturesListWidget(
                         features: service.features,
                         removableFeatures: service.removableFeatures,
+                        onRemovedChanged: (removed) =>
+                            _removedFeatures = removed,
                       ),
                       const SizedBox(height: 18),
                       ServiceReviewsWidget(
@@ -198,7 +203,11 @@ class _ServiceDetailsScreenState extends State<ServiceDetailsScreen> {
         ),
         bottomNavigationBar: ServiceBottomActionBarWidget(
           onBookNowTap: () {
-            BookingBottomSheetWidget.show(context, service);
+            BookingBottomSheetWidget.show(
+              context,
+              service,
+              removedFeatures: _removedFeatures,
+            );
           },
           onWhatsAppTap: () {},
           onShareTap: () {},

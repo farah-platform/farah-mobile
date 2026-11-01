@@ -38,6 +38,34 @@ void main() {
     expect(find.byIcon(Icons.more_vert_rounded), findsOneWidget);
   });
 
+  // فرح: إزالة ميزة تبلّغ صفحة الخدمة حتى تنبعت مع الحجز.
+  testWidgets('removing a feature reports it to the service page', (
+    tester,
+  ) async {
+    List<String> removed = const [];
+    await tester.pumpWidget(
+      _wrap(
+        ServiceFeaturesListWidget(
+          features: const ['api fixed', 'api optional'],
+          removableFeatures: const ['api optional'],
+          onRemovedChanged: (value) => removed = value,
+        ),
+      ),
+    );
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('إزالة من الحجز'));
+    await tester.pumpAndSettle();
+    expect(removed, ['api optional']);
+    expect(find.text('مُزالة'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.more_vert_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('مشمولة').last);
+    await tester.pumpAndSettle();
+    expect(removed, isEmpty);
+  });
+
   testWidgets('whatsapp without a provider number explains instead', (
     tester,
   ) async {

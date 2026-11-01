@@ -9,10 +9,19 @@ import 'package:farah/view/screens/user/booking_confirmation_screen.dart';
 
 class BookingBottomSheetWidget extends StatefulWidget {
   final ServiceModel service;
+  final List<String> removedFeatures;
 
-  const BookingBottomSheetWidget({super.key, required this.service});
+  const BookingBottomSheetWidget({
+    super.key,
+    required this.service,
+    this.removedFeatures = const [],
+  });
 
-  static Future<void> show(BuildContext context, ServiceModel service) {
+  static Future<void> show(
+    BuildContext context,
+    ServiceModel service, {
+    List<String> removedFeatures = const [],
+  }) {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -22,7 +31,10 @@ class BookingBottomSheetWidget extends StatefulWidget {
           context.read<BookingRepository>(),
           serviceId: service.id,
         )..loadMonth(DateTime.now()),
-        child: BookingBottomSheetWidget(service: service),
+        child: BookingBottomSheetWidget(
+          service: service,
+          removedFeatures: removedFeatures,
+        ),
       ),
     );
   }
@@ -421,6 +433,7 @@ class _BookingBottomSheetWidgetState extends State<BookingBottomSheetWidget> {
                               slot: selectedSlot,
                               currency: currency,
                               notes: notes.isEmpty ? null : notes,
+                              removedFeatures: widget.removedFeatures,
                             ),
                           ),
                         );
