@@ -1,3 +1,4 @@
+import 'package:farah/view/widgets/common/offline_banner.dart';
 import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/cubits/provider_dashboard/provider_dashboard_cubit.dart';
 import 'package:farah/cubits/provider_orders/provider_orders_cubit.dart';
@@ -178,7 +179,8 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
           );
         }
 
-        final data = (state as ProviderDashboardLoaded).data;
+        final loaded = state as ProviderDashboardLoaded;
+        final data = loaded.data;
 
         return RefreshIndicator(
           onRefresh: () =>
@@ -186,6 +188,11 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 24, 16, 24),
             children: [
+              if (loaded.offline)
+                OfflineBanner(
+                  onRetry: () =>
+                      context.read<ProviderDashboardCubit>().loadDashboard(),
+                ),
               ProviderHomeHeaderWidget(data: data),
               const SizedBox(height: 24),
               ProviderHomeSubscriptionCardWidget(data: data),

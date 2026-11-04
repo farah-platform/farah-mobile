@@ -1,3 +1,4 @@
+import 'package:farah/view/widgets/common/offline_banner.dart';
 import 'package:farah/cubits/home/home_cubit.dart';
 import 'package:farah/view/screens/user/MyBookingsScreen.dart';
 import 'package:farah/view/screens/user/NotificationsScreen.dart';
@@ -164,6 +165,10 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (state.offline)
+              OfflineBanner(
+                onRetry: () => context.read<HomeCubit>().loadHome(),
+              ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: HomeHeaderWidget(

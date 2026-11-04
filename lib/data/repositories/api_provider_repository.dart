@@ -1,3 +1,4 @@
+import 'package:farah/data/datasources/local/offline_cache.dart';
 import 'package:dio/dio.dart';
 import 'package:farah/core/network/api_endpoints.dart';
 import 'package:farah/core/network/dio_client.dart';
@@ -43,7 +44,9 @@ class ApiProviderRepository implements ProviderRepository {
   @override
   Future<Map<String, dynamic>> getVerificationStatus() async {
     final res = await dioClient.dio.get('/provider/verification');
-    return res.data['data'] ?? {};
+    final data = res.data['data'] ?? {};
+    await OfflineCache.save(OfflineCache.providerVerification, data);
+    return data;
   }
 
   @override
@@ -135,7 +138,9 @@ class ApiProviderRepository implements ProviderRepository {
   @override
   Future<Map<String, dynamic>> getDashboardData() async {
     final res = await dioClient.dio.get('/provider/dashboard');
-    return res.data['data'] ?? {};
+    final data = res.data['data'] ?? {};
+    await OfflineCache.save(OfflineCache.providerDashboard, data);
+    return data;
   }
   @override
   Future<void> reviewPaymentProof(int bookingId, int paymentId, String decision, {String? reviewNote}) async {

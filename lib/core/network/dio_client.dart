@@ -10,8 +10,10 @@ class DioClient {
     _dio = Dio(
       BaseOptions(
         baseUrl: ApiEndpoints.baseUrl,
-        connectTimeout: const Duration(seconds: 60),
-        receiveTimeout: const Duration(seconds: 60),
+        // فرح: 15 ثانية للاتصال بدل 60 حتى ما يضل التطبيق يحمّل بدون نت.
+        // الإرسال 60 لأن رفع الصور والإشعارات بياخد وقت.
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 30),
         sendTimeout: const Duration(seconds: 60),
         headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
       ),

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:farah/data/datasources/local/offline_cache.dart';
 import 'package:farah/data/models/home/home_response_model.dart';
 import 'package:farah/data/repositories/home_repostory.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,6 +18,14 @@ class HomeCubit extends Cubit<HomeState> {
       final homeData = await _repo.fetchHome();
       emit(HomeLoaded(home: homeData));
     } catch (e) {
+      // فرح: بدون نت نعرض آخر بيانات محفوظة بدل شاشة الخطأ.
+      if (OfflineCache.isOffline(e)) {
+        final cached = await _repo.cachedHome().catchError((_) => null);
+        if (cached != null) {
+          emit(HomeLoaded(home: cached, offline: true));
+          return;
+        }
+      }
       emit(HomeError(_mapError(e)));
     }
   }
