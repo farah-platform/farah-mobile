@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:farah/core/network/api_endpoints.dart';
 import 'package:farah/core/network/dio_client.dart';
 import 'package:farah/data/datasources/local/cache_datasource.dart';
+import 'package:farah/data/datasources/local/offline_cache.dart';
 import 'package:farah/data/models/auth/city_model.dart';
 import 'package:farah/data/models/user_model.dart';
 import 'package:farah/data/repositories/auth_repository.dart';
@@ -222,6 +223,8 @@ class ApiAuthRepository implements AuthRepository {
       // تجاهل أخطاء السيرفر عند تسجيل الخروج
     }
     await _cache.clearToken();
+    // فرح: بيانات الشاشات المحفوظة للحساب ما بتضل لحساب تاني.
+    await OfflineCache.clear();
     await _clearUser();
     // Forget the Google account so the account picker shows next time.
     try {
@@ -270,6 +273,8 @@ class ApiAuthRepository implements AuthRepository {
   }
 
   Future<void> _persistUser(UserModel user) async {
+    // A new sign-in starts with no saved screens from a previous account.
+    await OfflineCache.clear();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_userKey, json.encode(user.toMap()));
   }
