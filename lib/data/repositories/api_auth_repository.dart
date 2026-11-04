@@ -20,10 +20,17 @@ class ApiAuthRepository implements AuthRepository {
   GoogleSignIn? _googleSignInOverride;
   FirebaseAuth? _firebaseAuthOverride;
 
-  GoogleSignIn get _googleSignIn => _googleSignInOverride ??= GoogleSignIn(
-    serverClientId:
-        '800173223794-8kvbhprgpt0g8r0l9scab0br4c06jqsn.apps.googleusercontent.com',
-  );
+  // فرح: Web Client ID من السيرفر (/settings → google_client_id) حتى يطابق GOOGLE_CLIENT_ID اللي بيتحقق فيه.
+  Future<GoogleSignIn?> _googleSignInFor() async {
+    if (_googleSignInOverride != null) return _googleSignInOverride;
+    final res = await _dio.get(ApiEndpoints.settings);
+    final clientId = res.data['data']?['google_client_id']?.toString() ?? '';
+    if (clientId.isEmpty) return null;
+    return _googleSignInOverride = GoogleSignIn(
+      serverClientId: clientId,
+      scopes: const ['email'],
+    );
+  }
 
   FirebaseAuth get _firebaseAuth =>
       _firebaseAuthOverride ??= FirebaseAuth.instance;
@@ -139,32 +146,39 @@ class ApiAuthRepository implements AuthRepository {
     return [];
   }
 
+  // فرح: تسجيل الدخول بـ Google عن طريق السيرفر: id_token من Google ← POST /auth/google
+  // ← توكن الحساب من السيرفر (كان يدخل بـ Firebase بس وما يحكي مع السيرفر).
   @override
-  Future<UserModel> signInWithGoogle() async {
-    final existing = await checkSession();
-    if (existing != null) return existing;
+  Future<UserModel> signInWithGoogle({String? userType}) async {
+    final googleSignIn = await _googleSignInFor();
+    if (googleSignIn == null) {
+      throw Exception('هذه الميزة غير متاحة حالياً');
+    }
 
-    final googleUser = await _googleSignIn.signIn();
-    if (googleUser == null) throw Exception('تم إلغاء تسجيل الدخول');
+    final account = await googleSignIn.signIn();
+    if (account == null) throw Exception('تم إلغاء تسجيل الدخول');
 
-    final googleAuth = await googleUser.authentication;
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-    final userCred = await _firebaseAuth.signInWithCredential(credential);
-    final firebaseUser = userCred.user!;
-    final idToken = await firebaseUser.getIdToken();
-    await _cache.saveToken(idToken ?? '');
+    final idToken = (await account.authentication).idToken;
+    if (idToken == null || idToken.isEmpty) {
+      await googleSignIn.signOut();
+      throw Exception('تعذر التحقق من حساب Google، حاول مرة أخرى');
+    }
 
-    final user = UserModel(
-      uid: firebaseUser.uid,
-      name: firebaseUser.displayName ?? 'مستخدم جوجل',
-      email: firebaseUser.email ?? '',
-      phone: firebaseUser.phoneNumber ?? '',
-    );
-    await _persistUser(user);
-    return user;
+    try {
+      final res = await _dio.post(
+        ApiEndpoints.googleLogin,
+        data: {'id_token': idToken, 'user_type': ?userType},
+      );
+      final payload = res.data['data'] as Map<String, dynamic>;
+      await _cache.saveToken(payload['token'] as String);
+      final user = UserModel.fromMap(payload['user'] as Map<String, dynamic>);
+      await _persistUser(user);
+      return user;
+    } catch (_) {
+      // Let the user pick another Google account next time.
+      await googleSignIn.signOut();
+      rethrow;
+    }
   }
 
   @override
@@ -209,8 +223,11 @@ class ApiAuthRepository implements AuthRepository {
     }
     await _cache.clearToken();
     await _clearUser();
-    await _googleSignIn.signOut();
-    await _firebaseAuth.signOut();
+    // Forget the Google account so the account picker shows next time.
+    try {
+      await (_googleSignInOverride ?? GoogleSignIn()).signOut();
+      await _firebaseAuth.signOut();
+    } catch (_) {}
   }
 
   @override

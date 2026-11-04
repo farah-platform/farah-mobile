@@ -8,6 +8,8 @@ class ApiEndpoints {
   static const String register = '/register';
   static const String login = '/login';
   static const String logout = '/logout';
+  // فرح: تسجيل الدخول بـ Google (id_token) عن طريق السيرفر.
+  static const String googleLogin = '/auth/google';
   static const String resendVerification = '/resend-verification-email';
   static const String forgotPassword = '/forgot-password';
   static const String resetPassword = '/reset-password';

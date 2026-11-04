@@ -19,7 +19,8 @@ abstract class AuthRepository {
   /// Fetches the list of available cities from the backend.
   Future<List<CityModel>> getCities();
 
-  Future<UserModel> signInWithGoogle();
+  /// [userType] is `provider` when signing up from the provider flow.
+  Future<UserModel> signInWithGoogle({String? userType});
 
   Future<void> sendPasswordReset({required String email});
 
