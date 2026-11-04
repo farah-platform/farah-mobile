@@ -129,7 +129,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                   OutlinedButton(
                     onPressed: () =>
-                        context.read<AuthCubit>().signInWithGoogle(),
+                        context.read<AuthCubit>().signInWithGoogle(
+                          userType: widget.userType,
+                        ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         vertical: 8,
