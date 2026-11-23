@@ -1,3 +1,4 @@
+import 'package:farah/data/datasources/local/offline_cache.dart';
 import 'package:farah/data/repositories/provider_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -9,7 +10,9 @@ class ProviderDashboardLoading extends ProviderDashboardState {}
 
 class ProviderDashboardLoaded extends ProviderDashboardState {
   final Map<String, dynamic> data;
-  ProviderDashboardLoaded({required this.data});
+  // فرح: true لما تكون البيانات من آخر مرة (بدون نت).
+  final bool offline;
+  ProviderDashboardLoaded({required this.data, this.offline = false});
 }
 
 class ProviderDashboardError extends ProviderDashboardState {
@@ -33,9 +36,30 @@ class ProviderDashboardCubit extends Cubit<ProviderDashboardState> {
       emit(ProviderDashboardLoaded(data: data));
     } catch (e) {
       if (isClosed) return;
+      // فرح: بدون نت نعرض آخر لوحة محفوظة.
+      if (OfflineCache.isOffline(e)) {
+        final cached = await OfflineCache.read(OfflineCache.providerDashboard);
+        if (isClosed) return;
+        if (cached is Map) {
+          emit(
+            ProviderDashboardLoaded(
+              data: Map<String, dynamic>.from(cached),
+              offline: true,
+            ),
+          );
+          return;
+        }
+      }
+      if (isClosed) return;
       // فرح: لو فشل التحديث الصامت نبقي البيانات الحالية بدل شاشة الخطأ.
       if (!silent) {
-        emit(ProviderDashboardError('حدث خطأ أثناء جلب بيانات لوحة التحكم'));
+        emit(
+          ProviderDashboardError(
+            OfflineCache.isOffline(e)
+                ? 'لا يوجد اتصال بالإنترنت'
+                : 'حدث خطأ أثناء جلب بيانات لوحة التحكم',
+          ),
+        );
       }
     }
   }

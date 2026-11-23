@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:farah/core/constants/app_routes.dart';
 import 'package:farah/cubits/provider_verification/provider_verification_cubit.dart';
@@ -25,20 +25,72 @@ class _ProviderRouterScreenState extends State<ProviderRouterScreen> {
           if (state is ProviderVerificationLoaded) {
             if (state.status == 'active' || state.status == 'approved') {
               Navigator.pushReplacementNamed(context, AppRoutes.providerHome);
-            } else if (state.nextStep == 'onboarding' || state.status == 'not_started') {
-              Navigator.pushReplacementNamed(context, AppRoutes.providerOnboarding);
+            } else if (state.nextStep == 'onboarding' ||
+                state.status == 'not_started') {
+              Navigator.pushReplacementNamed(
+                context,
+                AppRoutes.providerOnboarding,
+              );
             } else if (state.nextStep == 'subscription') {
-              Navigator.pushReplacementNamed(context, AppRoutes.providerSubscriptionPlans);
+              Navigator.pushReplacementNamed(
+                context,
+                AppRoutes.providerSubscriptionPlans,
+              );
             } else {
               // Usually pending
-              Navigator.pushReplacementNamed(context, AppRoutes.providerVerification);
+              Navigator.pushReplacementNamed(
+                context,
+                AppRoutes.providerVerification,
+              );
             }
-          } else if (state is ProviderVerificationError) {
-             // Fallback
-             Navigator.pushReplacementNamed(context, AppRoutes.providerOnboarding);
           }
+          // فرح: عند الخطأ ما نودّي المزود على شاشة التسجيل؛ نعرض رسالة مع إعادة المحاولة (تحت).
         },
         builder: (context, state) {
+          if (state is ProviderVerificationError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      state.offline
+                          ? Icons.wifi_off_rounded
+                          : Icons.error_outline,
+                      size: 56,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      state.message,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (state.offline) ...[
+                      const SizedBox(height: 8),
+                      const Text(
+                        'تأكد من اتصالك ثم أعد المحاولة.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.black54),
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      onPressed: () => context
+                          .read<ProviderVerificationCubit>()
+                          .checkStatus(),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('إعادة المحاولة'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
           return const Center(child: CircularProgressIndicator());
         },
       ),
